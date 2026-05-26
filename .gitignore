@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+.npm
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Meridian runtime files (will be created during usage)
+.meridian/telemetry.jsonl
+.meridian/memory/episodic.jsonl
+.meridian/memory/corrections.jsonl
+*.tmp
+
+# User-specific local settings (don't commit user's local config)
+.meridian/settings.local.json
+
+# Test outputs
+coverage/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.bak
+*.swp
+*.tmp
+.cache/
