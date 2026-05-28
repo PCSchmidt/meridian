@@ -2,8 +2,9 @@
 
 **A next-generation agent harness framework for AI coding assistants**
 
-[![Status](https://img.shields.io/badge/status-planning-yellow)]()
-[![Version](https://img.shields.io/badge/version-0.0.0--planning-blue)]()
+![Status](https://img.shields.io/badge/status-in%20development-green)
+![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue)
+![Progress](https://img.shields.io/badge/phase%201-29%25-orange)
 
 ---
 
@@ -24,13 +25,16 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ## Status: Phase 1 - Foundation (In Progress)
 
-**Current Phase:** Phase 1 - Foundation (4/7 gates complete)  
-**Next Milestone:** G1.1 - Composable Gate DAG Engine  
+**Current Phase:** Phase 1 - Foundation (2/7 gates complete - 29%)  
+**Next Milestone:** G1.3 - Basic Hook Infrastructure  
 **Timeline:** 11 weeks to v0.1.0 (target: 2026-09-10)
 
 **Progress:**
 - ✅ Phase 0: Planning & Validation (6h actual vs 8h estimated - 1.33x faster)
-- 🔄 Phase 1: Foundation (40h estimated, in progress)
+- 🔄 Phase 1: Foundation (16h spent / 40h estimated - 40% complete)
+  - ✅ G1.1: Composable Gate DAG Engine (6h - 1.33x faster)
+  - ✅ G1.2: Schema-Validated Memory System (10h - 1.0x on target)
+  - ⏳ G1.3-G1.7: In progress
 
 See [ROADMAP.md](ROADMAP.md) for detailed progress tracking and [MERIDIAN_ARCHITECTURE_DECISIONS.md](MERIDIAN_ARCHITECTURE_DECISIONS.md) for the complete architectural blueprint.
 
@@ -51,8 +55,8 @@ See [ROADMAP.md](ROADMAP.md) for detailed progress tracking and [MERIDIAN_ARCHIT
 
 ### Core Architecture
 - [x] Architectural design complete
-- [ ] Composable gate DAG engine
-- [ ] Schema-validated memory system (JSONL)
+- [x] Composable gate DAG engine
+- [x] Schema-validated memory system (JSONL)
 - [ ] Multi-tier platform support (Claude Code, Cursor/Windsurf, Advisory)
 - [ ] Generator-Evaluator feedback loop
 
@@ -210,4 +214,4 @@ Built on research and patterns from:
 
 ---
 
-**Status:** Planning complete. Implementation begins 2026-05-26.
+**Status:** Phase 1 in progress. Gate DAG engine and memory system complete (29%). Target: v0.1.0 by 2026-09-10.
