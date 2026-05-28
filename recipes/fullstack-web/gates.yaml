@@ -1,0 +1,132 @@
+# Meridian Gate Definition - Full-Stack Web App Recipe
+# Reference implementation: Next.js + FastAPI + Supabase
+# Adapt this for your stack (React, Vue, Django, PostgreSQL, etc.)
+
+version: "1.0"
+
+project:
+  name: "fullstack-web-project"
+  recipe: "fullstack-web"
+  description: "Gate DAG for full-stack web applications"
+
+gates:
+  # Gate 1: Project scope confirmed
+  - id: confirmed
+    label: "Project Confirmed"
+    type: human_approval
+    required: true
+    approval_token: "CONFIRMED"
+    requires: []
+    requires_artifacts:
+      - CONTRACT.md      # Stack, deployment, constraints
+      - SPEC.md          # Feature specifications
+      - DECISIONS.md     # Architectural decisions
+    hooks:
+      pre:
+        - validate-contract.sh
+        - validate-spec.sh
+      post:
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: CONFIRMED_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 2: Frontend specification approved
+  - id: frontend_approved
+    label: "Frontend Specification Approved"
+    type: human_approval
+    required: true
+    approval_token: "FRONTEND APPROVED"
+    requires:
+      - confirmed
+    requires_artifacts:
+      - FRONTEND_SPEC.md    # Component tree, routes, state
+      - DESIGN_SYSTEM.md    # Colors, typography, spacing
+      - COMPONENT_REGISTRY.md  # Component inventory
+    hooks:
+      pre:
+        - validate-frontend-spec.sh
+      post:
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: FRONTEND_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 3: Backend specification approved
+  - id: backend_approved
+    label: "Backend Specification Approved"
+    type: human_approval
+    required: true
+    approval_token: "BACKEND APPROVED"
+    requires:
+      - confirmed
+    requires_artifacts:
+      - API_SPEC.md         # Endpoints, request/response schemas
+      - DATABASE_SCHEMA.md  # Tables, relationships, indexes
+    hooks:
+      pre:
+        - validate-api-spec.sh
+        - validate-schema.sh
+      post:
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: BACKEND_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 4: Tests passing (automated)
+  - id: tests_passing
+    label: "Tests Passing"
+    type: automated
+    required: true
+    requires:
+      - frontend_approved
+      - backend_approved
+    hooks:
+      pre:
+        - run-frontend-tests.sh  # Vitest, Jest, etc.
+        - run-backend-tests.sh   # Pytest, etc.
+    pass_condition: "exit_code == 0"
+    emits: TESTS_GATE.json
+    on_fail: block_write
+
+  # Gate 5: Security scan (optional but recommended)
+  - id: security_scan
+    label: "Security Scan Complete"
+    type: automated
+    required: false
+    requires:
+      - tests_passing
+    hooks:
+      pre:
+        - run-security-audit.sh  # Checks OWASP Top 10
+    pass_condition: "exit_code == 0"
+    on_fail: warn
+
+  # Gate 6: Ready to deploy
+  - id: deploy_ready
+    label: "Ready to Deploy"
+    type: human_approval
+    required: true
+    approval_token: "GO"
+    requires:
+      - tests_passing
+      - security_scan
+    requires_artifacts:
+      - DEPLOYMENT_CONFIG.md
+      - CHANGELOG.md
+    hooks:
+      pre:
+        - validate-deployment.sh
+      post:
+        - tag-release.sh
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: DEPLOY_APPROVED
+    on_fail: block_all_writes
+
+# Customization notes:
+# - Add/remove gates based on your workflow
+# - Frontend/backend can be sequential or parallel (adjust 'requires')
+# - Optional gates (required: false) show warnings but don't block
+# - Hooks are shell scripts in .claude/hooks/
+# - Approval tokens can be any string you want users to type

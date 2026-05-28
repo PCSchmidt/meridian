@@ -1,0 +1,106 @@
+# Meridian Gate Definition - CLI Tool Recipe
+# Reference implementation: Python + Click
+# Adapt this for your language/framework (Rust, Go, Node.js, etc.)
+
+version: "1.0"
+
+project:
+  name: "cli-tool-project"
+  recipe: "cli-tool"
+  description: "Gate DAG for command-line tools"
+
+gates:
+  # Gate 1: Project scope confirmed
+  - id: confirmed
+    label: "Project Confirmed"
+    type: human_approval
+    required: true
+    approval_token: "CONFIRMED"
+    requires: []
+    requires_artifacts:
+      - CONTRACT.md      # Purpose, commands, deployment
+      - SPEC.md          # Command specifications
+      - DECISIONS.md     # Technical decisions
+    hooks:
+      pre:
+        - validate-contract.sh
+        - validate-spec.sh
+      post:
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: CONFIRMED_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 2: Command specifications approved
+  - id: commands_approved
+    label: "Command Specifications Approved"
+    type: human_approval
+    required: true
+    approval_token: "COMMANDS APPROVED"
+    requires:
+      - confirmed
+    requires_artifacts:
+      - COMMANDS_SPEC.md    # Each command, arguments, options
+      - CLI_DESIGN.md       # UX, help text, error messages
+    hooks:
+      pre:
+        - validate-commands.sh
+      post:
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: COMMANDS_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 3: Tests passing (automated)
+  - id: tests_passing
+    label: "Tests Passing"
+    type: automated
+    required: true
+    requires:
+      - commands_approved
+    hooks:
+      pre:
+        - run-tests.sh       # Pytest, cargo test, go test, etc.
+    pass_condition: "exit_code == 0"
+    emits: TESTS_GATE.json
+    on_fail: block_write
+
+  # Gate 4: CLI usability check (optional)
+  - id: usability_check
+    label: "CLI Usability Verified"
+    type: human_approval
+    required: false
+    approval_token: "USABILITY OK"
+    requires:
+      - tests_passing
+    requires_artifacts:
+      - USABILITY_CHECKLIST.md  # Help text clear, errors helpful
+    on_fail: warn
+
+  # Gate 5: Ready to package/distribute
+  - id: package_ready
+    label: "Ready to Package"
+    type: human_approval
+    required: true
+    approval_token: "PACKAGE"
+    requires:
+      - tests_passing
+    requires_artifacts:
+      - PACKAGE_CONFIG.md   # PyPI, cargo, npm, etc.
+      - CHANGELOG.md
+      - README.md
+    hooks:
+      pre:
+        - validate-package.sh
+      post:
+        - build-package.sh
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: PACKAGE_APPROVED
+    on_fail: block_all_writes
+
+# CLI-specific notes:
+# - Simpler gate structure than web apps (no frontend/backend split)
+# - Usability gate is optional but recommended
+# - Package gate ensures distribution readiness
+# - Can add 'install_test' gate to verify installation works

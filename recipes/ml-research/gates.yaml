@@ -1,0 +1,159 @@
+# Meridian Gate Definition - ML/Research Recipe
+# Reference implementation: PyTorch + FastAPI
+# Adapt this for your ML stack (TensorFlow, JAX, scikit-learn, etc.)
+#
+# **This is the unique differentiator** - no other framework has native ML workflow support
+
+version: "1.0"
+
+project:
+  name: "ml-research-project"
+  recipe: "ml-research"
+  description: "Gate DAG for ML/data science projects with enforced human decisions"
+
+gates:
+  # Gate 1: Data contract defined (HUMAN DECISION)
+  - id: data_contract
+    label: "Data Contract Defined"
+    type: human_approval
+    required: true
+    approval_token: "DATA CONTRACT APPROVED"
+    requires: []
+    requires_artifacts:
+      - DATA_CONTRACT.md    # Schema, target, metrics, baseline
+      - DECISIONS.md        # Why this approach, alternatives considered
+    hooks:
+      pre:
+        - validate-data-contract.sh
+      post:
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: DATA_CONTRACT_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 2: Pipeline validated (AUTOMATED)
+  - id: pipeline_validated
+    label: "Data Pipeline Validated"
+    type: automated
+    required: true
+    requires:
+      - data_contract
+    hooks:
+      pre:
+        - validate-schema.sh        # Data schema matches contract
+        - validate-splits.sh        # Train/val/test split integrity
+        - validate-preprocessing.sh # Null handling, encoding, etc.
+        - run-pipeline-tests.sh     # Pipeline unit tests
+    pass_condition: "exit_code == 0"
+    emits: PIPELINE_GATE.json
+    on_fail: block_write
+
+  # Gate 3: Model evaluation (AUTOMATED + HUMAN REVIEW)
+  - id: model_eval
+    label: "Model Evaluation Complete"
+    type: human_approval
+    required: true
+    approval_token: "EVAL APPROVED"
+    requires:
+      - pipeline_validated
+    requires_artifacts:
+      - EVAL_RESULTS.md     # Metrics vs baseline, confusion matrix, etc.
+      - MODEL_CARD.md       # Model details, training config, limitations
+    hooks:
+      pre:
+        - run-benchmark.sh          # Automated benchmark vs baseline
+        - validate-metrics.sh       # Check meets contract thresholds
+        - generate-model-card.sh    # Auto-generate model card
+      post:
+        - save-best-model.sh
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: MODEL_EVAL_GATE.json
+    on_fail: block_all_writes
+
+  # Gate 4: Ablation study (OPTIONAL)
+  - id: ablation_study
+    label: "Ablation Study Complete"
+    type: human_approval
+    required: false
+    approval_token: "ABLATION DONE"
+    requires:
+      - model_eval
+    requires_artifacts:
+      - ABLATION_RESULTS.md   # Systematic component removal results
+    hooks:
+      post:
+        - write-reflexion.sh
+    on_fail: warn
+
+  # Gate 5: Evidence PDF (OPTIONAL - for academic/research work)
+  - id: evidence_pdf
+    label: "Evidence PDF Generated"
+    type: automated
+    required: false
+    requires:
+      - model_eval
+    hooks:
+      pre:
+        - generate-evidence-pdf.sh  # Compile results into PDF
+    pass_condition: "exit_code == 0"
+    emits: EVIDENCE.pdf
+    on_fail: warn
+
+  # Gate 6: Deployment ready (HUMAN DECISION)
+  - id: deploy_ready
+    label: "Ready to Deploy"
+    type: human_approval
+    required: true
+    approval_token: "DEPLOY"
+    requires:
+      - model_eval
+    requires_artifacts:
+      - DEPLOYMENT_CONFIG.md  # Serving infrastructure, monitoring
+      - CHANGELOG.md
+      - MODEL_CARD.md
+    hooks:
+      pre:
+        - validate-serving-config.sh
+        - test-inference-latency.sh
+      post:
+        - export-model.sh           # ONNX, TorchScript, etc.
+        - write-reflexion.sh
+        - emit-telemetry.sh
+    emits: DEPLOY_APPROVED
+    on_fail: block_all_writes
+
+# ML-specific design philosophy:
+#
+# 1. DATA_CONTRACT gate enforces that HUMAN makes methodological decisions
+#    - The model implements, but human chooses the approach
+#    - No "try everything and see what works" - hypothesis-driven
+#
+# 2. PIPELINE_VALIDATED is fully automated
+#    - Schema checks, split integrity, preprocessing correctness
+#    - Agent blocked until all validation passes
+#
+# 3. MODEL_EVAL combines automated + human review
+#    - Automated benchmark runs (vs baseline in contract)
+#    - Human reviews results and approves
+#    - Enforces that eval meets contract thresholds
+#
+# 4. ABLATION and EVIDENCE are optional
+#    - Research projects need them, production deployments may skip
+#
+# 5. DEPLOY gate is human-approved
+#    - Final sanity check before production
+#
+# This workflow prevents:
+# - Agents from making methodological decisions without human input
+# - Deploying models that don't meet contract thresholds
+# - Skipping validation steps
+# - Publishing results without evidence artifacts
+
+# Example DATA_CONTRACT.md structure:
+# - Data source: OpenSky Network REST API
+# - Schema: {icao24, callsign, latitude, longitude, altitude, velocity}
+# - Target: Anomaly flag (boolean)
+# - Evaluation metric: Precision ≥ 0.85, Recall ≥ 0.70 at 5% contamination
+# - Baseline: IsolationForest with default parameters
+# - Deployment target: Railway (backend), Vercel (frontend)
