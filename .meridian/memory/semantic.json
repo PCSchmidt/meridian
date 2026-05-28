@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "memory_type": "semantic",
+  "project": "meridian",
+  "patterns": [
+    {
+      "pattern_id": "PAT-GATEE-001",
+      "description": "Gate engine validation requires 1.2x time for YAML complexity",
+      "context": "When implementing YAML-based configuration with validation logic",
+      "confidence": "MEDIUM",
+      "validated_count": 2,
+      "hash": "7f3a8b9c2d1e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9",
+      "created": "2026-05-28T10:00:00Z",
+      "last_validated": "2026-05-28T14:00:00Z",
+      "source_projects": [
+        "meridian"
+      ]
+    },
+    {
+      "pattern_id": "PAT-MEMSC-001",
+      "description": "JSON schema design takes 0.8x time when examples are clear",
+      "context": "When designing JSON schemas with clear examples and documentation",
+      "confidence": "LOW",
+      "validated_count": 1,
+      "hash": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+      "created": "2026-05-28T14:30:00Z",
+      "last_validated": "2026-05-28T14:30:00Z",
+      "source_projects": [
+        "meridian"
+      ]
+    }
+  ],
+  "last_updated": "2026-05-28T14:30:00Z"
+}

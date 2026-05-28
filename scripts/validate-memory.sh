@@ -121,8 +121,8 @@ validate_episodic() {
 
     # Validate each line is valid JSON
     local line_num=0
-    while IFS= read -r line; do
-        ((line_num++))
+    while IFS= read -r line || [ -n "$line" ]; do
+        line_num=$((line_num + 1))
 
         # Skip empty lines
         if [ -z "$line" ]; then
@@ -179,8 +179,8 @@ validate_corrections() {
 
     # Validate each line
     local line_num=0
-    while IFS= read -r line; do
-        ((line_num++))
+    while IFS= read -r line || [ -n "$line" ]; do
+        line_num=$((line_num + 1))
 
         # Skip empty lines
         if [ -z "$line" ]; then
@@ -206,13 +206,18 @@ validate_corrections() {
         # Validate numeric fields are positive
         local predicted
         predicted=$(echo "$line" | jq -r '.predicted_hours')
-        if (( $(echo "$predicted <= 0" | bc -l) )); then
+        # Convert to integer for comparison (multiply by 100 to handle decimals)
+        local predicted_int
+        predicted_int=$(echo "$predicted" | awk '{print int($1 * 100)}')
+        if [ "$predicted_int" -le 0 ]; then
             error "predicted_hours must be > 0 at line $line_num" $ERR_SCHEMA_VALIDATION
         fi
 
         local actual
         actual=$(echo "$line" | jq -r '.actual_hours')
-        if (( $(echo "$actual <= 0" | bc -l) )); then
+        local actual_int
+        actual_int=$(echo "$actual" | awk '{print int($1 * 100)}')
+        if [ "$actual_int" -le 0 ]; then
             error "actual_hours must be > 0 at line $line_num" $ERR_SCHEMA_VALIDATION
         fi
 
