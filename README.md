@@ -22,13 +22,17 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ---
 
-## Status: Planning Complete
+## Status: Phase 1 - Foundation (In Progress)
 
-**Current Phase:** Architecture design complete, ready for implementation
+**Current Phase:** Phase 1 - Foundation (4/7 gates complete)  
+**Next Milestone:** G1.1 - Composable Gate DAG Engine  
+**Timeline:** 11 weeks to v0.1.0 (target: 2026-09-10)
 
-**Timeline:** 8-12 weeks to v0.1.0
+**Progress:**
+- ✅ Phase 0: Planning & Validation (6h actual vs 8h estimated - 1.33x faster)
+- 🔄 Phase 1: Foundation (40h estimated, in progress)
 
-See [MERIDIAN_ARCHITECTURE_DECISIONS.md](MERIDIAN_ARCHITECTURE_DECISIONS.md) for the complete architectural blueprint.
+See [ROADMAP.md](ROADMAP.md) for detailed progress tracking and [MERIDIAN_ARCHITECTURE_DECISIONS.md](MERIDIAN_ARCHITECTURE_DECISIONS.md) for the complete architectural blueprint.
 
 ---
 
