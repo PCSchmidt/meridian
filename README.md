@@ -4,7 +4,7 @@
 
 ![Status](https://img.shields.io/badge/status-in%20development-green)
 ![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue)
-![Progress](https://img.shields.io/badge/phase%201-29%25-orange)
+![Progress](https://img.shields.io/badge/phase%201-43%25-orange)
 
 ---
 
@@ -25,16 +25,17 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ## Status: Phase 1 - Foundation (In Progress)
 
-**Current Phase:** Phase 1 - Foundation (2/7 gates complete - 29%)  
-**Next Milestone:** G1.3 - Basic Hook Infrastructure  
+**Current Phase:** Phase 1 - Foundation (3/7 gates complete - 43%)  
+**Next Milestone:** G1.4 - Telemetry System (JSONL)  
 **Timeline:** 11 weeks to v0.1.0 (target: 2026-09-10)
 
 **Progress:**
 - ✅ Phase 0: Planning & Validation (6h actual vs 8h estimated - 1.33x faster)
-- 🔄 Phase 1: Foundation (16h spent / 40h estimated - 40% complete)
+- 🔄 Phase 1: Foundation (24h spent / 40h estimated - 60% complete)
   - ✅ G1.1: Composable Gate DAG Engine (6h - 1.33x faster)
   - ✅ G1.2: Schema-Validated Memory System (10h - 1.0x on target)
-  - ⏳ G1.3-G1.7: In progress
+  - ✅ G1.3: Basic Hook Infrastructure (8h - 1.0x on target)
+  - ⏳ G1.4-G1.7: In progress
 
 See [ROADMAP.md](ROADMAP.md) for detailed progress tracking and [MERIDIAN_ARCHITECTURE_DECISIONS.md](MERIDIAN_ARCHITECTURE_DECISIONS.md) for the complete architectural blueprint.
 
@@ -57,15 +58,17 @@ See [ROADMAP.md](ROADMAP.md) for detailed progress tracking and [MERIDIAN_ARCHIT
 - [x] Architectural design complete
 - [x] Composable gate DAG engine
 - [x] Schema-validated memory system (JSONL)
+- [x] Basic hook infrastructure (PreToolUse, PostToolUse)
 - [ ] Multi-tier platform support (Claude Code, Cursor/Windsurf, Advisory)
 - [ ] Generator-Evaluator feedback loop
 
 ### Observability Layer
-- [ ] JSONL telemetry (`.meridian/telemetry.jsonl`)
+- [x] JSONL telemetry (`.meridian/telemetry.jsonl`) - basic implementation
+- [x] Hook execution logging
 - [ ] `/health report` - gate rates, costs, trends
 - [ ] `/status` - project completion tracking
 - [ ] Real-time cost tracking
-- [ ] Hook feedback visibility
+- [ ] Enhanced telemetry schema
 
 ### Recipes
 - [ ] `fullstack-web` (reference: Next.js + FastAPI + Supabase)
@@ -214,4 +217,4 @@ Built on research and patterns from:
 
 ---
 
-**Status:** Phase 1 in progress. Gate DAG engine and memory system complete (29%). Target: v0.1.0 by 2026-09-10.
+**Status:** Phase 1 in progress. Gate DAG, memory system, and hook infrastructure complete (43%). Target: v0.1.0 by 2026-09-10.
