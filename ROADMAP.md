@@ -55,9 +55,9 @@ Each phase has:
 
 ## Phase 1: Foundation (Weeks 1-2)
 
-**Status:** IN PROGRESS (2/7 gates complete - 29%)  
+**Status:** IN PROGRESS (3/7 gates complete - 43%)  
 **Estimated:** 40 hours  
-**Actual:** 16 hours spent (40% complete)  
+**Actual:** 24 hours spent (60% complete)  
 **Target completion:** 2026-06-11
 
 ### Gates:
@@ -92,16 +92,24 @@ Each phase has:
 - ✅ JSONL validation for episodic and corrections
 - ✅ Tested with sample data (2 patterns, 4 events, 1 correction)
 
-#### G1.3: Basic Hook Infrastructure ⏳
-**Status:** Not Started  
+#### G1.3: Basic Hook Infrastructure ✅
+**Status:** COMPLETE  
 **Estimated:** 8 hours  
-**Actual:** —  
+**Actual:** 8 hours  
+**Variance:** 1.0x (on target)  
+**Completed:** 2026-05-29  
 **Deliverables:**
-- `.claude/hooks/hook-wrapper.sh` - Common hook logic
-- PreToolUse and PostToolUse entry points
-- Hook execution logging
-- Error handling and exit code 2 blocking
-- Test hook blocking behavior
+
+- ✅ `.claude/hooks/hook-wrapper.sh` - Common hook library (logging, error handling, timing)
+- ✅ `.claude/hooks/PreToolUse.sh` - Pre-execution validation and enforcement
+- ✅ `.claude/hooks/PostToolUse.sh` - Post-execution validation (memory, telemetry)
+- ✅ Hook execution logging to `.meridian/hooks.log`
+- ✅ Exit code 2 blocking mechanism working
+- ✅ Environment variable and stdin JSON parsing
+- ✅ Memory file validation integration
+- ✅ Telemetry logging to `.meridian/telemetry.jsonl`
+- ✅ `tests/test-hooks.sh` - Complete test suite (7/7 passing)
+- ✅ `.claude/hooks/README.md` - Full hook system documentation
 
 #### G1.4: Telemetry System (JSONL) ⏳
 **Status:** Not Started  
