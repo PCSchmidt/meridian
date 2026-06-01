@@ -36,6 +36,21 @@
           "type": "number",
           "minimum": 0,
           "description": "Duration of the operation in seconds"
+        },
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Phase 2 stub: input tokens consumed. Not captured in Phase 1; field reserved for forward-compatible cost tracking (see MERIDIAN_ARCHITECTURE_DECISIONS.md Decision 4)."
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Phase 2 stub: output tokens produced. Not captured in Phase 1; reserved for cost tracking."
+        },
+        "cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Phase 2 stub: estimated USD cost for the operation. Not captured in Phase 1; reserved for cost tracking."
         }
       }
     }

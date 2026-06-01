@@ -110,16 +110,28 @@ Meridian is a next-generation agent harness framework that improves upon Syntari
    - Not just Claude - human-readable error messages
    - Logged to telemetry for later analysis
 
+**Deferred to Phase 2 (was "Must Have", reclassified 2026-06-01):**
+
 5. **Real-time cost tracking**
    - Token usage per session
    - Cost per gate
    - Budget warnings
+   - **Why deferred:** Cost capture requires a token-usage data source from the
+     Claude Code session that the Phase 1 hook layer does not yet expose. The
+     telemetry schema carries optional `input_tokens` / `output_tokens` /
+     `cost_usd` fields as of Phase 1 (forward-compatible stub), but no capture
+     or `/health` cost section ships until Phase 2. Reclassified from "Must
+     Have v0.1.0" to Phase 2 to keep the documents honest about what is wired.
 
 **Rationale:**
 - **Your main pain point with Syntaris:** "There is no feedback that I'm aware of"
 - This is Meridian's competitive moat over Syntaris
 - Observability is what makes agents debuggable and trustworthy
 - From research: "Observability isn't nice-to-have, it's load-bearing infrastructure"
+
+**Status (2026-06-01):** Items 1–4 shipped in Phase 1 (JSONL telemetry,
+`/health report`, `/status`, hook feedback visibility). Item 5 (cost tracking)
+deferred to Phase 2 as noted above.
 
 **Nice to Have (defer to v0.2.0):**
 - Dashboard UI (web view)

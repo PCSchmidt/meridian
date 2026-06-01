@@ -28,6 +28,8 @@ Gates are enforced by **shell hooks that exit with code 2**, blocking tool execu
 
 **Implication:** Every "must do" becomes a hook, not a prompt instruction.
 
+**Rollout status:** Enforcement is delivered progressively by phase. Phase 1 established the hook infrastructure, exit-code contract (0/1/2), and detection logic — `PreToolUse` currently detects and warns on protected-file and destructive operations but does not yet block. Blocking enforcement (exit 2 for gate dependencies, security rules, and the Gate Evaluator) lands in Phase 2 (G2.1–G2.2) and Phase 5 (G5.1). The principle is the target architecture; the gates close mechanically as each phase ships, and this document will not claim enforcement that isn't yet wired.
+
 ---
 
 ### 2. Self-Improving Through Structured Memory
