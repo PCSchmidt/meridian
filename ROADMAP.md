@@ -177,18 +177,21 @@ Each phase has:
 
 ## Phase 2: Core Hooks & Skills (Weeks 3-5)
 
-**Status:** Not Started  
+**Status:** In Progress (1/6 gates)  
 **Estimated:** 60 hours  
 **Target completion:** 2026-06-25
 
 ### Gates:
 
-#### G2.1: Security Hooks
-**Estimated:** 8 hours  
+#### G2.1: Security Hooks ✅ COMPLETE (2026-06-01)
+**Estimated:** 8 hours | **Actual:** 7 hours | **Calibration:** 1.14x
 **Deliverables:**
-- `block-dangerous.sh` - Blocklist enforcement
-- `.meridian/security-rules.yaml` - Configurable blocklist
-- Tests for SQL injection, hardcoded secrets, destructive commands
+- ✅ `.claude/hooks/block-dangerous.sh` - Rule engine; **first hook that mechanically blocks (exit 2)**. Parses rules via `yq` when present, awk fallback otherwise.
+- ✅ `.meridian/security-rules.yaml` - Configurable blocklist (11 rules: destructive commands, secrets, SQLi) with per-rule `severity: block|warn|off`
+- ✅ Wired into `PreToolUse.sh` — propagates exit 2 for all tools
+- ✅ `tests/test-security.sh` - 14 tests (SQL injection, hardcoded secrets, destructive commands, clean-input pass-through, PreToolUse propagation)
+
+**Design notes:** Deterministic risks (recursive root delete, dd/mkfs, fork bomb, AWS keys, private keys) **block**; heuristic detections (SQLi concat/f-string, generic secret literals, `git reset --hard`) **warn** to avoid false-positive friction. This is the first delivery of the Phase 1 progressive-enforcement promise — `PreToolUse` now exits 2.
 
 #### G2.2: Gate Enforcement Hooks
 **Estimated:** 12 hours  

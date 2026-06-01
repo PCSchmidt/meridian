@@ -60,12 +60,23 @@ main() {
             ;;
 
         Bash)
-            # Check for destructive operations
-            if [[ "$COMMAND" == *"rm -rf"* ]] || [[ "$COMMAND" == *"git reset --hard"* ]]; then
-                warn "Destructive operation detected: $COMMAND"
-            fi
+            # Destructive-operation detection is handled by block-dangerous.sh
+            # (security-rules.yaml), invoked below for all tools.
+            :
             ;;
     esac
+
+    # Security blocklist enforcement (Gate 2.1).
+    # block-dangerous.sh scans COMMAND / Edit-Write content against
+    # .meridian/security-rules.yaml and exits 2 on a deterministic dangerous
+    # operation. We capture its code (|| guards `set -e`) and propagate a block.
+    local sec_rc=0
+    "$SCRIPT_DIR/block-dangerous.sh" || sec_rc=$?
+    if [ "$sec_rc" -eq 2 ]; then
+        info "Tool execution blocked by security rule"
+        timer_end
+        exit 2
+    fi
 
     # Log the operation
     info "Tool execution allowed"
