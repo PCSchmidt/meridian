@@ -55,9 +55,9 @@ Each phase has:
 
 ## Phase 1: Foundation (Weeks 1-2)
 
-**Status:** IN PROGRESS (5/7 gates complete - 71%)  
+**Status:** IN PROGRESS (6/7 gates complete - 86%)  
 **Estimated:** 40 hours  
-**Actual:** 36 hours spent (90% complete)  
+**Actual:** 38 hours spent (95% complete)  
 **Target completion:** 2026-06-11
 
 ### Gates:
@@ -142,14 +142,18 @@ Each phase has:
 - ✅ `--json` machine-readable output mode
 - ✅ `tests/test-health.sh` - Complete test suite (12/12 passing)
 
-#### G1.6: `/status` Command ⏳
-**Status:** Not Started  
+#### G1.6: `/status` Command ✅
+**Status:** COMPLETE  
 **Estimated:** 2 hours  
-**Actual:** —  
+**Actual:** 2 hours  
+**Variance:** 1.0x (on target)  
+**Completed:** 2026-06-01  
 **Deliverables:**
-- Reads FEATURES.json (or equivalent tracking file)
-- Shows completion percentage
-- Lists features done/remaining
+
+- ✅ `scripts/status-report.sh` - Compact session-start status (completed gates, calibration, last activity)
+- ✅ `.claude/skills/status/status.md` - Skill documentation for `/status` command
+- ✅ `--short` one-liner mode and `--json` machine-readable mode
+- ✅ `tests/test-status.sh` - Complete test suite (11/11 passing)
 
 #### G1.7: Phase 1 Integration Test ⏳
 **Status:** Not Started  
