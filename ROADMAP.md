@@ -55,9 +55,9 @@ Each phase has:
 
 ## Phase 1: Foundation (Weeks 1-2)
 
-**Status:** IN PROGRESS (4/7 gates complete - 57%)  
+**Status:** IN PROGRESS (5/7 gates complete - 71%)  
 **Estimated:** 40 hours  
-**Actual:** 30 hours spent (75% complete)  
+**Actual:** 36 hours spent (90% complete)  
 **Target completion:** 2026-06-11
 
 ### Gates:
@@ -126,15 +126,21 @@ Each phase has:
 - ✅ PostToolUse hook updated to use log-event.sh
 - ✅ `tests/test-telemetry.sh` - Complete test suite (8/8 passing)
 
-#### G1.5: `/health report` Command ⏳
-**Status:** Not Started  
+#### G1.5: `/health report` Command ✅
+**Status:** COMPLETE  
 **Estimated:** 6 hours  
-**Actual:** —  
+**Actual:** 6 hours  
+**Variance:** 1.0x (on target)  
+**Completed:** 2026-06-01  
 **Deliverables:**
-- `.claude/skills/health/health.md` - Health skill implementation
-- Reads telemetry.jsonl and memory files
-- Generates gate pass rates, token costs, evaluator trends
-- Displays calibration accuracy (predicted vs actual)
+
+- ✅ `scripts/health-report.sh` - Full health report with four sections (session, gates, memory, telemetry)
+- ✅ `.claude/skills/health/health.md` - Skill documentation for `/health` command
+- ✅ Gate calibration table with operator multiplier trend and color-coded assessment
+- ✅ Memory health summary (pattern confidence distribution, event counts)
+- ✅ Telemetry summary (event breakdown, error rate, top tools)
+- ✅ `--json` machine-readable output mode
+- ✅ `tests/test-health.sh` - Complete test suite (12/12 passing)
 
 #### G1.6: `/status` Command ⏳
 **Status:** Not Started  
