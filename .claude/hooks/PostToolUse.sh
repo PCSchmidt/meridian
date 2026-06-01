@@ -54,36 +54,21 @@ validate_memory_file() {
 }
 
 #######################################
-# Log telemetry event
+# Log telemetry event via log-event.sh
 #######################################
 log_telemetry() {
-    local telemetry_file="$PROJECT_DIR/.meridian/telemetry.jsonl"
-
-    # Only log if telemetry is enabled
     if [ ! -d "$PROJECT_DIR/.meridian" ]; then
         return 0
     fi
 
-    mkdir -p "$(dirname "$telemetry_file")"
+    local log_event_script="$PROJECT_DIR/scripts/log-event.sh"
 
-    # Create telemetry entry (simple version for now)
-    local timestamp
-    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S")
-
-    if command -v jq >/dev/null 2>&1; then
-        # Build JSON entry
-        local entry
-        entry=$(jq -n \
-            --arg ts "$timestamp" \
-            --arg tool "${TOOL_NAME:-unknown}" \
-            --arg hook "$HOOK_NAME" \
-            '{
-                timestamp: $ts,
-                hook: $hook,
-                tool: $tool
-            }')
-
-        echo "$entry" >> "$telemetry_file"
+    if [ -f "$log_event_script" ]; then
+        local outcome="allowed"
+        MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$log_event_script" tool_used \
+            "tool=${TOOL_NAME:-unknown}" \
+            "hook=$HOOK_NAME" \
+            "outcome=$outcome" 2>/dev/null || true
         info "Telemetry logged"
     fi
 }

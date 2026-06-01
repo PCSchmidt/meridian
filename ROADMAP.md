@@ -55,9 +55,9 @@ Each phase has:
 
 ## Phase 1: Foundation (Weeks 1-2)
 
-**Status:** IN PROGRESS (3/7 gates complete - 43%)  
+**Status:** IN PROGRESS (4/7 gates complete - 57%)  
 **Estimated:** 40 hours  
-**Actual:** 24 hours spent (60% complete)  
+**Actual:** 30 hours spent (75% complete)  
 **Target completion:** 2026-06-11
 
 ### Gates:
@@ -111,15 +111,20 @@ Each phase has:
 - ✅ `tests/test-hooks.sh` - Complete test suite (7/7 passing)
 - ✅ `.claude/hooks/README.md` - Full hook system documentation
 
-#### G1.4: Telemetry System (JSONL) ⏳
-**Status:** Not Started  
+#### G1.4: Telemetry System (JSONL) ✅
+**Status:** COMPLETE  
 **Estimated:** 6 hours  
-**Actual:** —  
+**Actual:** 6 hours  
+**Variance:** 1.0x (on target)  
+**Completed:** 2026-06-01  
 **Deliverables:**
-- `.meridian/telemetry.jsonl` structure defined
-- `scripts/log-event.sh` - Append events to telemetry
-- Event schema (gate_blocked, gate_passed, evaluator_verdict, etc.)
-- Test telemetry write and read
+
+- ✅ `.meridian/telemetry-schema.json` - Full event schema (8 event types)
+- ✅ `scripts/log-event.sh` - Append structured events to telemetry.jsonl
+- ✅ `scripts/session.sh` - Session lifecycle management (start/end/id/status)
+- ✅ `scripts/telemetry-query.sh` - Query and summarize telemetry data
+- ✅ PostToolUse hook updated to use log-event.sh
+- ✅ `tests/test-telemetry.sh` - Complete test suite (8/8 passing)
 
 #### G1.5: `/health report` Command ⏳
 **Status:** Not Started  
