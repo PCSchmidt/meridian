@@ -177,7 +177,7 @@ Each phase has:
 
 ## Phase 2: Core Hooks & Skills (Weeks 3-5)
 
-**Status:** In Progress (1/6 gates)  
+**Status:** In Progress (2/6 gates)  
 **Estimated:** 60 hours  
 **Target completion:** 2026-06-25
 
@@ -193,14 +193,18 @@ Each phase has:
 
 **Design notes:** Deterministic risks (recursive root delete, dd/mkfs, fork bomb, AWS keys, private keys) **block**; heuristic detections (SQLi concat/f-string, generic secret literals, `git reset --hard`) **warn** to avoid false-positive friction. This is the first delivery of the Phase 1 progressive-enforcement promise — `PreToolUse` now exits 2.
 
-#### G2.2: Gate Enforcement Hooks
-**Estimated:** 12 hours  
+#### G2.2: Gate Enforcement Hooks ✅ COMPLETE (2026-06-01)
+**Estimated:** 12 hours | **Actual:** 11 hours | **Calibration:** 1.09x
 **Deliverables:**
-- `validate-contract.sh`
-- `validate-spec.sh`
-- `validate-roadmap.sh`
-- `run-tests.sh`
-- `run-evaluator.sh` (calls Gate Evaluator subagent)
+- ✅ `.claude/hooks/validate-contract.sh` - CONTRACT.md required-section validator (configurable via `CONTRACT_REQUIRED_SECTIONS`)
+- ✅ `.claude/hooks/validate-spec.sh` - SPEC.md structure validator (title + sections + min content)
+- ✅ `.claude/hooks/validate-roadmap.sh` - ROADMAP.md gate/status-surface validator
+- ✅ `.claude/hooks/run-tests.sh` - auto-detects runner (bash suites, pytest, cargo, go, npm, make) and blocks (exit 2) on failure
+- ✅ `.claude/hooks/run-evaluator.sh` - **mechanically enforces A003**: `--prepare` writes the evaluator request payload; `--check` blocks a gate unless an independent verdict file clears `verdict==pass` and `score >= EVALUATOR_THRESHOLD` (default 7.0)
+- ✅ `scripts/gate-engine.sh verify <gate>` - new command runs a gate's `hooks.pre` in order and blocks (exit 2) on the first failure (yq parse + awk fallback); logs `gate_blocked` telemetry
+- ✅ `tests/test-gate-enforcement.sh` - 19 tests
+
+**Honest boundary:** the evaluator *subagent* is invoked by the harness/skill layer (Claude Code's Task/Agent tool) — a bash hook cannot spawn a subagent. `run-evaluator.sh` owns and enforces the *verdict contract* around it, which is what makes the generator-evaluator separation mechanical rather than advisory.
 
 #### G2.3: Memory Management Hooks
 **Estimated:** 6 hours  

@@ -326,6 +326,94 @@ mark_gate_passed() {
 }
 
 #######################################
+# Extract a gate's pre-hooks (hooks.pre) from gates.yaml.
+# Arguments: $1 - gate id
+# Emits: one hook script name per line (yq when available, awk fallback).
+#######################################
+get_pre_hooks() {
+    local gate_id="$1"
+
+    if command -v yq >/dev/null 2>&1; then
+        yq eval ".gates[] | select(.id == \"$gate_id\") | .hooks.pre[]" "$GATES_FILE" 2>/dev/null \
+            | grep -v '^null$' || true
+        return 0
+    fi
+
+    # Fallback: line-based awk parser for the regular 2-space-indent format.
+    awk -v target="$gate_id" '
+        /^[[:space:]]*-[[:space:]]+id:/ {
+            id=$0; sub(/^[^:]*:[[:space:]]*/, "", id);
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", id);
+            cur=(id==target); inpre=0; next
+        }
+        cur && /^[[:space:]]+pre:[[:space:]]*$/ { inpre=1; next }
+        cur && inpre && /^[[:space:]]+-[[:space:]]+/ {
+            h=$0; sub(/^[[:space:]]+-[[:space:]]+/, "", h);
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", h); print h; next
+        }
+        cur && inpre && /^[[:space:]]+[A-Za-z_]+:/ { inpre=0 }
+    ' "$GATES_FILE"
+}
+
+#######################################
+# Resolve a hook name to an executable path (.claude/hooks then scripts).
+# Arguments: $1 - hook script name
+# Echoes resolved path, or nothing if not found.
+#######################################
+resolve_hook() {
+    local name="$1"
+    local base="${MERIDIAN_PROJECT_DIR:-.}"
+    if [ -f "$base/.claude/hooks/$name" ]; then
+        echo "$base/.claude/hooks/$name"
+    elif [ -f "$base/scripts/$name" ]; then
+        echo "$base/scripts/$name"
+    fi
+}
+
+#######################################
+# Verify a gate: run its hooks.pre in order; block (exit 2) if any fails.
+# This is the mechanical gate-enforcement entrypoint (Gate 2.2). It does NOT
+# mark the gate passed - run mark-passed after a clean verify.
+# Arguments: $1 - gate id
+#######################################
+verify_gate() {
+    local gate_id="$1"
+    check_gates_file
+
+    local log_event="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-event.sh"
+    local hooks
+    hooks=$(get_pre_hooks "$gate_id")
+
+    if [ -z "$hooks" ]; then
+        success "Gate '$gate_id' has no pre-hooks to verify"
+        return 0
+    fi
+
+    local hook path rc=0
+    while IFS= read -r hook; do
+        [ -n "$hook" ] || continue
+        path=$(resolve_hook "$hook")
+        if [ -z "$path" ]; then
+            warn "Pre-hook '$hook' not found (skipping) - install it under .claude/hooks/ or scripts/"
+            continue
+        fi
+        echo -e "${YELLOW}→${NC} running pre-hook: $hook" >&2
+        rc=0
+        bash "$path" >&2 || rc=$?
+        if [ "$rc" -eq 2 ]; then
+            [ -f "$log_event" ] && bash "$log_event" gate_blocked gate="$gate_id" \
+                reason="pre-hook $hook failed" >/dev/null 2>&1 || true
+            error "Gate '$gate_id' verification FAILED: pre-hook '$hook' blocked (exit 2)" 2
+        elif [ "$rc" -ne 0 ]; then
+            warn "Pre-hook '$hook' exited $rc (non-blocking)"
+        fi
+    done <<< "$hooks"
+
+    success "Gate '$gate_id' verified - all pre-hooks passed"
+    return 0
+}
+
+#######################################
 # Main command dispatcher
 #######################################
 main() {
@@ -353,6 +441,12 @@ main() {
             fi
             mark_gate_passed "$2"
             ;;
+        verify)
+            if [ $# -lt 2 ]; then
+                error "Usage: gate-engine.sh verify <gate-id>"
+            fi
+            verify_gate "$2"
+            ;;
         *)
             echo "Meridian Gate Engine"
             echo ""
@@ -361,6 +455,7 @@ main() {
             echo "  gate-engine.sh check-circular        Detect circular dependencies"
             echo "  gate-engine.sh current               Get current active gate"
             echo "  gate-engine.sh can-proceed <gate-id> Check if gate can proceed"
+            echo "  gate-engine.sh verify <gate-id>      Run gate pre-hooks (block on failure)"
             echo "  gate-engine.sh mark-passed <gate-id> Mark gate as passed"
             echo ""
             echo "Dependencies (optional but recommended):"
