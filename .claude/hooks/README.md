@@ -122,16 +122,32 @@ All hook activity is logged to:
 
 ## Telemetry
 
-PostToolUse hook logs telemetry to:
+PostToolUse hook logs telemetry via `scripts/log-event.sh` to:
 
-```
+```text
 .meridian/telemetry.jsonl
 ```
 
-**Format:** One JSON object per line
+**Format:** One JSON object per line. Eight event types defined in `.meridian/telemetry-schema.json`:
+
 ```json
-{"timestamp":"2026-05-28T17:00:05Z","hook":"PostToolUse","tool":"Edit"}
-{"timestamp":"2026-05-28T17:00:10Z","hook":"PostToolUse","tool":"Bash"}
+{"timestamp":"2026-06-01T18:00:00Z","event_type":"tool_used","session_id":"6a1dc5ea","project":"meridian","tool":"Edit","hook":"PostToolUse","outcome":"allowed"}
+{"timestamp":"2026-06-01T18:00:05Z","event_type":"gate_passed","session_id":"6a1dc5ea","project":"meridian","gate":"1.4","predicted_hours":6,"actual_hours":6}
+{"timestamp":"2026-06-01T18:00:10Z","event_type":"error","session_id":"6a1dc5ea","project":"meridian","message":"validation failed","error_code":"MEM_ERR"}
+```
+
+**All events share base fields:** `timestamp`, `event_type`, `session_id`, `project`
+
+**Event types:** `session_start`, `session_end`, `gate_passed`, `gate_blocked`, `tool_used`, `evaluator_verdict`, `memory_write`, `error`
+
+**Query telemetry:**
+
+```bash
+bash scripts/telemetry-query.sh summary   # Overall stats
+bash scripts/telemetry-query.sh gates     # Gate pass/fail history
+bash scripts/telemetry-query.sh tools     # Most used tools
+bash scripts/telemetry-query.sh errors    # Error events
+bash scripts/telemetry-query.sh tail 20   # Last 20 events
 ```
 
 ---

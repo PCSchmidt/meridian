@@ -4,7 +4,7 @@
 
 **Review process:** Quarterly review to check if assumptions are still valid. Remove assumptions when model updates eliminate the underlying failure mode.
 
-**Last reviewed:** 2026-05-28
+**Last reviewed:** 2026-06-01
 
 ---
 
@@ -18,9 +18,9 @@
 
 **Review trigger:** Model reliably self-limits scope without the constraint. Evidence: successful multi-feature implementations across 10+ sessions without context overflow.
 
-**Last reviewed:** 2026-05-28
+**Last reviewed:** 2026-06-01 (Q2 review — no change, still necessary)
 
-**Status:** ACTIVE - Still necessary as of Claude Sonnet 4.5
+**Status:** ACTIVE — Still necessary as of Claude Sonnet 4.6
 
 ---
 
@@ -34,9 +34,9 @@
 
 **Review trigger:** Model reliably respects markdown task lists without modification across 10+ sessions. Evidence: no false completion markers, no deleted entries, no format corruption.
 
-**Last reviewed:** 2026-05-28
+**Last reviewed:** 2026-06-01 (Q2 review — no change, still necessary)
 
-**Status:** ACTIVE - Still necessary as of Claude Sonnet 4.5
+**Status:** ACTIVE — Still necessary as of Claude Sonnet 4.6
 
 ---
 
@@ -52,9 +52,9 @@
 
 **Review trigger:** Model reliably self-evaluates critically without separation. Evidence: same-session evaluation scores match or exceed adversarial evaluation harshness across 10+ evaluations.
 
-**Last reviewed:** 2026-05-28
+**Last reviewed:** 2026-06-01 (Q2 review — no change, still necessary)
 
-**Status:** ACTIVE - Validated by experiment, proceed with implementation
+**Status:** ACTIVE — Validated by experiment, proceed with implementation
 
 **Experiment reference:** `experiment/GENERATOR_EVALUATOR_VALIDATION.md`
 
@@ -77,7 +77,7 @@ When you discover a failure mode that requires a harness rule, add it here:
 ## Review Process
 
 **Quarterly schedule:**
-- **Q2 2026** (Jun 1) - First review
+- **Q2 2026** (Jun 1) - First review ✅ Completed 2026-06-01 — all 3 assumptions still ACTIVE (Claude Sonnet 4.6)
 - **Q3 2026** (Sep 1)
 - **Q4 2026** (Dec 1)
 - **Q1 2027** (Mar 1)
