@@ -55,10 +55,11 @@ Each phase has:
 
 ## Phase 1: Foundation (Weeks 1-2)
 
-**Status:** IN PROGRESS (6/7 gates complete - 86%)  
+**Status:** COMPLETE (7/7 gates - 100%)  
 **Estimated:** 40 hours  
-**Actual:** 38 hours spent (95% complete)  
-**Target completion:** 2026-06-11
+**Actual:** 40 hours  
+**Variance:** 1.0x (on target)  
+**Completed:** 2026-06-01
 
 ### Gates:
 
@@ -155,17 +156,22 @@ Each phase has:
 - ✅ `--short` one-liner mode and `--json` machine-readable mode
 - ✅ `tests/test-status.sh` - Complete test suite (11/11 passing)
 
-#### G1.7: Phase 1 Integration Test ⏳
-**Status:** Not Started  
+#### G1.7: Phase 1 Integration Test ✅
+**Status:** COMPLETE  
 **Estimated:** 2 hours  
-**Actual:** —  
+**Actual:** 2 hours  
+**Variance:** 1.0x (on target)  
+**Completed:** 2026-06-01  
 **Deliverables:**
-- All Phase 1 components working together
-- Gate engine blocks on missing artifacts
-- Memory system validates and deduplicates
-- Hooks log to telemetry
-- `/health report` displays real data
-- Documentation updated
+
+- ✅ `tests/test-integration-phase1.sh` - 8/8 cross-component integration tests
+- ✅ Gate engine validates recipe gates.yaml and manages state (mark-passed)
+- ✅ Session → telemetry pipeline: session_start events logged automatically
+- ✅ log-event.sh → telemetry-query.sh pipeline verified end-to-end
+- ✅ Memory validation passes on all three real memory files
+- ✅ memory-doctor.sh reports no CRITICAL issues
+- ✅ `/health report` aggregates all four data sources coherently
+- ✅ `/health` and `/status` agree on gate count (6 gates)
 
 ---
 
@@ -507,7 +513,7 @@ Each phase has:
 | Phase | Status | Estimated | Actual | Variance | Completion Date |
 |-------|--------|-----------|--------|----------|-----------------|
 | 0. Planning & Validation | ✅ Complete | 8h | 6h | 1.33x | 2026-05-28 |
-| 1. Foundation | 🔄 In Progress | 40h | — | — | 2026-06-11 (target) |
+| 1. Foundation | ✅ Complete | 40h | 40h | 1.0x | 2026-06-01 |
 | 2. Core Hooks & Skills | ⏳ Not Started | 60h | — | — | 2026-06-25 (target) |
 | 3. Multi-Tier Support | ⏳ Not Started | 30h | — | — | 2026-07-09 (target) |
 | 4. Recipes | ⏳ Not Started | 40h | — | — | 2026-07-23 (target) |
