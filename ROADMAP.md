@@ -278,13 +278,18 @@ Each phase has:
 
 ### Gates:
 
-#### G3.1: Gate Evaluator Subagent (the missing producer)
+#### G3.1: Gate Evaluator Subagent (the missing producer) ✅
+**Status:** COMPLETE
 **Estimated:** 10 hours
+**Actual:** 4 hours
+**Variance:** 2.5x (faster than estimated)
+**Completed:** 2026-06-02
 **Deliverables:**
-- `.claude/agents/gate-evaluator.md` — adversarial system prompt + structured JSON output schema (completeness, quality, consistency, spec_adherence scores; PASS/PASS_WITH_WARNINGS/BLOCK recommendation)
-- `/evaluate <gate>` skill — invokes the subagent as a separate Task/Agent call and writes the verdict file that `run-evaluator.sh` already enforces
-- The subagent's prompt explicitly: "You did not produce these artifacts. Do not praise. Score and flag."
-- Tests: a deliberately weak artifact gets BLOCK; a solid one gets PASS; warnings surface correctly
+- ✅ `.claude/agents/gate-evaluator.md` — adversarial system prompt + four-dimension scoring (completeness, quality, consistency, spec_adherence); strict JSON-only output; anti-praise discipline
+- ✅ `.claude/agents/spec-reviewer.md` — spec completeness reviewer for CONTRACT.md/SPEC.md/DECISIONS.md
+- ✅ `.claude/skills/evaluate/evaluate.md` — `/evaluate` skill backed by gate-evaluator subagent
+- ✅ `.claude/skills/review/review.md` — `/review` skill backed by spec-reviewer subagent
+- ✅ `tests/test-skills.sh` updated — 14 skills + agent doc presence tests; 19/19 passing
 
 **Why now:** This is the keystone. Today Meridian enforces the *verdict contract* (gates block without a passing file) but nothing *produces* verdicts. Until this is built, the anti-drift enforcement is structural, not semantic.
 
