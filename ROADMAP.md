@@ -177,7 +177,7 @@ Each phase has:
 
 ## Phase 2: Core Hooks & Skills (Weeks 3-5)
 
-**Status:** In Progress (2/6 gates)  
+**Status:** In Progress (3/6 gates)  
 **Estimated:** 60 hours  
 **Target completion:** 2026-06-25
 
@@ -206,13 +206,16 @@ Each phase has:
 
 **Honest boundary:** the evaluator *subagent* is invoked by the harness/skill layer (Claude Code's Task/Agent tool) — a bash hook cannot spawn a subagent. `run-evaluator.sh` owns and enforces the *verdict contract* around it, which is what makes the generator-evaluator separation mechanical rather than advisory.
 
-#### G2.3: Memory Management Hooks
-**Estimated:** 6 hours  
+#### G2.3: Memory Management Hooks ✅ COMPLETE (2026-06-02)
+**Estimated:** 6 hours | **Actual:** 5 hours | **Calibration:** 1.20x
 **Deliverables:**
-- `write-reflexion.sh` - Appends to corrections.jsonl
-- `validate-memory.sh` - Schema validation on writes
-- `global-memory-sync.sh` - Syncs to ~/.meridian/global/
-- `context-trim.sh` - Trims episodic to last N sessions
+- ✅ `scripts/write-reflexion.sh` - Appends to corrections.jsonl; computes `delta_ratio`/`variance_percent` from predicted vs actual hours, pulls session/project from `session.json`, **write-ahead validates** the entry via `validate-memory.sh` before appending, logs a `memory_write` telemetry event
+- ✅ `scripts/validate-memory.sh` - Schema validation on writes (pre-existing from G1.2; already wired into `PostToolUse.sh`)
+- ✅ `scripts/global-memory-sync.sh` - `push`/`pull`/`status` sync to `~/.meridian/global/`; merges semantic patterns by `hash` and corrections by `(session_id,gate,date,project)` identity (idempotent), keeping JSONL compact
+- ✅ `scripts/context-trim.sh` - Trims `episodic.jsonl` to the last N sessions (ordered by earliest timestamp), archiving older events to `episodic-archive.jsonl`; `--dry-run` and `-n N` modes
+- ✅ `tests/test-memory-hooks.sh` - 14 tests
+
+**Notes:** `validate-memory.sh` was already built and wired in Phase 1, so it is noted as satisfied rather than rebuilt. Two test-assertion fixes were needed for the Windows toolchain: jq emits CRLF (strip `\r` before string compares) and jq 1.7 preserves numeric literals (`6/5` serializes as `1.20`, not `1.2`). CRLF in the `.jsonl` data files is the pre-existing repo norm and was left as-is.
 
 #### G2.4: Core Skills (12+ skills)
 **Estimated:** 24 hours  
