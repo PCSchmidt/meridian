@@ -177,9 +177,8 @@ Each phase has:
 
 ## Phase 2: Core Hooks & Skills (Weeks 3-5)
 
-**Status:** In Progress (5/6 gates)  
-**Estimated:** 60 hours  
-**Target completion:** 2026-06-25
+**Status:** COMPLETE (6/6 gates, 49h/60h, 1.22x avg) — 2026-06-02  
+**Estimated:** 60 hours | **Actual:** 49 hours
 
 ### Gates:
 
@@ -246,13 +245,17 @@ Each phase has:
 
 **Measured payoff:** always-loaded metadata ≈ 725 tokens for all 12 skills vs ≈ 6,494 tokens of full bodies — ~5,769 tokens deferred until a skill is actually invoked.
 
-#### G2.6: Phase 2 Integration Test
-**Estimated:** 6 hours  
+#### G2.6: Phase 2 Integration Test ✅ COMPLETE (2026-06-02)
+**Estimated:** 6 hours | **Actual:** 3 hours | **Calibration:** 2.0x
 **Deliverables:**
-- All hooks working end-to-end (security blocking, gate enforcement, memory validation)
-- All 12 skills invocable; progressive disclosure measured
-- Cross-component: session → telemetry → health → status coherence
-- Full suite: 111+ tests passing
+- ✅ `tests/test-integration-phase2.sh` — 19/19 passing across 6 sections
+- ✅ Security blocking end-to-end: PreToolUse exits 2 on dangerous commands
+- ✅ Gate enforcement pipeline: verify passes/blocks + evaluator contract
+- ✅ Memory hooks pipeline: reflexion write + schema validation + sync idempotency + trim
+- ✅ Skills layer: all 12 docs present, manifest validates
+- ✅ Progressive disclosure: 725t metadata vs 6,494t bodies (~5,769t savings proven)
+- ✅ Phase coherence: health + status agree on ≥9 gates; all 9 prior suites regression-clean
+- ✅ **Total: 130 tests passing** across 10 suites
 
 ---
 
@@ -652,7 +655,7 @@ Each phase has:
 |-------|--------|-----------|--------|----------|-----------------|
 | 0. Planning & Validation | ✅ Complete | 8h | 6h | 1.33x | 2026-05-28 |
 | 1. Foundation | ✅ Complete | 40h | 40h | 1.0x | 2026-06-01 |
-| 2. Core Hooks & Skills | 🔄 5/6 gates | 60h | 46h | 1.17x | 2026-06-25 (target) |
+| 2. Core Hooks & Skills | ✅ Complete | 60h | 49h | 1.22x | 2026-06-02 |
 | 3. Prove the Thesis *(was Phase 5/8, redirected)* | ⏳ Next | 32h | — | — | TBD |
 | 4. Recipes *(was Phase 4, unchanged)* | ⏳ Deferred | 40h | — | — | TBD |
 | 5. Multi-Tier Support *(was Phase 3, deferred)* | ⏳ Deferred | 30h | — | — | TBD |
@@ -663,8 +666,8 @@ Each phase has:
 
 ### Hours Breakdown
 - **Total estimated:** ~290 hours (Phase 3 re-estimated at 32h; other phases unchanged)
-- **Total actual so far:** 92 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 46h)
-- **Remaining:** ~198 hours estimated; Phases 4–8 targets deferred to Phase 3 reassessment gate
+- **Total actual so far:** 95 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h)
+- **Remaining:** ~195 hours estimated; Phases 4–8 targets deferred to Phase 3 reassessment gate
 
 ### Working Pace Assumptions
 - **If full-time (40h/week):** 7.3 weeks remaining
