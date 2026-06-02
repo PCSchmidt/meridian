@@ -76,15 +76,44 @@ Shows memory statistics and trends.
 
 ### `/memory prune`
 
-Trims episodic memory to last N sessions to prevent unbounded growth.
+Trims episodic memory to the last N sessions to prevent unbounded growth. Older
+events are archived (not deleted) to `episodic-archive.jsonl`.
 
-**Default:** Keep last 50 sessions
+```bash
+bash "$PROJECT_DIR/scripts/context-trim.sh" -n 10        # keep last 10 sessions
+bash "$PROJECT_DIR/scripts/context-trim.sh" -n 10 --dry-run
+```
+
+**Default:** Keep last 10 sessions (`EPISODIC_KEEP_SESSIONS`)
 
 ---
 
-### `/memory export`
+### `/memory reflect`
 
-Exports structured memory summary for handoff or backup.
+Append a calibration/reflexion entry to `corrections.jsonl` at gate close —
+computes `delta_ratio` and `variance_percent`, write-ahead validates against the
+schema, and logs a `memory_write` telemetry event.
+
+```bash
+bash "$PROJECT_DIR/scripts/write-reflexion.sh" \
+  --gate <id> --predicted <h> --actual <h> \
+  --root-cause "<why>" --action-next "<next>"
+```
+
+---
+
+### `/memory sync`
+
+Sync local memory with the global cross-project store at `~/.meridian/global/`.
+
+```bash
+bash "$PROJECT_DIR/scripts/global-memory-sync.sh" status   # local vs global counts
+bash "$PROJECT_DIR/scripts/global-memory-sync.sh" push     # merge local -> global
+bash "$PROJECT_DIR/scripts/global-memory-sync.sh" pull     # merge global -> local
+```
+
+Semantic patterns merge by `hash`; corrections merge by
+`(session_id, gate, date, project)` identity, so repeated pushes are idempotent.
 
 ---
 
@@ -115,9 +144,9 @@ When user invokes `/memory doctor`:
   - `.meridian/memory/episodic.jsonl` - Session events
   - `.meridian/memory/corrections.jsonl` - Reflexion entries
 
-- **Global:**
-  - `~/.meridian/global/semantic_global.json` - Cross-project patterns
-  - `~/.meridian/global/stats.json` - Operator multiplier, calibration
+- **Global** (managed by `global-memory-sync.sh`):
+  - `~/.meridian/global/semantic.json` - Cross-project patterns (merged by hash)
+  - `~/.meridian/global/corrections.jsonl` - Cross-project calibration entries
 
 ---
 
@@ -141,5 +170,5 @@ If corruption detected:
 
 ---
 
-**Status:** Basic implementation complete (Gate 1.2)  
-**Enhanced features:** Coming in Phase 2 (visualization, advanced queries)
+**Status:** Complete — validation + doctor (Gate 1.2); reflexion writer, global
+sync, and episodic trim (Gate 2.3); skill commands wired (Gate 2.4)

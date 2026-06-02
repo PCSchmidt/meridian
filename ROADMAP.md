@@ -177,7 +177,7 @@ Each phase has:
 
 ## Phase 2: Core Hooks & Skills (Weeks 3-5)
 
-**Status:** In Progress (3/6 gates)  
+**Status:** In Progress (4/6 gates)  
 **Estimated:** 60 hours  
 **Target completion:** 2026-06-25
 
@@ -217,21 +217,24 @@ Each phase has:
 
 **Notes:** `validate-memory.sh` was already built and wired in Phase 1, so it is noted as satisfied rather than rebuilt. Two test-assertion fixes were needed for the Windows toolchain: jq emits CRLF (strip `\r` before string compares) and jq 1.7 preserves numeric literals (`6/5` serializes as `1.20`, not `1.2`). CRLF in the `.jsonl` data files is the pre-existing repo norm and was left as-is.
 
-#### G2.4: Core Skills (12+ skills)
-**Estimated:** 24 hours  
-**Deliverables:**
-- `/start` - Session initialization
-- `/health` - Health reporting with `--review-patterns`
-- `/memory` - Memory management (show, doctor, stats)
-- `/status` - Project status
-- `/deploy` - Deployment workflow
-- `/security` - Security audit
-- `/testing` - Test management
-- `/costs` - Cost tracking
-- `/rollback` - Rollback to last gate
-- `/build-rules` - Build workflow (adapted from Syntaris)
-- `/critical-thinker` - Decision pressure-testing
-- `/research` - Research automation
+#### G2.4: Core Skills (12+ skills) ✅ COMPLETE (2026-06-02)
+**Estimated:** 24 hours | **Actual:** 20 hours | **Calibration:** 1.20x
+**Deliverables (12 skill docs in `.claude/skills/`):**
+- ✅ `/start` - session bootstrap → `scripts/start-session.sh` (resume/new, status, gate, memory check)
+- ✅ `/health` - health reporting (pre-existing, G1.5)
+- ✅ `/memory` - memory mgmt; **refreshed** for G2.3 (added `prune`→context-trim, `reflect`→write-reflexion, `sync`→global-memory-sync; fixed stale global file paths)
+- ✅ `/status` - project status (pre-existing, G1.6)
+- ✅ `/deploy` - **orchestration** skill: composes run-tests → security-audit → run-evaluator → gate verify/mark-passed (deploy automation is end-user scope)
+- ✅ `/security` - security audit → `scripts/security-audit.sh` (rules + telemetry events) over G2.1 enforcement
+- ✅ `/testing` - test mgmt → wraps `run-tests.sh` + `run-evaluator.sh`
+- ✅ `/costs` - cost report → `scripts/cost-report.sh` (aggregates the reserved stub fields; honest zero until a token source is wired)
+- ✅ `/rollback` - rollback gate state → `scripts/rollback-gate.sh` (--list/--to/--dry-run, backup + git guidance)
+- ✅ `/build-rules` - **process** skill: gate DAG authoring over `gate-engine.sh` + recipes
+- ✅ `/critical-thinker` - **process** skill: decision pressure-test paired with ASSUMPTIONS.md
+- ✅ `/research` - **process** skill: memory-first research workflow
+- ✅ `tests/test-skills.sh` - 14 tests (doc presence + 4 backing scripts)
+
+**Honest scope:** four skills wrap new backing scripts (start, security, costs, rollback); two wrap existing G2.2 hooks (testing, deploy-orchestration); three are inherently prompt/process skills with no script (build-rules, critical-thinker, research); three pre-existed (health, memory, status). `/costs` aggregation is wired but capture awaits a token source (Decision 4); `/deploy` orchestrates gates but does not ship stack-specific deploy automation.
 
 #### G2.5: Skill Progressive Disclosure
 **Estimated:** 4 hours  
