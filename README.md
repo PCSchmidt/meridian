@@ -39,8 +39,8 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 |-------|--------|-----------|--------|
 | 0. Planning & Validation | ✅ Complete | 8h | 6h |
 | 1. Foundation | ✅ Complete | 40h | 40h |
-| 2. Core Hooks & Skills | 🔄 5/6 gates | 60h | 46h |
-| 3. Prove the Thesis *(redirected — evaluator, drift sensor, real-project validation)* | ⏳ Next | 32h | — |
+| 2. Core Hooks & Skills | ✅ Complete | 60h | 46h |
+| 3. Prove the Thesis *(redirected — evaluator, drift sensor, real-project validation)* | 🔄 2/5 gates | 32h | 7h |
 | 4. Recipes | ⏳ Deferred | 40h | — |
 | 5. Multi-Tier Support *(was Phase 3)* | ⏳ Deferred | 30h | — |
 | (former 5) Subagents → merged into Phase 3 | — | — | — |
@@ -48,14 +48,22 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |
 
-### Phase 2 Gates
+### Phase 2 Gates (Complete)
 
 - ✅ G2.1: Security Hooks — `block-dangerous.sh`, first hook that blocks (exit 2)
 - ✅ G2.2: Gate Enforcement Hooks — validators, `run-tests`, `run-evaluator`, `gate-engine verify`
 - ✅ G2.3: Memory Management Hooks — `write-reflexion`, `global-memory-sync`, `context-trim`
 - ✅ G2.4: Core Skills — 12 skill docs + backing scripts
 - ✅ G2.5: Skill Progressive Disclosure — frontmatter metadata + `skill-manifest.sh`
-- ⏳ G2.6: Phase 2 Integration Test
+- ✅ G2.6: Phase 2 Integration Test — 131 tests across 10 suites, all passing
+
+### Phase 3 Gates (In Progress)
+
+- ✅ G3.1: Gate Evaluator Subagent — `gate-evaluator.md`, `spec-reviewer.md`, `/evaluate`, `/review`
+- ✅ G3.2: Lifecycle-Aware Completion — `FEATURES.json`, `features-init.sh`, `features-report.sh`, `/status` upgrade
+- ⏳ G3.3: Continuous Drift Sensor
+- ⏳ G3.4: Calibrate the Judge
+- ⏳ G3.5: Minimal Installer + Real-Project Validation
 
 See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 
@@ -100,6 +108,20 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `scripts/cost-report.sh` | Aggregate token/cost telemetry (reserved stub fields) |
 | `scripts/skill-manifest.sh` | Emit the always-loaded skill metadata layer |
 
+### Phase 3 Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/features-init.sh` | Seed `.meridian/FEATURES.json` from SPEC.md headings |
+| `scripts/features-report.sh` | Two metrics: happy-path % vs full-lifecycle % |
+
+### Subagents (`.claude/agents/`)
+
+| Agent | Purpose |
+|-------|---------|
+| `gate-evaluator.md` | Adversarial 4-dimension scorer; pass/warn/fail verdict |
+| `spec-reviewer.md` | Spec completeness reviewer; gap and contradiction detection |
+
 ### Hook System
 
 | Hook | Purpose |
@@ -114,13 +136,13 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `.claude/hooks/run-tests.sh` | Auto-detect + run tests; blocks on failure |
 | `.claude/hooks/run-evaluator.sh` | Enforce generator-evaluator separation (A003) |
 
-### Skills (12, with progressive-disclosure frontmatter)
+### Skills (14, with progressive-disclosure frontmatter)
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
 | `start` | `/start` | Begin/resume a session, show where you are |
 | `health` | `/health` | Health report: calibration, memory, telemetry |
-| `status` | `/status` | Session-start status: completed gates, current gate |
+| `status` | `/status` | Session-start status: completed gates + lifecycle |
 | `memory` | `/memory` | Memory: doctor, show, stats, prune, reflect, sync |
 | `security` | `/security` | Audit active rules + security telemetry |
 | `testing` | `/testing` | Run tests + check evaluator verdict |
@@ -130,6 +152,8 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `build-rules` | `/build-rules` | Author a project gate DAG |
 | `critical-thinker` | `/critical-thinker` | Pressure-test a decision before it locks |
 | `research` | `/research` | Memory-first research workflow |
+| `evaluate` | `/evaluate` | Invoke gate-evaluator subagent for adversarial scoring |
+| `review` | `/review` | Invoke spec-reviewer subagent for spec completeness |
 
 ### Memory System
 
@@ -164,11 +188,13 @@ recipes/
 
 ## What's Coming
 
-### Remaining in Phase 2
+### Remaining in Phase 3
 
-- [ ] G2.6 — Phase 2 integration test (cross-component end-to-end)
+- [ ] G3.3 — Continuous Drift Sensor (advisory warning light)
+- [ ] G3.4 — Calibrate the Judge (fixture-based discrimination test)
+- [ ] G3.5 — Minimal Installer + Real-Project Validation
 
-### Core Architecture (Phase 3 / 5)
+### Core Architecture (Phase 5)
 
 - [ ] Multi-tier platform support (Claude Code, Cursor/Windsurf, Advisory)
 - [ ] Live in-loop Gate Evaluator **subagent** (G5.1) — the verdict *contract* is already enforced by `run-evaluator.sh`
@@ -182,7 +208,9 @@ recipes/
 - [x] `write-reflexion.sh` — reflexion writer
 - [x] `global-memory-sync.sh` — cross-project pattern sync
 - [x] `context-trim.sh` — episodic memory trimming
-- [x] 12 skills (`/start`, `/deploy`, `/rollback`, `/security`, `/costs`, `/testing`, `/build-rules`, `/critical-thinker`, `/research`, plus `/health`, `/status`, `/memory`) with progressive disclosure
+- [x] 14 skills (`/start`, `/deploy`, `/rollback`, `/security`, `/costs`, `/testing`, `/build-rules`, `/critical-thinker`, `/research`, `/health`, `/status`, `/memory`, `/evaluate`, `/review`) with progressive disclosure
+- [x] `features-init.sh` / `features-report.sh` — lifecycle-aware completion (happy-path % vs full-lifecycle %)
+- [x] `gate-evaluator.md` / `spec-reviewer.md` — adversarial subagents for generator-evaluator separation
 
 ### Recipes (Phase 4)
 

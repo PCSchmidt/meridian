@@ -252,10 +252,10 @@ Each phase has:
 - ✅ Security blocking end-to-end: PreToolUse exits 2 on dangerous commands
 - ✅ Gate enforcement pipeline: verify passes/blocks + evaluator contract
 - ✅ Memory hooks pipeline: reflexion write + schema validation + sync idempotency + trim
-- ✅ Skills layer: all 12 docs present, manifest validates
+- ✅ Skills layer: all 14 docs present, manifest validates
 - ✅ Progressive disclosure: 725t metadata vs 6,494t bodies (~5,769t savings proven)
 - ✅ Phase coherence: health + status agree on ≥9 gates; all 9 prior suites regression-clean
-- ✅ **Total: 130 tests passing** across 10 suites
+- ✅ **Total: 131 tests passing** across 10 suites (prior to Phase 3)
 
 ---
 
@@ -267,9 +267,9 @@ Each phase has:
 > that actually address the core pain (goal drift, false "90% done" completion) —
 > and validates the thesis on a real codebase before investing in breadth.
 
-**Status:** Not Started  
+**Status:** In Progress (G3.1 ✅, G3.2 ✅, G3.3–G3.5 pending)  
 **Estimated:** 32 hours  
-**Target completion:** TBD (begins after G2.6)
+**Actual so far:** 7 hours (G3.1: 4h, G3.2: 3h)
 
 ### North-star test for this phase:
 > On a real, non-trivial codebase: (a) does the evaluator catch a real drift that
