@@ -177,7 +177,7 @@ Each phase has:
 
 ## Phase 2: Core Hooks & Skills (Weeks 3-5)
 
-**Status:** In Progress (4/6 gates)  
+**Status:** In Progress (5/6 gates)  
 **Estimated:** 60 hours  
 **Target completion:** 2026-06-25
 
@@ -236,12 +236,15 @@ Each phase has:
 
 **Honest scope:** four skills wrap new backing scripts (start, security, costs, rollback); two wrap existing G2.2 hooks (testing, deploy-orchestration); three are inherently prompt/process skills with no script (build-rules, critical-thinker, research); three pre-existed (health, memory, status). `/costs` aggregation is wired but capture awaits a token source (Decision 4); `/deploy` orchestrates gates but does not ship stack-specific deploy automation.
 
-#### G2.5: Skill Progressive Disclosure
-**Estimated:** 4 hours  
+#### G2.5: Skill Progressive Disclosure ✅ COMPLETE (2026-06-02)
+**Estimated:** 4 hours | **Actual:** 3 hours | **Calibration:** 1.33x
 **Deliverables:**
-- Skill frontmatter metadata (name, trigger, purpose, tokens_metadata)
-- Body/references sections
-- Skills load on demand
+- ✅ YAML frontmatter on all 12 skill docs: `name, trigger, purpose, type, backing, load, tokens_metadata, references`
+- ✅ Three-tier disclosure: **metadata** (frontmatter, always loaded) → **body** (doc content, `load: on-invocation`) → **references** (the `references:` field — machine-readable on-demand pointers, kept lean instead of duplicate prose sections)
+- ✅ `scripts/skill-manifest.sh` - emits the always-loaded metadata layer (`list` / `--json` / `validate`); CRLF-safe frontmatter parser, computes body-token estimates, `validate` exits 2 on any incomplete frontmatter
+- ✅ `tests/test-skills.sh` extended +4 (frontmatter presence, manifest validate/json, missing-frontmatter detection) → 18 tests
+
+**Measured payoff:** always-loaded metadata ≈ 725 tokens for all 12 skills vs ≈ 6,494 tokens of full bodies — ~5,769 tokens deferred until a skill is actually invoked.
 
 #### G2.6: Phase 2 Integration Test
 **Estimated:** 6 hours  

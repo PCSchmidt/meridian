@@ -1,3 +1,14 @@
+---
+name: health
+trigger: /health
+purpose: Generate an engineer-legible health report for the project
+type: wired
+backing: scripts/health-report.sh
+load: on-invocation
+tokens_metadata: 60
+references: scripts/health-report.sh, scripts/telemetry-query.sh
+---
+
 # Health Skill
 
 **Skill:** health  

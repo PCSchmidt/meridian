@@ -1,3 +1,14 @@
+---
+name: critical-thinker
+trigger: /critical-thinker
+purpose: Pressure-test a significant decision before it locks
+type: process
+backing: process (no script)
+load: on-invocation
+tokens_metadata: 55
+references: ASSUMPTIONS.md, MERIDIAN_ARCHITECTURE_DECISIONS.md
+---
+
 # Critical Thinker Skill
 
 **Skill:** critical-thinker

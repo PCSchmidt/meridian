@@ -1,3 +1,14 @@
+---
+name: status
+trigger: /status
+purpose: Quick where-am-I report for session start
+type: wired
+backing: scripts/status-report.sh
+load: on-invocation
+tokens_metadata: 55
+references: scripts/status-report.sh
+---
+
 # Status Skill
 
 **Skill:** status  

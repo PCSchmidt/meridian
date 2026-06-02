@@ -1,3 +1,14 @@
+---
+name: testing
+trigger: /testing
+purpose: Run the project tests and surface gate test and evaluation status
+type: wired
+backing: .claude/hooks/run-tests.sh
+load: on-invocation
+tokens_metadata: 65
+references: .claude/hooks/run-tests.sh, .claude/hooks/run-evaluator.sh
+---
+
 # Testing Skill
 
 **Skill:** testing

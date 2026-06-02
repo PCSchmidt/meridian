@@ -1,3 +1,14 @@
+---
+name: start
+trigger: /start
+purpose: Begin or resume a work session and show where you are
+type: wired
+backing: scripts/start-session.sh
+load: on-invocation
+tokens_metadata: 60
+references: scripts/start-session.sh, scripts/status-report.sh, scripts/session.sh
+---
+
 # Start Skill
 
 **Skill:** start

@@ -162,6 +162,41 @@ test_cost_sums_when_present() {
 }
 
 #######################################
+# Progressive disclosure (Gate 2.5)
+#######################################
+test_all_docs_frontmatter() {
+    echo ""; echo "Test: all 12 skill docs begin with YAML frontmatter"
+    local bad="" s
+    for s in start health memory status deploy security testing costs rollback build-rules critical-thinker research; do
+        head -1 "$SKILLS/$s/$s.md" | tr -d '\r' | grep -qx -- '---' || bad="${bad:+$bad }$s"
+    done
+    [ -z "$bad" ] && pass "All docs start with frontmatter" || fail "No frontmatter: $bad"
+}
+
+test_manifest_validate() {
+    echo ""; echo "Test: skill-manifest validate passes on complete frontmatter"
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$SCRIPTS/skill-manifest.sh" validate)
+    [ "$rc" -eq 0 ] && pass "Manifest validate exit 0" || fail "Expected 0, got $rc"
+}
+
+test_manifest_json() {
+    echo ""; echo "Test: skill-manifest --json lists 12 skills, tokens_metadata numeric"
+    local out n nums
+    out=$(MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$SCRIPTS/skill-manifest.sh" --json 2>/dev/null)
+    n=$(echo "$out" | jq 'length' 2>/dev/null)
+    nums=$(echo "$out" | jq '[.[] | select(.tokens_metadata|type=="number")] | length' 2>/dev/null)
+    [ "$n" = "12" ] && [ "$nums" = "12" ] && pass "12 skills, all tokens_metadata numeric" || fail "n=$n nums=$nums"
+}
+
+test_manifest_detects_missing() {
+    echo ""; echo "Test: skill-manifest validate blocks a doc missing frontmatter"
+    local p; p=$(mktemp -d "$WORK/p.XXXXXX"); mkdir -p "$p/.claude/skills/bad"
+    printf '# Bad Skill\n\nNo frontmatter here.\n' > "$p/.claude/skills/bad/bad.md"
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/skill-manifest.sh" validate)
+    [ "$rc" -eq 2 ] && pass "Missing frontmatter -> exit 2" || fail "Expected 2, got $rc"
+}
+
+#######################################
 # Runner
 #######################################
 main() {
@@ -183,6 +218,10 @@ main() {
     test_audit_full
     test_cost_json
     test_cost_sums_when_present
+    test_all_docs_frontmatter
+    test_manifest_validate
+    test_manifest_json
+    test_manifest_detects_missing
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

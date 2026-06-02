@@ -1,3 +1,14 @@
+---
+name: rollback
+trigger: /rollback
+purpose: Revert the gate state to an earlier gate
+type: wired
+backing: scripts/rollback-gate.sh
+load: on-invocation
+tokens_metadata: 60
+references: scripts/rollback-gate.sh, scripts/gate-engine.sh
+---
+
 # Rollback Skill
 
 **Skill:** rollback

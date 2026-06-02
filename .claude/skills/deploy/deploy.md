@@ -1,3 +1,14 @@
+---
+name: deploy
+trigger: /deploy
+purpose: Orchestrate the pre-deploy gate sequence before shipping
+type: orchestration
+backing: orchestration (no single script)
+load: on-invocation
+tokens_metadata: 60
+references: .claude/hooks/run-tests.sh, scripts/security-audit.sh, .claude/hooks/run-evaluator.sh, scripts/gate-engine.sh
+---
+
 # Deploy Skill
 
 **Skill:** deploy

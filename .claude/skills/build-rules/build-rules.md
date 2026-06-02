@@ -1,3 +1,14 @@
+---
+name: build-rules
+trigger: /build-rules
+purpose: Define a project gate DAG before any code is written
+type: process
+backing: process (no script)
+load: on-invocation
+tokens_metadata: 55
+references: scripts/gate-engine.sh, .meridian/gate-schema.yaml, recipes/
+---
+
 # Build Rules Skill
 
 **Skill:** build-rules

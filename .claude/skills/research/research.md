@@ -1,3 +1,14 @@
+---
+name: research
+trigger: /research
+purpose: Run memory-first competitive and framework research
+type: process
+backing: process (no script)
+load: on-invocation
+tokens_metadata: 55
+references: scripts/memory-doctor.sh, scripts/global-memory-sync.sh
+---
+
 # Research Skill
 
 **Skill:** research

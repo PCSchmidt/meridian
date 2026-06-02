@@ -1,3 +1,14 @@
+---
+name: costs
+trigger: /costs
+purpose: Report token usage and estimated spend from telemetry
+type: wired
+backing: scripts/cost-report.sh
+load: on-invocation
+tokens_metadata: 60
+references: scripts/cost-report.sh, .meridian/telemetry-schema.json, MERIDIAN_ARCHITECTURE_DECISIONS.md
+---
+
 # Costs Skill
 
 **Skill:** costs

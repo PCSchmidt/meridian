@@ -1,3 +1,14 @@
+---
+name: security
+trigger: /security
+purpose: Audit the security blocklist and what it has caught
+type: wired
+backing: scripts/security-audit.sh
+load: on-invocation
+tokens_metadata: 65
+references: scripts/security-audit.sh, .claude/hooks/block-dangerous.sh, .meridian/security-rules.yaml
+---
+
 # Security Skill
 
 **Skill:** security

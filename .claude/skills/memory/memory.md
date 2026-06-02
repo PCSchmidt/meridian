@@ -1,3 +1,14 @@
+---
+name: memory
+trigger: /memory
+purpose: Manage and validate the three-tier memory system
+type: wired
+backing: scripts/validate-memory.sh
+load: on-invocation
+tokens_metadata: 75
+references: scripts/validate-memory.sh, scripts/memory-doctor.sh, scripts/write-reflexion.sh, scripts/global-memory-sync.sh, scripts/context-trim.sh
+---
+
 # Memory Management Skill
 
 **Skill:** memory  
