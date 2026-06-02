@@ -1,0 +1,23 @@
+{
+  "gate": "lifecycle_tracking",
+  "session_id": "calibration-g3.4",
+  "timestamp": "2026-06-02T14:00:00Z",
+  "evaluator": "gate-evaluator",
+  "artifacts_reviewed": ["SPEC.md", "FEATURES.json"],
+  "scores": {
+    "completeness": 9,
+    "quality": 8,
+    "consistency": 9,
+    "spec_adherence": 8
+  },
+  "overall": 8.5,
+  "issues": [
+    {
+      "artifact": "FEATURES.json",
+      "severity": "low",
+      "description": "delete-task and complete-task have not advanced past happy_path — expected for an active project but worth noting for gate closure."
+    }
+  ],
+  "verdict": "pass",
+  "notes": "All four CONTRACT features are present and tracked. FEATURES.json IDs map directly to SPEC sections. The one low issue does not block passage — it reflects work in progress, not missing tracking."
+}

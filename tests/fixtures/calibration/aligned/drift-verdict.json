@@ -1,0 +1,9 @@
+{
+  "session_id": "calibration-g3.4",
+  "timestamp": "2026-06-02T14:00:00Z",
+  "evaluator": "drift-evaluator",
+  "alignment_score": 8,
+  "divergences": [],
+  "recommendation": "aligned",
+  "summary": "FEATURES.json contains exactly the four features named in CONTRACT scope; no out-of-scope work present. Lifecycle progress is realistic for a mid-gate project — add-task is furthest along, complete-task has only happy_path, which is consistent with a project in active development rather than one hiding scope."
+}

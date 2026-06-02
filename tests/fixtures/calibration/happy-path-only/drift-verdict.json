@@ -1,0 +1,15 @@
+{
+  "session_id": "calibration-g3.4",
+  "timestamp": "2026-06-02T14:10:00Z",
+  "evaluator": "drift-evaluator",
+  "alignment_score": 7,
+  "divergences": [
+    {
+      "type": "feature_lag",
+      "description": "All 4 features report only happy_path=true; integration, edge_cases, error_handling, and hardening are all false — lifecycle depth is shallower than a production-ready CLI contract implies.",
+      "severity": "medium"
+    }
+  ],
+  "recommendation": "warn",
+  "summary": "No scope creep detected — FEATURES.json contains exactly the four contracted features. However, all four report only happy_path; the CONTRACT acceptance criteria require integration tests before release, which no feature has reached."
+}

@@ -1,0 +1,25 @@
+{
+  "session_id": "calibration-g3.4",
+  "timestamp": "2026-06-02T14:05:00Z",
+  "evaluator": "drift-evaluator",
+  "alignment_score": 3,
+  "divergences": [
+    {
+      "type": "scope_creep",
+      "description": "user-auth appears in FEATURES.json with happy_path and integration true; CONTRACT explicitly lists authentication as out of scope.",
+      "severity": "high"
+    },
+    {
+      "type": "scope_creep",
+      "description": "network-sync appears in FEATURES.json with happy_path true; CONTRACT explicitly lists network sync as out of scope.",
+      "severity": "high"
+    },
+    {
+      "type": "feature_lag",
+      "description": "delete-task and complete-task have happy_path=false while out-of-scope work has advanced — in-scope work deprioritized in favor of CONTRACT violations.",
+      "severity": "medium"
+    }
+  ],
+  "recommendation": "drifted",
+  "summary": "Two CONTRACT scope exclusions (auth, network sync) are actively tracked in FEATURES.json with lifecycle progress, while two contracted features (delete-task, complete-task) have stalled at happy_path=false. Implementation has substantially departed from commitments."
+}

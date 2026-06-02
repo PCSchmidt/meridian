@@ -324,13 +324,22 @@ Each phase has:
 
 **Why this is novel:** The original blueprint only checked alignment at gate boundaries. Your specific pain — *subtle drift that compounds inside a gate* — requires a signal that fires more frequently than once per checkpoint.
 
-#### G3.4: Calibrate the Judge
+#### G3.4: Calibrate the Judge ✅
+**Status:** COMPLETE
 **Estimated:** 2 hours
+**Actual:** 1.5 hours
+**Variance:** 1.33x (faster than estimated)
+**Completed:** 2026-06-02
 **Deliverables:**
-- Fixture set: (a) known-aligned state, (b) deliberately drifted state, (c) happy-path-only state
-- Run G3.1 evaluator and G3.3 drift sensor against all three fixtures; record discrimination results
-- Documented evidence: judges separate good from bad without excessive false positives
-- Any tuning decisions recorded in `ASSUMPTIONS.md`
+- ✅ `tests/fixtures/calibration/aligned/` — 4 contracted features, lifecycle progressing, no out-of-scope work
+- ✅ `tests/fixtures/calibration/drifted/` — 2 CONTRACT exclusions (auth, sync) actively tracked; 2 contracted features stalled
+- ✅ `tests/fixtures/calibration/happy-path-only/` — 4 features, all happy_path=true, all other states false
+- ✅ Pre-computed verdicts: both evaluators run against all 3 fixtures; scores and verdicts recorded
+- ✅ `CALIBRATION.md` — discrimination table + 4 key findings
+- ✅ `tests/test-calibration.sh` — 21/21 passing; discrimination asserted
+- ✅ `ASSUMPTIONS.md` A004 — drift threshold validated; tuning decisions recorded
+
+**Key findings:** Drift sensor delta = 5 pts (aligned 8 vs drifted 3). Gate evaluator delta = 4.9 pts (8.5 vs 3.6). No false positives on aligned fixture. Gate evaluator provides stronger signal on happy-path-only (5.95) than drift sensor (7.0) — gate is the right tool for lifecycle depth; drift sensor is right for scope creep.
 
 **Why before blocking:** Don't trust an anti-drift tool that hasn't been shown to detect drift.
 

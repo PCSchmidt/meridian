@@ -1,0 +1,38 @@
+{
+  "gate": "lifecycle_tracking",
+  "session_id": "calibration-g3.4",
+  "timestamp": "2026-06-02T14:05:00Z",
+  "evaluator": "gate-evaluator",
+  "artifacts_reviewed": ["SPEC.md", "FEATURES.json"],
+  "scores": {
+    "completeness": 4,
+    "quality": 5,
+    "consistency": 2,
+    "spec_adherence": 3
+  },
+  "overall": 3.6,
+  "issues": [
+    {
+      "artifact": "FEATURES.json",
+      "severity": "high",
+      "description": "user-auth feature tracked with lifecycle progress; absent from SPEC.md and explicitly excluded by CONTRACT."
+    },
+    {
+      "artifact": "FEATURES.json",
+      "severity": "high",
+      "description": "network-sync feature tracked with lifecycle progress; absent from SPEC.md and explicitly excluded by CONTRACT."
+    },
+    {
+      "artifact": "FEATURES.json",
+      "severity": "medium",
+      "description": "delete-task has happy_path=false — no lifecycle progress recorded for a contracted feature."
+    },
+    {
+      "artifact": "FEATURES.json",
+      "severity": "medium",
+      "description": "complete-task has happy_path=false — no lifecycle progress recorded for a contracted feature."
+    }
+  ],
+  "verdict": "fail",
+  "notes": "FEATURES.json directly contradicts CONTRACT scope: two explicitly excluded features have active lifecycle tracking while two required features show no progress. This is not a tracking gap — it is tracking the wrong work."
+}

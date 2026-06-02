@@ -1,0 +1,28 @@
+{
+  "gate": "lifecycle_tracking",
+  "session_id": "calibration-g3.4",
+  "timestamp": "2026-06-02T14:10:00Z",
+  "evaluator": "gate-evaluator",
+  "artifacts_reviewed": ["SPEC.md", "FEATURES.json"],
+  "scores": {
+    "completeness": 7,
+    "quality": 4,
+    "consistency": 8,
+    "spec_adherence": 5
+  },
+  "overall": 5.95,
+  "issues": [
+    {
+      "artifact": "FEATURES.json",
+      "severity": "medium",
+      "description": "0 of 4 features have integration=true; CONTRACT acceptance criteria explicitly require integration tests before release."
+    },
+    {
+      "artifact": "FEATURES.json",
+      "severity": "medium",
+      "description": "Full-lifecycle completion is 0% — no feature has advanced past happy_path despite all four being 'tracked' as present."
+    }
+  ],
+  "verdict": "warn",
+  "notes": "Tracking coverage is complete (4/4 features present, correct ids) but lifecycle depth is uniformly shallow. The 100% happy-path / 0% full-lifecycle gap means this looks 'done' on a surface count but does not satisfy CONTRACT acceptance criteria."
+}

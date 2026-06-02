@@ -66,6 +66,35 @@
 
 ---
 
+## A004: Drift sensor threshold at alignment_score < 5 for blocking
+
+**Failure mode:** A drift sensor with the wrong threshold either misses real drift (too lenient)
+or fires on healthy in-progress projects (too strict), becoming bureaucracy that engineers route
+around.
+
+**Source:** Meridian G3.4 calibration experiment, 2026-06-02. Three fixtures: aligned (score 8),
+drifted (score 3), happy-path-only (score 7). Threshold at < 5 correctly distinguishes all three.
+
+**Rule:** Use `alignment_score < 5` → `drifted` (block candidate) and `alignment_score < 7` →
+`warn` (advisory) as the drift sensor verdict thresholds. Do not promote the drift sensor to
+blocking without re-running calibration if the scoring rubric changes.
+
+**Implementation status:** ACTIVE. Thresholds are baked into `drift-evaluator.md` verdict rules.
+Drift sensor is currently advisory only (G3.3). Promotion to blocking requires operator decision
+after real-project validation (G3.5).
+
+**Review trigger:** Drift sensor produces false positives (aligned projects score < 5) or misses
+confirmed drift cases (drifted projects score >= 5) in production use. Evidence threshold: 3+
+confirmed errors in either direction.
+
+**Experiment reference:** `CALIBRATION.md`, `tests/test-calibration.sh`
+
+**Last reviewed:** 2026-06-02 (created at G3.4)
+
+**Status:** ACTIVE — Thresholds validated by experiment; promotion to blocking is operator decision.
+
+---
+
 ## How to Add New Assumptions
 
 When you discover a failure mode that requires a harness rule, add it here:
@@ -126,6 +155,6 @@ The goal is not to accumulate assumptions. The goal is to **actively remove** as
 
 ---
 
-**Current active assumptions:** 3  
+**Current active assumptions:** 4  
 **Current deprecated assumptions:** 0  
 **Total removed assumptions:** 0
