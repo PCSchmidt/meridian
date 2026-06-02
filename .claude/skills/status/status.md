@@ -1,12 +1,12 @@
 ---
 name: status
 trigger: /status
-purpose: Quick where-am-I report for session start
+purpose: Quick where-am-I report — gates completed, calibration, lifecycle completion
 type: wired
 backing: scripts/status-report.sh
 load: on-invocation
-tokens_metadata: 55
-references: scripts/status-report.sh
+tokens_metadata: 60
+references: scripts/status-report.sh, scripts/features-report.sh, .meridian/FEATURES.json
 ---
 
 # Status Skill
@@ -44,7 +44,13 @@ Completed gates:
   Summary:             5 gates, avg 0.95x calibration
 
   Last activity:       2026-06-01T18:30:00Z
+
+Feature lifecycle:
+
+  90% happy-path / 50% full-lifecycle  (10 features)
 ```
+
+The lifecycle line only appears when `.meridian/FEATURES.json` exists (seeded by `features-init.sh`).
 
 ---
 
@@ -114,9 +120,31 @@ The key difference: `/status` answers "where am I?" in one screen. `/health` ans
 | Completed gates | `.meridian/memory/corrections.jsonl` |
 | Avg calibration | `.meridian/memory/corrections.jsonl` (computed) |
 | Last activity | `.meridian/telemetry.jsonl` (last event) |
+| Lifecycle completion | `.meridian/FEATURES.json` (seeded by `features-init.sh`) |
 
 ---
 
-**Status:** Implemented in Gate 1.6  
-**Script:** `scripts/status-report.sh`  
+## Feature Lifecycle Commands
+
+Initialize features from SPEC.md:
+```bash
+bash scripts/features-init.sh
+```
+
+Mark a lifecycle sub-state as complete (edit FEATURES.json directly or via script):
+```bash
+# Example: mark "auth" happy_path done
+jq '(.[] | select(.id == "auth") | .lifecycle.happy_path) |= true' \
+  .meridian/FEATURES.json > /tmp/f.json && mv /tmp/f.json .meridian/FEATURES.json
+```
+
+Full lifecycle breakdown:
+```bash
+bash scripts/features-report.sh
+```
+
+---
+
+**Status:** Updated Gate 3.2 — lifecycle-aware completion added  
+**Script:** `scripts/status-report.sh`, `scripts/features-init.sh`, `scripts/features-report.sh`  
 **Related:** [`/health`](../health/health.md)

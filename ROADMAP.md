@@ -293,14 +293,18 @@ Each phase has:
 
 **Why now:** This is the keystone. Today Meridian enforces the *verdict contract* (gates block without a passing file) but nothing *produces* verdicts. Until this is built, the anti-drift enforcement is structural, not semantic.
 
-#### G3.2: Lifecycle-Aware Completion (`FEATURES.json`)
+#### G3.2: Lifecycle-Aware Completion (`FEATURES.json`) ✅
+**Status:** COMPLETE
 **Estimated:** 8 hours
+**Actual:** 3 hours
+**Variance:** 2.67x (faster than estimated)
+**Completed:** 2026-06-02
 **Deliverables:**
-- `.meridian/features-schema.json` — JSON schema with lifecycle sub-states per feature: `happy_path`, `integration`, `edge_cases`, `error_handling`, `hardening` (each boolean)
-- `scripts/features-init.sh` — seeds `FEATURES.json` from SPEC.md sections; all features start `passing: false`, all lifecycle states `false`
-- `scripts/features-report.sh` — computes lifecycle-weighted completion % (a feature is only `passing` when all its lifecycle states are true); reports "X% happy-path / Y% full-lifecycle" as distinct numbers
-- `/status` upgraded to show lifecycle-weighted completion alongside the gate view
-- Tests: `/status` shows "90% happy-path / 55% full-lifecycle" as distinct numbers on a fixture
+- ✅ `.meridian/features-schema.json` — JSON schema: five lifecycle sub-states per feature (happy_path, integration, edge_cases, error_handling, hardening)
+- ✅ `scripts/features-init.sh` — seeds FEATURES.json from SPEC.md ## and ### headings; all states start false; supports --force, --spec
+- ✅ `scripts/features-report.sh` — reports "X% happy-path / Y% full-lifecycle" as two distinct numbers; --json, --short, --full modes
+- ✅ `/status` upgraded — shows lifecycle section when FEATURES.json present; --json includes lifecycle object
+- ✅ `tests/test-lifecycle.sh` — 18/18 passing; covers init, report math, and status integration
 
 **Why now:** Directly defuses the "90% done" illusion. A feature with only `happy_path: true` is not done — it is 20% done. This is one of the two mechanisms the project was founded to deliver.
 
