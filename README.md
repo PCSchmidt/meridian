@@ -40,9 +40,10 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | 0. Planning & Validation | ✅ Complete | 8h | 6h |
 | 1. Foundation | ✅ Complete | 40h | 40h |
 | 2. Core Hooks & Skills | 🔄 5/6 gates | 60h | 46h |
-| 3. Multi-Tier Support | ⏳ Upcoming | 30h | — |
-| 4. Recipes | ⏳ Upcoming | 40h | — |
-| 5. Subagents | ⏳ Upcoming | 35h | — |
+| 3. Prove the Thesis *(redirected — evaluator, drift sensor, real-project validation)* | ⏳ Next | 32h | — |
+| 4. Recipes | ⏳ Deferred | 40h | — |
+| 5. Multi-Tier Support *(was Phase 3)* | ⏳ Deferred | 30h | — |
+| (former 5) Subagents → merged into Phase 3 | — | — | — |
 | 6. Documentation | ⏳ Upcoming | 25h | — |
 | 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |

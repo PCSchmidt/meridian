@@ -506,6 +506,52 @@ Continue following implementation priorities above...
 
 ---
 
+---
+
+### Decision 9: Build Sequencing — Use-First, Risk-First (2026-06-02)
+
+**Decision:** Re-sequence Phases 3–8 so the thesis is *proved on a real codebase*
+before breadth (multi-tier, extra recipes, full benchmark) is built.
+
+**Rationale:**
+The original roadmap was **completeness-first, risk-last**: build the entire
+substrate across 8 phases, prove the anti-drift thesis with a benchmark at the
+end. After a deep review against the problem that spawned Meridian — *goal drift
+and the brutal last-20% on a real deep codebase* — the sequencing was found to
+defer the highest-value, highest-risk components (evaluator subagent,
+completion-honesty, drift sensor) to Phases 5 and 8 while doing predictable
+substrate work (multi-tier porting, extra recipes) next.
+
+The corrected insight: **the components that prove the thesis and deliver the
+most pain-reduction are exactly the ones the original roadmap scheduled last.**
+Meridian should answer "does this actually help?" cheaply and early, rather than
+investing in surface breadth before the core value is validated.
+
+**Specific realignment:**
+- Evaluator subagent: Phase 5 → **new Phase 3 (next)**
+- Completion-honesty (`FEATURES.json` + lifecycle states): Phase 4 → **new Phase 3**
+- Drift sensor (continuous alignment monitoring): new, **Phase 3**
+- Multi-tier platform support: Phase 3 (was next) → **deferred to Phase 5+**
+- Full benchmark suite: Phase 8 → **deferred; replaced near-term by n=1 real-project validation**
+- Phase 3 contains an explicit reassessment gate: proceed to breadth only with evidence
+
+**Explicit decision on tension:**
+Decision 3 originally said "build fully upfront." This decision supersedes it for
+*sequencing* (not scope): we still intend to build all 8 phases eventually, but
+the order now puts proof-of-value first. The thesis ("mechanical anti-drift on a
+real codebase") must survive a real test before we invest in portability and breadth.
+
+**Honest status:**
+Meridian after Phase 2 enforces **structure** (gates, schemas, security). It
+does not yet enforce **alignment** — the judge (evaluator subagent) that would
+catch "the agent is quietly diverging from the goal" is not yet built. Phase 3
+closes that gap.
+
+**Review trigger:** After new Phase 3 (real-project validation), re-evaluate
+the roadmap with evidence before starting Phase 4.
+
+---
+
 **Status:** Phase 2 in progress (5/6 gates). Phase 1 complete. 111 tests passing.
 
 **Last updated:** 2026-06-02

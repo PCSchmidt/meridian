@@ -249,30 +249,148 @@ Each phase has:
 #### G2.6: Phase 2 Integration Test
 **Estimated:** 6 hours  
 **Deliverables:**
-- All hooks working
-- All skills invocable
-- Security blocking tested
-- Memory validation tested
-- Progressive disclosure working
+- All hooks working end-to-end (security blocking, gate enforcement, memory validation)
+- All 12 skills invocable; progressive disclosure measured
+- Cross-component: session → telemetry → health → status coherence
+- Full suite: 111+ tests passing
 
 ---
 
-## Phase 3: Multi-Tier Platform Support (Weeks 6-7)
+## Phase 3: Prove the Thesis — Keystone Slice (REDIRECTED 2026-06-02)
+
+> **Why this phase was redirected:** See MERIDIAN_ARCHITECTURE_DECISIONS.md Decision 9.
+> The original Phase 3 (Multi-Tier Platform Support) has been deferred to Phase 5.
+> This phase pulls forward the highest-risk, highest-value components — the ones
+> that actually address the core pain (goal drift, false "90% done" completion) —
+> and validates the thesis on a real codebase before investing in breadth.
 
 **Status:** Not Started  
-**Estimated:** 30 hours  
-**Target completion:** 2026-07-09
+**Estimated:** 32 hours  
+**Target completion:** TBD (begins after G2.6)
+
+### North-star test for this phase:
+> On a real, non-trivial codebase: (a) does the evaluator catch a real drift that
+> would otherwise surface late, and (b) does completion tracking report a number
+> that matches reality rather than the "happy-path done" illusion?
 
 ### Gates:
 
-#### G3.1: Tier 1 (Claude Code) - Full Enforcement
+#### G3.1: Gate Evaluator Subagent (the missing producer)
+**Estimated:** 10 hours
+**Deliverables:**
+- `.claude/agents/gate-evaluator.md` — adversarial system prompt + structured JSON output schema (completeness, quality, consistency, spec_adherence scores; PASS/PASS_WITH_WARNINGS/BLOCK recommendation)
+- `/evaluate <gate>` skill — invokes the subagent as a separate Task/Agent call and writes the verdict file that `run-evaluator.sh` already enforces
+- The subagent's prompt explicitly: "You did not produce these artifacts. Do not praise. Score and flag."
+- Tests: a deliberately weak artifact gets BLOCK; a solid one gets PASS; warnings surface correctly
+
+**Why now:** This is the keystone. Today Meridian enforces the *verdict contract* (gates block without a passing file) but nothing *produces* verdicts. Until this is built, the anti-drift enforcement is structural, not semantic.
+
+#### G3.2: Lifecycle-Aware Completion (`FEATURES.json`)
+**Estimated:** 8 hours
+**Deliverables:**
+- `.meridian/features-schema.json` — JSON schema with lifecycle sub-states per feature: `happy_path`, `integration`, `edge_cases`, `error_handling`, `hardening` (each boolean)
+- `scripts/features-init.sh` — seeds `FEATURES.json` from SPEC.md sections; all features start `passing: false`, all lifecycle states `false`
+- `scripts/features-report.sh` — computes lifecycle-weighted completion % (a feature is only `passing` when all its lifecycle states are true); reports "X% happy-path / Y% full-lifecycle" as distinct numbers
+- `/status` upgraded to show lifecycle-weighted completion alongside the gate view
+- Tests: `/status` shows "90% happy-path / 55% full-lifecycle" as distinct numbers on a fixture
+
+**Why now:** Directly defuses the "90% done" illusion. A feature with only `happy_path: true` is not done — it is 20% done. This is one of the two mechanisms the project was founded to deliver.
+
+#### G3.3: Continuous Drift Sensor (advisory)
+**Estimated:** 8 hours
+**Deliverables:**
+- `.claude/agents/drift-evaluator.md` — subagent that reads CONTRACT.md + recent git diff + FEATURES.json and returns `alignment_score` (0-10), `divergences[]`, `recommendation`
+- `scripts/drift-check.sh` — runs the subagent, appends `drift_score` event to telemetry.jsonl, outputs the divergence list
+- `/drift-check` skill — runs on demand; **advisory only** (warns, does not block); `/health` shows drift_score trend
+- Tests: a drifted fixture flags divergences; an aligned one scores high; `drift_score` appears in telemetry
+
+**Why advisory:** We calibrate before we block. A drift sensor that fires false positives would become bureaucracy. Build it as a warning light first; promote to blocking after G3.4 validates it discriminates cleanly.
+
+**Why this is novel:** The original blueprint only checked alignment at gate boundaries. Your specific pain — *subtle drift that compounds inside a gate* — requires a signal that fires more frequently than once per checkpoint.
+
+#### G3.4: Calibrate the Judge
+**Estimated:** 2 hours
+**Deliverables:**
+- Fixture set: (a) known-aligned state, (b) deliberately drifted state, (c) happy-path-only state
+- Run G3.1 evaluator and G3.3 drift sensor against all three fixtures; record discrimination results
+- Documented evidence: judges separate good from bad without excessive false positives
+- Any tuning decisions recorded in `ASSUMPTIONS.md`
+
+**Why before blocking:** Don't trust an anti-drift tool that hasn't been shown to detect drift.
+
+#### G3.5: Minimal Installer + Real-Project Validation
+**Estimated:** 4 hours (installer) + qualitative findings (validation)
+**Deliverables:**
+- `install.sh` — minimal: copies `.claude/hooks/`, `.claude/skills/`, `.claude/agents/`, `.meridian/` skeleton into a target project; runs `gate-engine validate`; does not require Meridian's own test suite in the target
+- Install into **one real project** (to be named — TBD with the user)
+- Run a real work-stretch under Meridian on that project
+- Short findings report: did it catch a real drift? does completion match reality? what was rough?
+
+**Reassessment gate:** After G3.5, decide with evidence whether to proceed to breadth (Phase 4: multi-tier, recipes, full benchmark). If the thesis doesn't hold, the findings report tells us what to fix — having spent a fraction of the full-plan effort to learn it.
+
+---
+
+## Phase 4: Recipes — Deepen the Validated Path (deferred until Phase 3 validates)
+
+**Status:** Not Started  
+**Estimated:** 40 hours  
+**Target completion:** TBD (after Phase 3 reassessment gate)
+
+> Previously Phase 4. Re-numbered 2026-06-02. Content unchanged — only moved.
+
+### Gates:
+
+#### G4.1: Recipe: fullstack-web
+**Estimated:** 14 hours  
+**Deliverables:**
+- `recipes/fullstack-web/gates.yaml` - Stack-agnostic gate model
+- `recipes/fullstack-web/README.md` - Reference implementation (Next.js + FastAPI + Supabase)
+- `recipes/fullstack-web/foundation/` - Template files
+- Installation test end-to-end
+
+#### G4.2: Recipe: cli-tool
 **Estimated:** 10 hours  
 **Deliverables:**
-- All hooks working with Claude Code PreToolUse/PostToolUse
-- Test on real Claude Code session
-- Installation guide for Claude Code
+- `recipes/cli-tool/gates.yaml`
+- `recipes/cli-tool/README.md` - Reference implementation (Python + Click)
+- `recipes/cli-tool/foundation/`
+- Installation test
 
-#### G3.2: Tier 2 (Cursor/Windsurf) - Rule-Based
+#### G4.3: Recipe: ml-research
+**Estimated:** 14 hours  
+**Deliverables:**
+- `recipes/ml-research/gates.yaml` - ML-specific gate model (DATA_CONTRACT → PIPELINE_VALIDATED → MODEL_EVAL → DEPLOY)
+- `recipes/ml-research/README.md` - Reference implementation (PyTorch + FastAPI)
+- `recipes/ml-research/foundation/`
+- Installation test
+- **This is the unique differentiator**
+
+#### G4.4: Recipe Adaptation Guide
+**Estimated:** 2 hours  
+**Deliverables:**
+- `docs/recipes.md` - How to adapt reference stacks
+- Examples of customizing gate models
+
+---
+
+## Phase 5: Multi-Tier Platform Support (deferred from original Phase 3)
+
+**Status:** Not Started  
+**Estimated:** 30 hours  
+**Target completion:** TBD (after Phase 3 reassessment gate)
+
+> Previously Phase 3. Deferred 2026-06-02 per Decision 9 — depth before breadth.
+> Multi-tier porting before the core thesis is validated on Claude Code inverts priority.
+
+### Gates:
+
+#### G5.1: Tier 1 (Claude Code) - Verify Full Enforcement
+**Estimated:** 4 hours
+**Deliverables:**
+- Confirm all Phase 2–3 hooks work correctly in a clean Claude Code session
+- Installation guide for Claude Code updated
+
+#### G5.2: Tier 2 (Cursor/Windsurf) - Rule-Based
 **Estimated:** 12 hours  
 **Deliverables:**
 - Convert hooks to auto-applied rules
@@ -280,14 +398,14 @@ Each phase has:
 - Measure compliance rate (~60-70% expected)
 - Document differences from Tier 1
 
-#### G3.3: Tier 3 (Advisory) - Markdown Guidance
+#### G5.3: Tier 3 (Advisory) - Markdown Guidance
 **Estimated:** 6 hours  
 **Deliverables:**
 - Generate markdown guidance from hook logic
 - Test on advisory platforms (Aider, Codex CLI, etc.)
 - Document expected compliance (~50-60%)
 
-#### G3.4: Platform Detection
+#### G5.4: Platform Detection
 **Estimated:** 2 hours  
 **Deliverables:**
 - `scripts/detect-runtime.sh` - Auto-detect platform
@@ -526,23 +644,27 @@ Each phase has:
 
 ### Phase Overview
 
+> **Note (2026-06-02):** Phases 3–5 have been re-sequenced per Decision 9 (use-first,
+> risk-first). Phase 3 is now the keystone "Prove the Thesis" slice. Original Phase 3
+> (Multi-Tier) moved to Phase 5. See MERIDIAN_ARCHITECTURE_DECISIONS.md Decision 9.
+
 | Phase | Status | Estimated | Actual | Variance | Completion Date |
 |-------|--------|-----------|--------|----------|-----------------|
 | 0. Planning & Validation | ✅ Complete | 8h | 6h | 1.33x | 2026-05-28 |
 | 1. Foundation | ✅ Complete | 40h | 40h | 1.0x | 2026-06-01 |
 | 2. Core Hooks & Skills | 🔄 5/6 gates | 60h | 46h | 1.17x | 2026-06-25 (target) |
-| 3. Multi-Tier Support | ⏳ Not Started | 30h | — | — | 2026-07-09 (target) |
-| 4. Recipes | ⏳ Not Started | 40h | — | — | 2026-07-23 (target) |
-| 5. Subagents | ⏳ Not Started | 35h | — | — | 2026-08-06 (target) |
-| 6. Documentation | ⏳ Not Started | 25h | — | — | 2026-08-20 (target) |
-| 7. Dogfooding & Refinement | ⏳ Not Started | 40h | — | — | 2026-09-03 (target) |
-| 8. Community Preparation | ⏳ Not Started | 15h | — | — | 2026-09-10 (target) |
-| **TOTAL** | | **293h** | **92h** | | **~11 weeks** |
+| 3. Prove the Thesis *(was Phase 5/8, redirected)* | ⏳ Next | 32h | — | — | TBD |
+| 4. Recipes *(was Phase 4, unchanged)* | ⏳ Deferred | 40h | — | — | TBD |
+| 5. Multi-Tier Support *(was Phase 3, deferred)* | ⏳ Deferred | 30h | — | — | TBD |
+| 6. Documentation | ⏳ Deferred | 25h | — | — | TBD |
+| 7. Dogfooding & Refinement | ⏳ Deferred | 40h | — | — | TBD |
+| 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
+| **TOTAL** | | **290h** | **92h** | | TBD after Phase 3 reassessment |
 
 ### Hours Breakdown
-- **Total estimated:** 293 hours (~37 working days at 8h/day, ~11 weeks at 26h/week)
-- **Total actual so far:** 92 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 46h of 54h estimated for 5/6 gates)
-- **Remaining:** ~201 hours estimated
+- **Total estimated:** ~290 hours (Phase 3 re-estimated at 32h; other phases unchanged)
+- **Total actual so far:** 92 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 46h)
+- **Remaining:** ~198 hours estimated; Phases 4–8 targets deferred to Phase 3 reassessment gate
 
 ### Working Pace Assumptions
 - **If full-time (40h/week):** 7.3 weeks remaining
