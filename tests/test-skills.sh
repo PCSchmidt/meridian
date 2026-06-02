@@ -3,7 +3,7 @@
 # Tests for Meridian core skills (Gate 2.4)
 #
 # Covers:
-#   - presence of all 12 skill docs
+#   - presence of all 15 skill docs
 #   - the four backing scripts: start-session, rollback-gate,
 #     security-audit, cost-report
 
@@ -26,27 +26,27 @@ rc_of() { local rc=0; "$@" >/dev/null 2>&1 || rc=$?; echo "$rc"; }
 # Skill docs presence
 #######################################
 test_skill_docs_exist() {
-    echo ""; echo "Test: all 14 skill docs exist"
+    echo ""; echo "Test: all 15 skill docs exist"
     local missing="" s
-    for s in start health memory status deploy security testing costs rollback build-rules critical-thinker research evaluate review; do
+    for s in start health memory status deploy security testing costs rollback build-rules critical-thinker research evaluate review drift-check; do
         [ -f "$SKILLS/$s/$s.md" ] || missing="${missing:+$missing }$s"
     done
-    [ -z "$missing" ] && pass "All 14 skill docs present" || fail "Missing skill docs: $missing"
+    [ -z "$missing" ] && pass "All 15 skill docs present" || fail "Missing skill docs: $missing"
 }
 
 test_agent_docs_exist() {
-    echo ""; echo "Test: agent docs present for gate-evaluator and spec-reviewer"
+    echo ""; echo "Test: agent docs present for all three evaluators"
     local missing="" a
-    for a in gate-evaluator spec-reviewer; do
+    for a in gate-evaluator spec-reviewer drift-evaluator; do
         [ -f "$PROJECT_DIR/.claude/agents/$a.md" ] || missing="${missing:+$missing }$a"
     done
-    [ -z "$missing" ] && pass "Agent docs present (gate-evaluator, spec-reviewer)" || fail "Missing agent docs: $missing"
+    [ -z "$missing" ] && pass "Agent docs present (gate-evaluator, spec-reviewer, drift-evaluator)" || fail "Missing agent docs: $missing"
 }
 
 test_skill_docs_have_trigger() {
     echo ""; echo "Test: each skill doc declares a Trigger"
     local bad="" s
-    for s in start deploy security testing costs rollback build-rules critical-thinker research evaluate review; do
+    for s in start deploy security testing costs rollback build-rules critical-thinker research evaluate review drift-check; do
         grep -q '\*\*Trigger:\*\*' "$SKILLS/$s/$s.md" || bad="${bad:+$bad }$s"
     done
     [ -z "$bad" ] && pass "All new skill docs declare a Trigger" || fail "Missing Trigger in: $bad"
@@ -174,9 +174,9 @@ test_cost_sums_when_present() {
 # Progressive disclosure (Gate 2.5)
 #######################################
 test_all_docs_frontmatter() {
-    echo ""; echo "Test: all 14 skill docs begin with YAML frontmatter"
+    echo ""; echo "Test: all 15 skill docs begin with YAML frontmatter"
     local bad="" s
-    for s in start health memory status deploy security testing costs rollback build-rules critical-thinker research evaluate review; do
+    for s in start health memory status deploy security testing costs rollback build-rules critical-thinker research evaluate review drift-check; do
         head -1 "$SKILLS/$s/$s.md" | tr -d '\r' | grep -qx -- '---' || bad="${bad:+$bad }$s"
     done
     [ -z "$bad" ] && pass "All docs start with frontmatter" || fail "No frontmatter: $bad"
@@ -189,12 +189,12 @@ test_manifest_validate() {
 }
 
 test_manifest_json() {
-    echo ""; echo "Test: skill-manifest --json lists 14 skills, tokens_metadata numeric"
+    echo ""; echo "Test: skill-manifest --json lists 15 skills, tokens_metadata numeric"
     local out n nums
     out=$(MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$SCRIPTS/skill-manifest.sh" --json 2>/dev/null)
     n=$(echo "$out" | jq 'length' 2>/dev/null)
     nums=$(echo "$out" | jq '[.[] | select(.tokens_metadata|type=="number")] | length' 2>/dev/null)
-    [ "$n" = "14" ] && [ "$nums" = "14" ] && pass "14 skills, all tokens_metadata numeric" || fail "n=$n nums=$nums"
+    [ "$n" = "15" ] && [ "$nums" = "15" ] && pass "15 skills, all tokens_metadata numeric" || fail "n=$n nums=$nums"
 }
 
 test_manifest_detects_missing() {

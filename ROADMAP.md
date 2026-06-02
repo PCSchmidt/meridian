@@ -308,13 +308,17 @@ Each phase has:
 
 **Why now:** Directly defuses the "90% done" illusion. A feature with only `happy_path: true` is not done — it is 20% done. This is one of the two mechanisms the project was founded to deliver.
 
-#### G3.3: Continuous Drift Sensor (advisory)
+#### G3.3: Continuous Drift Sensor (advisory) ✅
+**Status:** COMPLETE
 **Estimated:** 8 hours
+**Actual:** 2 hours
+**Variance:** 4.0x (faster than estimated)
+**Completed:** 2026-06-02
 **Deliverables:**
-- `.claude/agents/drift-evaluator.md` — subagent that reads CONTRACT.md + recent git diff + FEATURES.json and returns `alignment_score` (0-10), `divergences[]`, `recommendation`
-- `scripts/drift-check.sh` — runs the subagent, appends `drift_score` event to telemetry.jsonl, outputs the divergence list
-- `/drift-check` skill — runs on demand; **advisory only** (warns, does not block); `/health` shows drift_score trend
-- Tests: a drifted fixture flags divergences; an aligned one scores high; `drift_score` appears in telemetry
+- ✅ `.claude/agents/drift-evaluator.md` — subagent returning `alignment_score` (0-10), `divergences[]`, `recommendation` (aligned/warn/drifted)
+- ✅ `scripts/drift-check.sh` — `--prepare` assembles context; `--check` reads verdict, logs `drift_score` to telemetry; exits 0 always (advisory)
+- ✅ `.claude/skills/drift-check/drift-check.md` — `/drift-check` skill; advisory only, never blocks
+- ✅ `tests/test-drift.sh` — 15/15 passing; prepare, aligned, drifted, warn, no-verdict, agent doc, skill doc
 
 **Why advisory:** We calibrate before we block. A drift sensor that fires false positives would become bureaucracy. Build it as a warning light first; promote to blocking after G3.4 validates it discriminates cleanly.
 
