@@ -67,10 +67,12 @@ $LOG_FILE                  # Hook log file path
 **Purpose:** Enforce constraints BEFORE tool execution
 
 **Checks:**
-- Gate dependencies (future: block edits if gate not passed)
+- Security blocklist via `block-dangerous.sh` — **blocks (exit 2)** on deterministic
+  dangerous operations (recursive root delete, dd/mkfs, fork bomb, hardcoded secrets);
+  warns on heuristic matches (Gate 2.1)
 - Protected file modifications
-- Destructive operations (rm -rf, git reset --hard)
 - Memory file edits (flags for PostToolUse validation)
+- Gate dependencies (enforced at gate transition by `gate-engine.sh verify`, Gate 2.2)
 
 **Example blocking scenario:**
 ```bash
@@ -220,16 +222,20 @@ Hooks are automatically executed by Claude Code when:
 
 ---
 
+## Shipped in Phase 2
+
+- ✅ Security scanning + blocking (`block-dangerous.sh`, `security-rules.yaml`) — Gate 2.1
+- ✅ Gate-transition validators (`validate-contract.sh`, `validate-spec.sh`,
+  `validate-roadmap.sh`, `run-tests.sh`) + `gate-engine.sh verify` — Gate 2.2
+- ✅ Generator-evaluator verdict enforcement (`run-evaluator.sh`) — Gate 2.2
+
 ## Future Enhancements
 
-Phase 2+:
-- Gate dependency enforcement (block operations based on gates.yaml)
 - Artifact tracking (detect when gate artifacts are complete)
-- Cost tracking hooks
-- Security scanning hooks
-- Test coverage hooks
+- Cost tracking hooks (aggregation built in `cost-report.sh`; needs a token source)
+- Live in-loop Evaluator subagent (Phase 5)
 
 ---
 
-**Status:** Basic hook infrastructure complete (Gate 1.3)  
-**Next:** Enhanced enforcement rules in Phase 2
+**Status:** Hook infrastructure (Gate 1.3) + blocking enforcement (Gates 2.1–2.2) complete  
+**Next:** Phase 2 integration test (G2.6)

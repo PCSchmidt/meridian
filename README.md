@@ -5,7 +5,8 @@ A next-generation agent harness framework for AI coding assistants.
 ![Status](https://img.shields.io/badge/status-in%20development-green)
 ![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
 ![Phase 1](https://img.shields.io/badge/phase%201-complete-brightgreen)
-![Phase 2](https://img.shields.io/badge/phase%202-starting-yellow)
+![Phase 2](https://img.shields.io/badge/phase%202-5%2F6%20gates-brightgreen)
+![Tests](https://img.shields.io/badge/tests-111%20passing-brightgreen)
 
 ---
 
@@ -24,13 +25,13 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ---
 
-## Status: Phase 1 Complete — Phase 2 Starting
+## Status: Phase 2 In Progress (5/6 gates)
 
-**Current phase:** Phase 2 — Core Hooks & Skills (starting)
+**Current phase:** Phase 2 — Core Hooks & Skills (5/6 gates, 46h/54h so far)
 
-**Last completed:** Phase 1 — Foundation (7/7 gates, 40h/40h, 0.97x avg calibration, completed 2026-06-01)
+**Last completed:** G2.5 — Skill Progressive Disclosure (2026-06-02). Phase 1 — Foundation closed at 7/7 gates, 40h/40h, on 2026-06-01.
 
-**Timeline:** ~10 weeks remaining to v0.1.0 (target: 2026-09-10)
+**Tests:** 111 passing across 9 suites.
 
 ### Phase Progress
 
@@ -38,7 +39,7 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 |-------|--------|-----------|--------|
 | 0. Planning & Validation | ✅ Complete | 8h | 6h |
 | 1. Foundation | ✅ Complete | 40h | 40h |
-| 2. Core Hooks & Skills | 🔄 Starting | 60h | — |
+| 2. Core Hooks & Skills | 🔄 5/6 gates | 60h | 46h |
 | 3. Multi-Tier Support | ⏳ Upcoming | 30h | — |
 | 4. Recipes | ⏳ Upcoming | 40h | — |
 | 5. Subagents | ⏳ Upcoming | 35h | — |
@@ -46,15 +47,14 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |
 
-### Phase 1 Gates (All Complete)
+### Phase 2 Gates
 
-- ✅ G1.1: Composable Gate DAG Engine (6h)
-- ✅ G1.2: Schema-Validated Memory System (10h)
-- ✅ G1.3: Basic Hook Infrastructure (8h)
-- ✅ G1.4: Telemetry System / JSONL (6h)
-- ✅ G1.5: `/health report` Command (6h)
-- ✅ G1.6: `/status` Command (2h)
-- ✅ G1.7: Phase 1 Integration Test — 46 tests passing (2h)
+- ✅ G2.1: Security Hooks — `block-dangerous.sh`, first hook that blocks (exit 2)
+- ✅ G2.2: Gate Enforcement Hooks — validators, `run-tests`, `run-evaluator`, `gate-engine verify`
+- ✅ G2.3: Memory Management Hooks — `write-reflexion`, `global-memory-sync`, `context-trim`
+- ✅ G2.4: Core Skills — 12 skill docs + backing scripts
+- ✅ G2.5: Skill Progressive Disclosure — frontmatter metadata + `skill-manifest.sh`
+- ⏳ G2.6: Phase 2 Integration Test
 
 See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 
@@ -71,9 +71,9 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 
 ---
 
-## What's Built (Phase 1)
+## What's Built
 
-### Foundation Scripts
+### Foundation Scripts (Phase 1)
 
 | Script | Purpose |
 |--------|---------|
@@ -86,21 +86,49 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `scripts/health-report.sh` | Full health report: session, calibration, memory, telemetry |
 | `scripts/status-report.sh` | Compact session-start status — completed gates + calibration |
 
+### Phase 2 Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/write-reflexion.sh` | Append calibration entry to `corrections.jsonl` (write-ahead validated) |
+| `scripts/global-memory-sync.sh` | Cross-project memory sync to `~/.meridian/global/` (push/pull/status) |
+| `scripts/context-trim.sh` | Trim `episodic.jsonl` to last N sessions, archive the rest |
+| `scripts/start-session.sh` | Session bootstrap — resume/new, status, current gate, memory check |
+| `scripts/rollback-gate.sh` | Revert gate state to an earlier gate (+ git guidance) |
+| `scripts/security-audit.sh` | Active rules + security telemetry summary |
+| `scripts/cost-report.sh` | Aggregate token/cost telemetry (reserved stub fields) |
+| `scripts/skill-manifest.sh` | Emit the always-loaded skill metadata layer |
+
 ### Hook System
 
 | Hook | Purpose |
 |------|---------|
 | `.claude/hooks/hook-wrapper.sh` | Common library: logging, timing, error handling |
-| `.claude/hooks/PreToolUse.sh` | Pre-execution validation — blocks destructive ops |
+| `.claude/hooks/PreToolUse.sh` | Pre-execution validation — **blocks (exit 2)** via `block-dangerous.sh` |
 | `.claude/hooks/PostToolUse.sh` | Post-execution validation — memory schema + telemetry |
+| `.claude/hooks/block-dangerous.sh` | Security blocklist enforcement (exit 2 on dangerous ops) |
+| `.claude/hooks/validate-contract.sh` | Gate-transition validator for `CONTRACT.md` |
+| `.claude/hooks/validate-spec.sh` | Gate-transition validator for `SPEC.md` |
+| `.claude/hooks/validate-roadmap.sh` | Gate-transition validator for `ROADMAP.md` |
+| `.claude/hooks/run-tests.sh` | Auto-detect + run tests; blocks on failure |
+| `.claude/hooks/run-evaluator.sh` | Enforce generator-evaluator separation (A003) |
 
-### Skills
+### Skills (12, with progressive-disclosure frontmatter)
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
-| `.claude/skills/health/health.md` | `/health` | Health report: calibration, memory, telemetry |
-| `.claude/skills/status/status.md` | `/status` | Session-start status: completed gates, current gate |
-| `.claude/skills/memory/memory.md` | `/memory` | Memory management: doctor, show, stats, prune |
+| `start` | `/start` | Begin/resume a session, show where you are |
+| `health` | `/health` | Health report: calibration, memory, telemetry |
+| `status` | `/status` | Session-start status: completed gates, current gate |
+| `memory` | `/memory` | Memory: doctor, show, stats, prune, reflect, sync |
+| `security` | `/security` | Audit active rules + security telemetry |
+| `testing` | `/testing` | Run tests + check evaluator verdict |
+| `costs` | `/costs` | Token/cost report from telemetry |
+| `rollback` | `/rollback` | Revert gate state to an earlier gate |
+| `deploy` | `/deploy` | Orchestrate the pre-deploy gate sequence |
+| `build-rules` | `/build-rules` | Author a project gate DAG |
+| `critical-thinker` | `/critical-thinker` | Pressure-test a decision before it locks |
+| `research` | `/research` | Memory-first research workflow |
 
 ### Memory System
 
@@ -133,30 +161,27 @@ recipes/
 
 ---
 
-## What's Coming (Phase 2+)
+## What's Coming
 
-### Core Architecture
+### Remaining in Phase 2
+
+- [ ] G2.6 — Phase 2 integration test (cross-component end-to-end)
+
+### Core Architecture (Phase 3 / 5)
 
 - [ ] Multi-tier platform support (Claude Code, Cursor/Windsurf, Advisory)
-- [ ] Generator-Evaluator feedback loop (Gate Evaluator subagent)
-- [ ] Real-time cost tracking
+- [ ] Live in-loop Gate Evaluator **subagent** (G5.1) — the verdict *contract* is already enforced by `run-evaluator.sh`
+- [ ] Cost capture wired to a token source (aggregation already built in `cost-report.sh`)
 
-### Hooks (Phase 2)
+### Shipped in Phase 2
 
-- [ ] `block-dangerous.sh` — security rule enforcement
-- [ ] `validate-contract.sh` / `validate-spec.sh` — gate artifact checks
-- [ ] `run-evaluator.sh` — Generator-Evaluator integration
-- [ ] `write-reflexion.sh` — automated reflexion writes
-- [ ] `global-memory-sync.sh` — cross-project pattern sync
-
-### Skills (Phase 2)
-
-- [ ] `/start` — session initialization with memory reconstruction
-- [ ] `/deploy` — deployment workflow
-- [ ] `/rollback` — rollback to last gate
-- [ ] `/security` — security audit
-- [ ] `/costs` — cost tracking
-- [ ] `/build-rules` — build workflow orchestration
+- [x] `block-dangerous.sh` — security rule enforcement (exit 2)
+- [x] `validate-contract.sh` / `validate-spec.sh` / `validate-roadmap.sh` — gate artifact checks
+- [x] `run-evaluator.sh` — generator-evaluator verdict enforcement
+- [x] `write-reflexion.sh` — reflexion writer
+- [x] `global-memory-sync.sh` — cross-project pattern sync
+- [x] `context-trim.sh` — episodic memory trimming
+- [x] 12 skills (`/start`, `/deploy`, `/rollback`, `/security`, `/costs`, `/testing`, `/build-rules`, `/critical-thinker`, `/research`, plus `/health`, `/status`, `/memory`) with progressive disclosure
 
 ### Recipes (Phase 4)
 
@@ -201,7 +226,7 @@ meridian/
     cli-tool/
     ml-research/
 
-  tests/                      # Test suites (46 tests passing)
+  tests/                      # Test suites (111 tests passing)
   experiment/                 # Generator-Evaluator validation
   docs/                       # Documentation (Phase 6)
 
@@ -238,7 +263,13 @@ bash tests/test-telemetry.sh           # Telemetry pipeline (8 tests)
 bash tests/test-health.sh              # /health report (12 tests)
 bash tests/test-status.sh              # /status command (11 tests)
 bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
+bash tests/test-security.sh            # Security blocklist (14 tests)
+bash tests/test-gate-enforcement.sh    # Gate validators + evaluator (19 tests)
+bash tests/test-memory-hooks.sh        # Reflexion / sync / trim (14 tests)
+bash tests/test-skills.sh              # Core skills + manifest (18 tests)
 ```
+
+All 9 suites — **111 tests** — pass on Windows / Git Bash.
 
 ---
 
@@ -284,4 +315,4 @@ Built on research and patterns from:
 
 ---
 
-**Phase 1 complete.** Gate DAG engine, schema-validated memory, hook infrastructure, telemetry, `/health`, `/status`, and integration tests all shipped. Phase 2 starting. Target: v0.1.0 by 2026-09-10.
+**Phase 1 complete; Phase 2 at 5/6 gates.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, and 12 progressively-disclosed skills have all shipped (111 tests passing). Next: the Phase 2 integration test (G2.6). Target: v0.1.0 by 2026-09-10.

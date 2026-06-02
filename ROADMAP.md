@@ -530,19 +530,19 @@ Each phase has:
 |-------|--------|-----------|--------|----------|-----------------|
 | 0. Planning & Validation | ✅ Complete | 8h | 6h | 1.33x | 2026-05-28 |
 | 1. Foundation | ✅ Complete | 40h | 40h | 1.0x | 2026-06-01 |
-| 2. Core Hooks & Skills | ⏳ Not Started | 60h | — | — | 2026-06-25 (target) |
+| 2. Core Hooks & Skills | 🔄 5/6 gates | 60h | 46h | 1.17x | 2026-06-25 (target) |
 | 3. Multi-Tier Support | ⏳ Not Started | 30h | — | — | 2026-07-09 (target) |
 | 4. Recipes | ⏳ Not Started | 40h | — | — | 2026-07-23 (target) |
 | 5. Subagents | ⏳ Not Started | 35h | — | — | 2026-08-06 (target) |
 | 6. Documentation | ⏳ Not Started | 25h | — | — | 2026-08-20 (target) |
 | 7. Dogfooding & Refinement | ⏳ Not Started | 40h | — | — | 2026-09-03 (target) |
 | 8. Community Preparation | ⏳ Not Started | 15h | — | — | 2026-09-10 (target) |
-| **TOTAL** | | **293h** | **6h** | | **~11 weeks** |
+| **TOTAL** | | **293h** | **92h** | | **~11 weeks** |
 
 ### Hours Breakdown
 - **Total estimated:** 293 hours (~37 working days at 8h/day, ~11 weeks at 26h/week)
-- **Total actual so far:** 6 hours
-- **Remaining:** 287 hours
+- **Total actual so far:** 92 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 46h of 54h estimated for 5/6 gates)
+- **Remaining:** ~201 hours estimated
 
 ### Working Pace Assumptions
 - **If full-time (40h/week):** 7.3 weeks remaining
@@ -570,7 +570,12 @@ As we complete phases, we'll track actual vs estimated time to calibrate future 
 | Phase | Variance | Running Avg Multiplier |
 |-------|----------|------------------------|
 | 0 | 1.33x (0.75x) | 0.75x |
-| 1 | TBD | TBD |
+| 1 | 1.0x | 0.93x |
+| 2 (5/6) | 1.17x (0.85x) | 0.90x |
+
+Per-gate calibration in Phase 2 (estimate/actual): G2.1 1.14x, G2.2 1.09x,
+G2.3 1.20x, G2.4 1.20x, G2.5 1.33x — steady mild over-estimation on
+hook/script/doc work; the multiplier is converging.
 
 **Target:** Operator multiplier converges toward 1.0x over time (accurate estimates)
 

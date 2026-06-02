@@ -14,10 +14,10 @@ This repo is Meridian building itself (dogfooding).
 
 - `scripts/` — core framework scripts (gate engine, memory, telemetry, health, status)
 - `.claude/hooks/` — PreToolUse / PostToolUse enforcement (source `hook-wrapper.sh`, never execute it)
-- `.claude/skills/` — slash-command skill docs (`/health`, `/status`, `/memory`)
-- `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`
+- `.claude/skills/` — 12 slash-command skill docs with progressive-disclosure frontmatter (`/start`, `/health`, `/status`, `/memory`, `/security`, `/testing`, `/costs`, `/rollback`, `/deploy`, `/build-rules`, `/critical-thinker`, `/research`)
+- `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`; plus tracked `security-rules.yaml`, `*-schema.{json,yaml}`
 - `recipes/` — pattern-based `gates.yaml` for fullstack-web, cli-tool, ml-research
-- `tests/` — bash test suites (46 passing as of Phase 1)
+- `tests/` — bash test suites (111 passing as of Phase 2 G2.5)
 - `ROADMAP.md` — gate progress + calibration data (single source of truth for status)
 
 ## Development model
@@ -44,6 +44,9 @@ converging toward 1.0x.
 
 ## Enforcement status (honest scope)
 
-Phase 1 established hook infrastructure and detection. Blocking enforcement
-(exit code 2 for gates/security) lands in Phase 2 — PreToolUse currently
-detects and warns but does not block. Don't claim enforcement that isn't wired.
+Blocking enforcement is live as of Phase 2. `PreToolUse` runs `block-dangerous.sh`
+and exits 2 on deterministic dangerous ops (G2.1); `gate-engine.sh verify` runs a
+gate's pre-hooks and blocks on failure; `run-evaluator.sh` blocks a gate without a
+passing independent verdict (G2.2). Heuristic checks still warn (non-blocking) by
+design. The live Evaluator *subagent* lands in Phase 5. Don't claim enforcement
+that isn't wired — but blocking now is.

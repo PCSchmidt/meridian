@@ -1,6 +1,6 @@
 # Meridian - Architectural Decisions & Blueprint
 **Date:** 2026-05-26  
-**Status:** Phase 1 Complete (7/7 gates, 40h/40h, 0.97x avg calibration — 2026-06-01)  
+**Status:** Phase 2 In Progress (5/6 gates, 46h/54h so far). Phase 1 complete (7/7 gates, 40h/40h — 2026-06-01). Updated 2026-06-02.  
 **Repository:** https://github.com/PCSchmidt/meridian
 
 ---
@@ -506,6 +506,6 @@ Continue following implementation priorities above...
 
 ---
 
-**Status:** Phase 1 implementation in progress (3/7 gates complete - 43%)
+**Status:** Phase 2 in progress (5/6 gates). Phase 1 complete. 111 tests passing.
 
-**Last updated:** 2026-05-29
+**Last updated:** 2026-06-02

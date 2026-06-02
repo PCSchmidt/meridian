@@ -58,7 +58,9 @@
 
 **Last reviewed:** 2026-06-01 (Q2 review — no change, still necessary)
 
-**Status:** ACTIVE — Validated by experiment, proceed with implementation
+**Status:** ACTIVE — Validated by experiment; verdict contract now mechanically enforced (Gate 2.2).
+
+**Implementation status:** PARTIAL. `run-evaluator.sh` (G2.2) enforces the *contract*: a gate stays blocked until a separate evaluator writes a verdict file that clears `verdict==pass` and `score >= EVALUATOR_THRESHOLD`. The live in-loop Evaluator *subagent* that produces those verdicts (invoked via the Task/Agent tool) lands in Phase 5 (G5.1) — a bash hook cannot spawn a subagent, so the contract is wired now and the producer follows.
 
 **Experiment reference:** `experiment/GENERATOR_EVALUATOR_VALIDATION.md`
 
