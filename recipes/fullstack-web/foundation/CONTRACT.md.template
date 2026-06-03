@@ -1,0 +1,57 @@
+# CONTRACT.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+**Framework:** Meridian (fullstack-web recipe)
+
+---
+
+## Scope
+
+[One paragraph describing the product — what it does and who uses it.]
+
+### In scope
+
+- [Feature or capability 1]
+- [Feature or capability 2]
+- [Feature or capability 3]
+- [Deployment — frontend on X, backend on Y]
+
+### Out of scope
+
+- [Explicitly excluded feature 1 — e.g., "User authentication"]
+- [Explicitly excluded feature 2 — e.g., "Historical data storage"]
+- [Explicitly excluded feature 3]
+
+---
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | [Next.js / React / Vue / etc.] |
+| Backend | [FastAPI / Django / Express / etc.] |
+| Database | [PostgreSQL / Supabase / MongoDB / etc.] |
+| LLM (if any) | [Claude API / OpenAI / none] |
+| Deploy | [Vercel / Fly.io / Railway / AWS / etc.] |
+
+---
+
+## Acceptance Criteria
+
+A feature is not complete until:
+
+1. **Happy path works** — the feature produces correct output under normal conditions
+2. **Integration verified** — the feature is wired end-to-end (backend → API → frontend)
+3. **Edge cases handled** — invalid input, missing data, empty states
+4. **Error handling present** — failures do not crash; errors surface cleanly to the user
+5. **Hardened** — stable under realistic load or demo conditions without manual restarts
+
+---
+
+## Known Constraints
+
+- [e.g., "API rate limit: 100 req/day on free tier"]
+- [e.g., "No mobile support required"]
+- [e.g., "Authentication is out of scope for v1"]

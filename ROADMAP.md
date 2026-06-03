@@ -371,21 +371,24 @@ Each phase has:
 
 ## Phase 4: Recipes — Deepen the Validated Path (deferred until Phase 3 validates)
 
-**Status:** Not Started  
+**Status:** In Progress  
 **Estimated:** 40 hours  
-**Target completion:** TBD (after Phase 3 reassessment gate)
+**Target completion:** TBD
 
 > Previously Phase 4. Re-numbered 2026-06-02. Content unchanged — only moved.
 
 ### Gates:
 
 #### G4.1: Recipe: fullstack-web
-**Estimated:** 14 hours  
+**Status:** COMPLETE  
+**Estimated:** 14 hours | **Actual:** 3.5 hours | **Ratio:** 4.0x  
 **Deliverables:**
-- `recipes/fullstack-web/gates.yaml` - Stack-agnostic gate model
-- `recipes/fullstack-web/README.md` - Reference implementation (Next.js + FastAPI + Supabase)
-- `recipes/fullstack-web/foundation/` - Template files
-- Installation test end-to-end
+
+- `recipes/fullstack-web/gates.yaml` - Stack-agnostic gate model ✓
+- `recipes/fullstack-web/README.md` - Reference implementation (Next.js + FastAPI + Supabase) ✓
+- `recipes/fullstack-web/foundation/CONTRACT.md.template` ✓
+- `recipes/fullstack-web/foundation/SPEC.md.template` ✓
+- Installation test end-to-end (AeroIntel, 2026-06-02) ✓
 
 #### G4.2: Recipe: cli-tool
 **Estimated:** 10 hours  

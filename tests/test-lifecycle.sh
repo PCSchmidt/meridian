@@ -139,6 +139,39 @@ test_init_ids_are_slugs() {
         || fail "$spaces ids contain spaces"
 }
 
+test_init_boilerplate_filter() {
+    echo ""; echo "Test: features-init excludes boilerplate section headings"
+    local p; p=$(mktemp -d "$WORK/p.XXXXXX"); mkdir -p "$p/.meridian"
+    cat > "$p/SPEC.md" <<'EOF'
+# Spec
+
+## Feature List
+
+These are the features.
+
+## Features
+
+More boilerplate.
+
+## Feature Overview
+
+Also boilerplate.
+
+## Real Feature One
+
+A real feature.
+
+## Real Feature Two
+
+Another real feature.
+EOF
+    MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/features-init.sh" >/dev/null 2>&1
+    local n; n=$(jq 'length' "$p/.meridian/FEATURES.json" | tr -d '\r')
+    [ "$n" = "2" ] \
+        && pass "Boilerplate headings excluded: 2 real features extracted (not 5)" \
+        || fail "Expected 2 features, got $n (boilerplate filter may be broken)"
+}
+
 # ── features-report.sh tests ──────────────────────────────────────────────────
 
 test_report_short_happy_path_pct() {
@@ -279,6 +312,7 @@ main() {
     test_init_force_overwrites
     test_init_no_spec_errors
     test_init_ids_are_slugs
+    test_init_boilerplate_filter
 
     test_report_short_happy_path_pct
     test_report_short_full_lifecycle_pct

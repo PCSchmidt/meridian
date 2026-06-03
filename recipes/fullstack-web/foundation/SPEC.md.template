@@ -1,0 +1,65 @@
+# SPEC.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+
+Brief one-sentence summary of what this project does.
+
+---
+
+Each `##` heading below becomes one entry in FEATURES.json. Run:
+
+```bash
+MERIDIAN_PROJECT_DIR=. bash path/to/meridian/scripts/features-init.sh
+```
+
+Use a noun-phrase style for feature names ("User Authentication", not "Implement auth").
+Delete or rename sections that don't apply. Add as many features as needed.
+
+---
+
+## [Core Feature 1]
+
+[One paragraph describing what this feature does, what it looks like from the user's
+perspective, and what "done" means. Do not describe implementation details here.]
+
+---
+
+## [Core Feature 2]
+
+[Description.]
+
+---
+
+## [Core Feature 3]
+
+[Description.]
+
+---
+
+## [Integration / API Feature]
+
+[Description. For fullstack projects: name the API contract expected between
+frontend and backend so this can be validated at the `backend_approved` gate.]
+
+---
+
+## [Secondary Feature]
+
+[Description.]
+
+---
+
+## [Secondary Feature]
+
+[Description.]
+
+---
+
+<!-- Remove this comment block before running features-init.sh
+     Headings excluded from FEATURES.json (treated as boilerplate):
+       Overview, Purpose, Goals, Non-Goals, Out of Scope,
+       References, Appendix, Changelog, Table of Contents,
+       Feature List, Features, Feature Overview
+-->

@@ -51,7 +51,7 @@ err()  { echo "  ✗ $1"; ERRORS=$((ERRORS+1)); }
 
 # ─── 1. .claude/hooks/ ────────────────────────────────────────────────────────
 
-echo "[1/7] Copying .claude/hooks/"
+echo "[1/8] Copying .claude/hooks/"
 if [ -d "$MERIDIAN_DIR/.claude/hooks" ]; then
     mkdir -p "$TARGET/.claude/hooks"
     cp -r "$MERIDIAN_DIR/.claude/hooks/." "$TARGET/.claude/hooks/"
@@ -62,7 +62,7 @@ fi
 
 # ─── 2. .claude/skills/ ───────────────────────────────────────────────────────
 
-echo "[2/7] Copying .claude/skills/"
+echo "[2/8] Copying .claude/skills/"
 if [ -d "$MERIDIAN_DIR/.claude/skills" ]; then
     mkdir -p "$TARGET/.claude/skills"
     cp -r "$MERIDIAN_DIR/.claude/skills/." "$TARGET/.claude/skills/"
@@ -73,7 +73,7 @@ fi
 
 # ─── 3. .claude/agents/ ───────────────────────────────────────────────────────
 
-echo "[3/7] Copying .claude/agents/"
+echo "[3/8] Copying .claude/agents/"
 if [ -d "$MERIDIAN_DIR/.claude/agents" ]; then
     mkdir -p "$TARGET/.claude/agents"
     cp -r "$MERIDIAN_DIR/.claude/agents/." "$TARGET/.claude/agents/"
@@ -84,7 +84,7 @@ fi
 
 # ─── 4. .meridian/ tracked schemas + security rules ──────────────────────────
 
-echo "[4/7] Installing .meridian/ skeleton"
+echo "[4/8] Installing .meridian/ skeleton"
 mkdir -p "$TARGET/.meridian"
 
 # Copy tracked schema files
@@ -106,7 +106,7 @@ fi
 
 # ─── 5. .meridian/ runtime skeleton ──────────────────────────────────────────
 
-echo "[5/7] Creating runtime skeleton"
+echo "[5/8] Creating runtime skeleton"
 
 # telemetry.jsonl — empty, append-only event log
 if [ ! -f "$TARGET/.meridian/telemetry.jsonl" ]; then
@@ -133,7 +133,7 @@ fi
 
 # ─── 6. gates.yaml recipe ─────────────────────────────────────────────────────
 
-echo "[6/7] gates.yaml"
+echo "[6/8] gates.yaml"
 if [ -n "$RECIPE" ]; then
     RECIPE_FILE="$MERIDIAN_DIR/recipes/$RECIPE/gates.yaml"
     if [ -f "$RECIPE_FILE" ]; then
@@ -152,9 +152,24 @@ else
     echo "     Run: bash install.sh $TARGET --recipe fullstack-web|cli-tool|ml-research"
 fi
 
-# ─── 7. .gitignore entries ────────────────────────────────────────────────────
+# ─── 7. CLAUDE.md template ────────────────────────────────────────────────────
 
-echo "[7/7] .gitignore"
+echo "[7/8] CLAUDE.md"
+CLAUDE_TEMPLATE="$MERIDIAN_DIR/templates/CLAUDE.md"
+if [ -f "$CLAUDE_TEMPLATE" ]; then
+    if [ -f "$TARGET/CLAUDE.md" ]; then
+        ok "CLAUDE.md already exists (preserved — review and add Meridian section if needed)"
+    else
+        cp "$CLAUDE_TEMPLATE" "$TARGET/CLAUDE.md"
+        ok "CLAUDE.md installed from templates/CLAUDE.md"
+    fi
+else
+    warn "templates/CLAUDE.md not found in Meridian source — skipping"
+fi
+
+# ─── 8. .gitignore entries ────────────────────────────────────────────────────
+
+echo "[8/8] .gitignore"
 GITIGNORE="$TARGET/.gitignore"
 MERIDIAN_BLOCK="# Meridian runtime state (auto-generated, not for version control)
 .meridian/memory/

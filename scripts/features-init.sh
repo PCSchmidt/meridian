@@ -48,7 +48,8 @@ features_json=$(
         map(select(
             . != "Overview" and . != "Purpose" and . != "Goals" and
             . != "Non-Goals" and . != "Out of Scope" and . != "References" and
-            . != "Appendix" and . != "Changelog" and . != "Table of Contents"
+            . != "Appendix" and . != "Changelog" and . != "Table of Contents" and
+            . != "Feature List" and . != "Features" and . != "Feature Overview"
         )) |
         map({
             id: (
