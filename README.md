@@ -36,10 +36,10 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | ----- | ------ | --------- | ------ |
 | 0. Planning & Validation | ✅ Complete | 8h | 6h |
 | 1. Foundation | ✅ Complete | 40h | 40h |
-| 2. Core Hooks & Skills | ✅ Complete | 60h | 46h |
-| 3. Prove the Thesis *(evaluator, drift sensor, real-project validation)* | ✅ Complete | 32h | 16h |
+| 2. Core Hooks & Skills | ✅ Complete | 60h | 49h |
+| 3. Prove the Thesis *(evaluator, drift sensor, real-project validation)* | ✅ Complete | 32h | 12.5h |
 | 4. Recipes *(fullstack-web, cli-tool, ml-research)* | ✅ Complete | 40h | ~8.5h |
-| 5. Multi-Tier Support *(Claude Code verify + Cursor/Windsurf + Advisory)* | ⏳ Not Started | 30h | — |
+| 5. Portable Enforcement & Multi-Tier *(verifier + git/CI + Cursor/Windsurf + Advisory)* | ⏳ Not Started | 34h | — |
 | 6. Documentation | ⏳ Upcoming | 25h | — |
 | 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |
@@ -201,19 +201,26 @@ recipes/
 
 ```
 docs/
-  recipes.md    # Recipe adaptation guide: stack substitution, gate customization, DAG reshape examples
+  recipes.md          # Recipe adaptation guide: stack substitution, gate customization, DAG reshape examples
+  platform-tiers.md   # Tier definitions + feature parity matrix (Claude Code / Cursor / advisory)
 ```
 
 ---
 
 ## What's Coming
 
-### Phase 5: Multi-Tier Platform Support
+### Phase 5: Portable Enforcement & Multi-Tier Platform Support
 
-- [ ] G5.1 — Tier 1 (Claude Code): verify full enforcement in a clean session, update installation guide
-- [ ] G5.2 — Tier 2 (Cursor/Windsurf): convert hooks to auto-applied rules (~60-70% compliance)
-- [ ] G5.3 — Tier 3 (Advisory): generate markdown guidance from hook logic (~50-60% compliance)
-- [ ] G5.4 — Platform detection: `detect-runtime.sh` auto-adapts installation to platform tier
+Off-Claude platforms can't block at the keystroke boundary, so enforcement is relocated to the
+git/CI boundary — which every platform shares. See [docs/platform-tiers.md](docs/platform-tiers.md)
+for the feature parity matrix and tier definitions.
+
+- [ ] G5.0 — Reconcile roadmap, ship `meridian-doctor.sh`, close the `yq` gate-detection gap
+- [ ] G5.1 — Tier 1 (Claude Code): verify full enforcement with a real live-session protocol
+- [ ] G5.2 — Portable verifier: `meridian-verify.sh` + generated `pre-commit` hook + CI workflow (the shared boundary)
+- [ ] G5.3 — Tier 2 (Cursor/Windsurf): editor rules generated from the same source as the hooks
+- [ ] G5.4 — Tier 3 (Advisory): generated markdown guidance, enforced via CI
+- [ ] G5.5 — Platform detection (`detect-runtime.sh`) + published parity matrix
 
 ### Phase 6: Documentation
 
@@ -262,6 +269,7 @@ meridian/
 
   docs/                       # Framework documentation
     recipes.md                # Recipe adaptation guide
+    platform-tiers.md         # Tier definitions + feature parity matrix
 
   tests/                      # 13 test suites (186 tests passing)
   experiment/                 # Generator-Evaluator validation experiment
@@ -325,6 +333,7 @@ All 13 suites — **186 tests** — pass on Windows / Git Bash.
 - [PHILOSOPHY.md](PHILOSOPHY.md) — Design principles and rationale
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — Harness assumptions governance
 - [Recipe Adaptation Guide](docs/recipes.md) — How to adapt recipes to your stack
+- [Platform Tiers](docs/platform-tiers.md) — Tier definitions and feature parity matrix
 - [Hook System](.claude/hooks/README.md) — Hook architecture and usage
 
 ---
@@ -361,4 +370,4 @@ Built on research and patterns from:
 
 ---
 
-**Phases 0–4 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer validated on a real project, and three complete recipes (fullstack-web, cli-tool, ml-research) have all shipped (186 tests passing). Next: Phase 5 multi-tier platform support (Cursor/Windsurf/advisory). Target: v0.1.0 by 2026-09-10.
+**Phases 0–4 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer validated on a real project, and three complete recipes (fullstack-web, cli-tool, ml-research) have all shipped (186 tests passing). Next: Phase 5 — portable enforcement (a platform-neutral verifier + git/CI boundary) and multi-tier support (Cursor/Windsurf/advisory). Target: v0.1.0 by 2026-09-10.

@@ -28,7 +28,7 @@ Gates are enforced by **shell hooks that exit with code 2**, blocking tool execu
 
 **Implication:** Every "must do" becomes a hook, not a prompt instruction.
 
-**Rollout status:** Enforcement is delivered progressively by phase. Phase 1 established the hook infrastructure, exit-code contract (0/1/2), and detection logic. **Phase 2 made it block:** `PreToolUse` runs `block-dangerous.sh` and exits 2 on deterministic dangerous operations (G2.1); `gate-engine.sh verify` runs a gate's pre-hooks and blocks on failure; and `run-evaluator.sh` blocks a gate until a *separate* evaluator writes a passing verdict (G2.2) — the generator-evaluator separation is now mechanical, not advisory. Heuristic checks (e.g. SQLi shape detection) warn rather than block, to avoid false-positive friction. The remaining piece, the live in-loop Evaluator *subagent*, lands in Phase 5 (G5.1). This document does not claim enforcement that isn't wired — and as of Phase 2, blocking is.
+**Rollout status:** Enforcement is delivered progressively by phase. Phase 1 established the hook infrastructure, exit-code contract (0/1/2), and detection logic. **Phase 2 made it block:** `PreToolUse` runs `block-dangerous.sh` and exits 2 on deterministic dangerous operations (G2.1); `gate-engine.sh verify` runs a gate's pre-hooks and blocks on failure; and `run-evaluator.sh` blocks a gate until a *separate* evaluator writes a passing verdict (G2.2) — the generator-evaluator separation is now mechanical, not advisory. Heuristic checks (e.g. SQLi shape detection) warn rather than block, to avoid false-positive friction. The live in-loop Evaluator *subagent* that produces verdicts landed in **Phase 3 (G3.1)** — see `.claude/agents/gate-evaluator.md` — so both the contract and its producer are wired. This document does not claim enforcement that isn't wired — and as of Phase 2, blocking is.
 
 ---
 
@@ -162,11 +162,24 @@ These map to cognitive science: semantic = long-term patterns, episodic = event 
 
 ## Multi-Platform Support
 
-**Tier 1 (Claude Code):** Full hook enforcement - `PreToolUse`/`PostToolUse` exit 2 blocks tool execution  
-**Tier 2 (Cursor/Windsurf):** Rule-based partial enforcement (~60-70% compliance)  
-**Tier 3 (Advisory):** Markdown guidance (honor system ~50-60%)
+Only Claude Code exposes pre-execution hooks that can block a tool call (exit 2). The other
+platforms cannot enforce at the keystroke boundary — so Meridian **relocates enforcement to
+the git/CI boundary**, which every platform shares. The same engines (`gate-engine.sh`,
+`drift-check.sh`, `validate-memory.sh`, the evaluator contract) run through a platform-neutral
+`meridian-verify.sh` CLI plus a generated `pre-commit` hook and CI workflow. A non-zero exit at
+commit blocks a merge regardless of which agent wrote the code.
 
-**The principle:** Maximize reach without diluting quality. Tier 1 gets the full experience. Other platforms get what their architecture allows.
+**Tier 1 — Enforced (Claude Code):** Full hook enforcement at the keystroke boundary —
+`PreToolUse`/`PostToolUse` exit 2 — *plus* the git/CI boundary.  
+**Tier 2 — Guided + CI (Cursor/Windsurf):** Editor rules generated from the same `gates.yaml` +
+`security-rules.yaml` (context layer, can't drift from the hooks), enforced at the git/CI boundary.  
+**Tier 3 — Reference + CI (Aider/Codex/etc.):** Generated markdown guidance (context layer),
+enforced at the git/CI boundary.
+
+**The principle:** Maximize reach without diluting the *boundary*. Tier 1 gets keystroke-level
+enforcement; every tier gets commit-level enforcement. We do not publish "compliance percentages"
+without a measurement harness. See `docs/platform-tiers.md` for the per-capability parity matrix.
+This is documented as assumption A005 in `ASSUMPTIONS.md`.
 
 ---
 

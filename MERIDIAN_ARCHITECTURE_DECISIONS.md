@@ -39,6 +39,17 @@ Meridian is a next-generation agent harness framework that improves upon Syntari
 
 **Reference:** Original Syntaris multi-tier model
 
+**Re-scoped 2026-06-03 (supersedes the implementation block above):** The tier-architecture
+review found that only Claude Code can block at the keystroke boundary, so "Tier 2 = 60-70%
+enforcement" and "Tier 3 = 50-60%" are honor-system claims that violate Principle 1, and the
+percentages were never measured. Enforcement is **relocated to the git/CI boundary** (shared by
+all platforms) via a platform-neutral `meridian-verify.sh` + generated `pre-commit` hook and CI
+workflow. Tier 2/3 surfaces (editor rules, advisory markdown) are generated from the same
+`gates.yaml`/`security-rules.yaml` the hooks read, so they can't drift. Tiers renamed
+**Enforced / Guided+CI / Reference+CI**. Compliance percentages are not published without a
+measurement harness. See `docs/platform-tiers.md` (parity matrix) and `ASSUMPTIONS.md` A005.
+This is the design target for Phase 5.
+
 ---
 
 ### Decision 2: Recipe Strategy (3 Pattern-Based Recipes)
@@ -552,6 +563,6 @@ the roadmap with evidence before starting Phase 4.
 
 ---
 
-**Status:** Phase 2 in progress (5/6 gates). Phase 1 complete. 111 tests passing.
+**Status:** Phases 0–4 complete. Phase 5 (Portable Enforcement & Multi-Tier) in planning. 186 tests passing.
 
-**Last updated:** 2026-06-02
+**Last updated:** 2026-06-03

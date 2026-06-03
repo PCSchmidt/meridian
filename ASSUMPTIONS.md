@@ -60,7 +60,7 @@
 
 **Status:** ACTIVE — Validated by experiment; verdict contract now mechanically enforced (Gate 2.2).
 
-**Implementation status:** PARTIAL. `run-evaluator.sh` (G2.2) enforces the *contract*: a gate stays blocked until a separate evaluator writes a verdict file that clears `verdict==pass` and `score >= EVALUATOR_THRESHOLD`. The live in-loop Evaluator *subagent* that produces those verdicts (invoked via the Task/Agent tool) lands in Phase 5 (G5.1) — a bash hook cannot spawn a subagent, so the contract is wired now and the producer follows.
+**Implementation status:** IMPLEMENTED. `run-evaluator.sh` (G2.2) enforces the *contract*: a gate stays blocked until a separate evaluator writes a verdict file that clears `verdict==pass` and `score >= EVALUATOR_THRESHOLD`. The live in-loop Evaluator *subagent* that produces those verdicts landed in **Phase 3 (G3.1)** — see `.claude/agents/gate-evaluator.md` — pulled forward from the original Phase 5 per Decision 9. The contract (hook) and the producer (subagent) are both wired.
 
 **Experiment reference:** `experiment/GENERATOR_EVALUATOR_VALIDATION.md`
 
@@ -92,6 +92,39 @@ confirmed errors in either direction.
 **Last reviewed:** 2026-06-02 (created at G3.4)
 
 **Status:** ACTIVE — Thresholds validated by experiment; promotion to blocking is operator decision.
+
+---
+
+## A005: Enforcement boundary relocation for non-Claude platforms
+
+**Failure mode:** Meridian's enforcement model (Principle 1: "if the model can hallucinate
+past it, it's not a real boundary") depends on `PreToolUse`/`PostToolUse` hooks that exit 2
+to block tool execution. Only Claude Code exposes these events. Porting "enforcement" to
+Cursor, Windsurf, or advisory platforms by converting hooks into context-injected rules
+produces an **honor system**, not a boundary — the model can ignore a markdown rule. Shipping
+that as "60–70% enforcement" silently violates the framework's first principle and sets a
+false expectation.
+
+**Source:** Meridian tier-architecture review, 2026-06-03 (pre-Phase-5).
+
+**Rule:** Off-Claude platforms get enforcement at the **git/CI boundary**, not the keystroke
+boundary. The same engines (`gate-engine.sh verify`, `drift-check.sh`, `validate-memory.sh`,
+the evaluator contract) are exposed through a platform-neutral `meridian-verify.sh` CLI and a
+generated `pre-commit` hook + CI workflow. A non-zero exit at commit/CI blocks a merge on any
+platform, because every platform commits to git. Editor rules (Tier 2) and advisory markdown
+(Tier 3) are the *context* layer; the git/CI verifier is the *boundary* layer. Compliance
+percentages are not published without a measurement harness.
+
+**Implementation status:** PLANNED (Phase 5, G5.2–G5.5). Tier definitions and the per-capability
+parity matrix live in `docs/platform-tiers.md`.
+
+**Review trigger:** A non-Claude platform exposes a real pre-execution hook API capable of
+blocking tool calls (exit-2-equivalent). At that point, revisit whether keystroke-boundary
+enforcement is achievable for that platform and demote this assumption accordingly.
+
+**Last reviewed:** 2026-06-03 (created at Phase 5 planning)
+
+**Status:** ACTIVE — Enforces honest tiering; relocation is the design for v0.1.0.
 
 ---
 
@@ -155,6 +188,6 @@ The goal is not to accumulate assumptions. The goal is to **actively remove** as
 
 ---
 
-**Current active assumptions:** 4  
+**Current active assumptions:** 5  
 **Current deprecated assumptions:** 0  
 **Total removed assumptions:** 0

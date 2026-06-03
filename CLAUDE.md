@@ -17,7 +17,7 @@ This repo is Meridian building itself (dogfooding).
 - `.claude/skills/` — 14 slash-command skill docs with progressive-disclosure frontmatter (`/start`, `/health`, `/status`, `/memory`, `/security`, `/testing`, `/costs`, `/rollback`, `/deploy`, `/build-rules`, `/critical-thinker`, `/research`, `/evaluate`, `/review`)
 - `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`; plus tracked `security-rules.yaml`, `*-schema.{json,yaml}`
 - `recipes/` — pattern-based `gates.yaml` + foundation templates for fullstack-web, cli-tool, ml-research
-- `docs/` — framework documentation (`recipes.md` — recipe adaptation guide)
+- `docs/` — framework documentation (`recipes.md` — recipe adaptation guide; `platform-tiers.md` — tier definitions + feature parity matrix)
 - `tests/` — bash test suites (186 passing across 13 suites, as of Phase 4)
 - `ROADMAP.md` — gate progress + calibration data (single source of truth for status)
 
@@ -49,5 +49,7 @@ Blocking enforcement is live as of Phase 2. `PreToolUse` runs `block-dangerous.s
 and exits 2 on deterministic dangerous ops (G2.1); `gate-engine.sh verify` runs a
 gate's pre-hooks and blocks on failure; `run-evaluator.sh` blocks a gate without a
 passing independent verdict (G2.2). Heuristic checks still warn (non-blocking) by
-design. The live Evaluator *subagent* lands in Phase 5. Don't claim enforcement
-that isn't wired — but blocking now is.
+design. The live Evaluator *subagent* that produces verdicts landed in Phase 3
+(G3.1, `.claude/agents/gate-evaluator.md`). Phase 5 relocates enforcement to the
+git/CI boundary for non-Claude platforms (see `docs/platform-tiers.md`). Don't
+claim enforcement that isn't wired — but blocking now is.

@@ -371,9 +371,11 @@ Each phase has:
 
 ## Phase 4: Recipes — Deepen the Validated Path (deferred until Phase 3 validates)
 
-**Status:** In Progress  
+**Status:** COMPLETE ✅ (4/4 gates)  
 **Estimated:** 40 hours  
-**Target completion:** TBD
+**Actual:** ~8.5 hours  
+**Variance:** ~4.7x (faster — design work was front-loaded in Phase 3)  
+**Completed:** 2026-06-03
 
 > Previously Phase 4. Re-numbered 2026-06-02. Content unchanged — only moved.
 
@@ -442,131 +444,83 @@ Each phase has:
 
 ---
 
-## Phase 5: Multi-Tier Platform Support (deferred from original Phase 3)
+## Phase 5: Portable Enforcement & Multi-Tier Platform Support
 
-**Status:** Not Started  
-**Estimated:** 30 hours  
-**Target completion:** TBD (after Phase 3 reassessment gate)
+**Status:** Not Started (⏳ Next)  
+**Estimated:** 34 hours  
+**Target completion:** TBD
 
-> Previously Phase 3. Deferred 2026-06-02 per Decision 9 — depth before breadth.
-> Multi-tier porting before the core thesis is validated on Claude Code inverts priority.
+> Previously "Multi-Tier Platform Support" (original Phase 3). Deferred 2026-06-02 per
+> Decision 9 — depth before breadth. Re-scoped 2026-06-03 after the tier-architecture
+> review: the central insight is that off-Claude platforms **cannot** block at the
+> keystroke boundary, so enforcement is **relocated to the git/CI boundary**, which is
+> platform-neutral. This keeps Phase 5 inside Principle 1 ("if the model can hallucinate
+> past it, it's not a real boundary") instead of shipping an honor-system copy.
+> See `docs/platform-tiers.md` for the feature parity matrix and tier definitions.
 
-### Gates:
-
-#### G5.1: Tier 1 (Claude Code) - Verify Full Enforcement
-**Estimated:** 4 hours
-**Deliverables:**
-- Confirm all Phase 2–3 hooks work correctly in a clean Claude Code session
-- Installation guide for Claude Code updated
-
-#### G5.2: Tier 2 (Cursor/Windsurf) - Rule-Based
-**Estimated:** 12 hours  
-**Deliverables:**
-- Convert hooks to auto-applied rules
-- Test on Cursor and Windsurf
-- Measure compliance rate (~60-70% expected)
-- Document differences from Tier 1
-
-#### G5.3: Tier 3 (Advisory) - Markdown Guidance
-**Estimated:** 6 hours  
-**Deliverables:**
-- Generate markdown guidance from hook logic
-- Test on advisory platforms (Aider, Codex CLI, etc.)
-- Document expected compliance (~50-60%)
-
-#### G5.4: Platform Detection
-**Estimated:** 2 hours  
-**Deliverables:**
-- `scripts/detect-runtime.sh` - Auto-detect platform
-- Installation adapts to platform tier
-
----
-
-## Phase 4: Recipes (Weeks 7-8)
-
-**Status:** Not Started  
-**Estimated:** 40 hours  
-**Target completion:** 2026-07-23
+### North-star for this phase:
+> A developer on Cursor, Windsurf, or Aider — not just Claude Code — can run the **same**
+> gate/drift/memory verification Meridian enforces on Tier 1, and a deliberately drifted
+> change is **blocked at commit/CI time** regardless of which agent produced it.
 
 ### Gates:
 
-#### G4.1: Recipe: fullstack-web
-**Estimated:** 14 hours  
+#### G5.0: Reconcile & Close Tier-1 Gaps *(do first — blocks all others)*
+**Estimated:** 4 hours  
 **Deliverables:**
-- `recipes/fullstack-web/gates.yaml` - Stack-agnostic gate model
-- `recipes/fullstack-web/README.md` - Reference implementation (Next.js + FastAPI + Supabase)
-- `recipes/fullstack-web/foundation/` - Template files
-- Installation test end-to-end
+- Reconcile ROADMAP body with the summary table (remove stale duplicate phase blocks) ✓ (this edit)
+- `scripts/meridian-doctor.sh` — install validator promised in README + success criteria
+  (bash version, `jq`/`yq` presence, `gates.yaml` parses, no circular deps, hooks sourced-not-executed, memory schema valid; exits 0/1 with engineer-legible report)
+- Resolve the `yq`-less `get_current_gate()` gap (fallback parser **or** declare `yq` a hard prereq surfaced by `meridian-doctor`)
+- Fix stale cross-refs (ASSUMPTIONS A003, PHILOSOPHY multi-platform note → evaluator subagent landed in Phase 3 G3.1, not here)
+- `tests/test-doctor.sh`
 
-#### G4.2: Recipe: cli-tool
+#### G5.1: Tier 1 (Claude Code) — Verify with a Real Protocol
+**Estimated:** 3 hours  
+**Deliverables:**
+- `docs/tier1-verification.md` — exact `PreToolUse`/`PostToolUse` stdin contract, the tool calls that must trigger each hook, and what "pass" means (the 186-test suite simulates hooks via subprocess; it has never asserted the live stdin shape)
+- Captured live-session fixture + documented manual protocol
+- `meridian-doctor` green on a clean clone; installation guide updated
+
+#### G5.2: Portable Verifier + git/CI Boundary *(keystone)*
 **Estimated:** 10 hours  
 **Deliverables:**
-- `recipes/cli-tool/gates.yaml`
-- `recipes/cli-tool/README.md` - Reference implementation (Python + Click)
-- `recipes/cli-tool/foundation/`
-- Installation test
+- `scripts/meridian-verify.sh` — single platform-agnostic entry point wrapping `gate-engine.sh verify`, `drift-check.sh`, `validate-memory.sh`, and the evaluator contract; exits non-zero on any gate failure; emits JSONL (telemetry) + human summary
+- Generated `pre-commit` hook and `.github/workflows/meridian.yml` template, installed by `install.sh` for **every** tier
+- `tests/test-verify.sh` covering pass / fail / drift paths
 
-#### G4.3: Recipe: ml-research
-**Estimated:** 14 hours  
+#### G5.3: Tier 2 (Cursor/Windsurf) — Rules from a Single Source of Truth
+**Estimated:** 8 hours  
 **Deliverables:**
-- `recipes/ml-research/gates.yaml` - ML-specific gate model (DATA_CONTRACT → PIPELINE_VALIDATED → MODEL_EVAL → DEPLOY)
-- `recipes/ml-research/README.md` - Reference implementation (PyTorch + FastAPI)
-- `recipes/ml-research/foundation/`
-- Installation test
-- **This is the unique differentiator**
+- `scripts/gen-rules.sh` — generates `.cursor/rules/*.mdc` and `.windsurfrules` from the **same** `gates.yaml` + `security-rules.yaml` the hooks read (editor rules cannot drift from enforced rules)
+- Paired with the G5.2 git hook: guided at keystroke, enforced at commit
+- Idempotent-regeneration round-trip test; documented in the parity matrix
+- No fabricated compliance percentage — capability stated qualitatively (a number requires a measurement harness, which does not exist)
 
-#### G4.4: Recipe Adaptation Guide
-**Estimated:** 2 hours  
+#### G5.4: Tier 3 (Advisory) — Reference + the Same Verifier
+**Estimated:** 4 hours  
 **Deliverables:**
-- `docs/recipes.md` - How to adapt reference stacks
-- Examples of customizing gate models
+- `scripts/gen-guidance.sh` — emits structured `MERIDIAN.md` for Aider/Codex/etc. from the same source
+- CI template documented as the real enforcement path for this tier (markdown is the context layer, not the boundary)
+- No fabricated compliance percentage
+
+#### G5.5: Platform Detection + Honest Parity Matrix
+**Estimated:** 5 hours  
+**Deliverables:**
+- `scripts/detect-runtime.sh` — detect Claude Code / Cursor / Windsurf / generic; `install.sh` installs the right surface set but **always** installs the git/CI verifier
+- `docs/platform-tiers.md` — per-capability parity matrix; tiers renamed to what they are: **Enforced / Guided+CI / Reference+CI**
+- New `A005` in ASSUMPTIONS.md (enforcement-boundary relocation)
+- `tests/test-detect.sh`
 
 ---
 
-## Phase 5: Subagents (Weeks 9-10)
-
-**Status:** Not Started  
-**Estimated:** 35 hours  
-**Target completion:** 2026-08-06
-
-### Gates:
-
-#### G5.1: Gate Evaluator Subagent
-**Estimated:** 12 hours  
-**Deliverables:**
-- `.claude/agents/gate-evaluator.md` - Evaluator prompt and schema
-- JSON output schema validation
-- `run-evaluator.sh` hook integration
-- Test blocking on BLOCK recommendation
-- Test warnings on PASS_WITH_WARNINGS
-
-#### G5.2: Spec Reviewer Subagent
-**Estimated:** 8 hours  
-**Deliverables:**
-- `.claude/agents/spec-reviewer.md`
-- Checks CONTRACT.md and SPEC.md completeness
-- Returns structured gap analysis
-
-#### G5.3: Test Writer Subagent
-**Estimated:** 8 hours  
-**Deliverables:**
-- `.claude/agents/test-writer.md`
-- Writes tests from spec (not from implementation)
-- Prevents tautological tests
-
-#### G5.4: Security Auditor Subagent
-**Estimated:** 6 hours  
-**Deliverables:**
-- `.claude/agents/security-auditor.md`
-- OWASP Top 10 checks
-- AI-specific threat model
-
-#### G5.5: Subagent Integration Test
-**Estimated:** 1 hour  
-**Deliverables:**
-- All subagents invocable
-- Proper isolation (separate contexts)
-- Structured output validation
+> **Subagents (delivered in Phase 3, not a separate phase).** The original roadmap
+> scheduled a "Phase 5: Subagents." Per Decision 9 these were pulled forward into the
+> Phase 3 keystone slice: the Gate Evaluator (`.claude/agents/gate-evaluator.md`, G3.1),
+> Drift Evaluator (`.claude/agents/drift-evaluator.md`, G3.3), and Spec Reviewer
+> (`.claude/agents/spec-reviewer.md`) already exist and are wired via `run-evaluator.sh`.
+> Test Writer and Security Auditor ship as session subagents. No separate subagents phase
+> remains; this note supersedes the former stale "Phase 5: Subagents" block.
 
 ---
 
@@ -722,18 +676,18 @@ Each phase has:
 | 0. Planning & Validation | ✅ Complete | 8h | 6h | 1.33x | 2026-05-28 |
 | 1. Foundation | ✅ Complete | 40h | 40h | 1.0x | 2026-06-01 |
 | 2. Core Hooks & Skills | ✅ Complete | 60h | 49h | 1.22x | 2026-06-02 |
-| 3. Prove the Thesis *(was Phase 5/8, redirected)* | ⏳ Next | 32h | — | — | TBD |
-| 4. Recipes *(was Phase 4, unchanged)* | ⏳ Deferred | 40h | — | — | TBD |
-| 5. Multi-Tier Support *(was Phase 3, deferred)* | ⏳ Deferred | 30h | — | — | TBD |
+| 3. Prove the Thesis *(was Phase 5/8, redirected)* | ✅ Complete | 32h | 12.5h | 2.56x | 2026-06-02 |
+| 4. Recipes *(was Phase 4, unchanged)* | ✅ Complete | 40h | ~8.5h | ~4.7x | 2026-06-03 |
+| 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ⏳ Next | 34h | — | — | TBD |
 | 6. Documentation | ⏳ Deferred | 25h | — | — | TBD |
 | 7. Dogfooding & Refinement | ⏳ Deferred | 40h | — | — | TBD |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
-| **TOTAL** | | **290h** | **92h** | | TBD after Phase 3 reassessment |
+| **TOTAL** | | **294h** | **116h** | | TBD |
 
 ### Hours Breakdown
-- **Total estimated:** ~290 hours (Phase 3 re-estimated at 32h; other phases unchanged)
-- **Total actual so far:** 95 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h)
-- **Remaining:** ~195 hours estimated; Phases 4–8 targets deferred to Phase 3 reassessment gate
+- **Total estimated:** ~294 hours (Phase 5 re-scoped 30h → 34h; subagents folded into Phase 3)
+- **Total actual so far:** 116 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h, Phase 3: 12.5h, Phase 4: ~8.5h)
+- **Remaining:** ~178 hours estimated across Phases 5–8
 
 ### Working Pace Assumptions
 - **If full-time (40h/week):** 7.3 weeks remaining
@@ -762,11 +716,20 @@ As we complete phases, we'll track actual vs estimated time to calibrate future 
 |-------|----------|------------------------|
 | 0 | 1.33x (0.75x) | 0.75x |
 | 1 | 1.0x | 0.93x |
-| 2 (5/6) | 1.17x (0.85x) | 0.90x |
+| 2 | 1.22x (0.82x) | 0.90x |
+| 3 | 2.56x (0.39x) | — |
+| 4 | ~4.7x (0.21x) | — |
 
 Per-gate calibration in Phase 2 (estimate/actual): G2.1 1.14x, G2.2 1.09x,
 G2.3 1.20x, G2.4 1.20x, G2.5 1.33x — steady mild over-estimation on
-hook/script/doc work; the multiplier is converging.
+hook/script/doc work.
+
+Phases 3 and 4 ran far faster than estimated (2.56x, 4.7x), but this is **not**
+estimate convergence — it is design work front-loaded into the Phase 3 keystone
+slice making the Phase 4 recipe gates near-trivial. Treat these multipliers as a
+sequencing artifact, not a baseline. Phase 5 introduces genuinely new build work
+(portable verifier, git/CI integration, rule generation) and should be estimated
+from first principles, not from the 0.2–0.4x recipe-doc multipliers.
 
 **Target:** Operator multiplier converges toward 1.0x over time (accurate estimates)
 
@@ -810,6 +773,6 @@ hook/script/doc work; the multiplier is converging.
 
 ---
 
-**Status:** Phase 0 complete, Phase 1 in progress  
-**Last updated:** 2026-05-28  
+**Status:** Phases 0–4 complete. Phase 5 (Portable Enforcement & Multi-Tier) next.  
+**Last updated:** 2026-06-03  
 **Next milestone:** G1.1 (Gate DAG Engine) - Estimated 8h
