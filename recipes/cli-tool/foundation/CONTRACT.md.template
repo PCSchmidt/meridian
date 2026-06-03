@@ -1,0 +1,75 @@
+# CONTRACT.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+**Framework:** Meridian (cli-tool recipe)
+
+---
+
+## What This Tool Does
+
+[One paragraph: what the tool does, who runs it, and what problem it solves.
+Be specific about the primary workflow — e.g., "Developers run `mytool sync`
+to push local config files to a remote server, replacing the current manual
+scp workflow."]
+
+---
+
+## Scope
+
+### In scope
+
+- [Primary command or capability 1]
+- [Primary command or capability 2]
+- [Primary command or capability 3]
+- [Target use case — e.g., "Single-user local tool, not multi-tenant"]
+
+### Out of scope
+
+- [Explicitly excluded feature — e.g., "GUI or web interface"]
+- [Explicitly excluded feature — e.g., "Windows support (v1 is macOS/Linux only)"]
+- [Explicitly excluded feature — e.g., "Remote execution / SSH"]
+
+---
+
+## Target Platforms
+
+| Platform | Supported |
+|----------|-----------|
+| macOS | [Yes / No] |
+| Linux | [Yes / No] |
+| Windows | [Yes / No] |
+
+---
+
+## Distribution
+
+How users install this tool:
+
+- [ ] PyPI (`pip install <name>`)
+- [ ] Cargo (`cargo install <name>`)
+- [ ] Homebrew (`brew install <name>`)
+- [ ] npm global (`npm i -g <name>`)
+- [ ] Binary release (GitHub releases)
+- [ ] Internal only (not published)
+
+---
+
+## Acceptance Criteria
+
+A feature is not complete until:
+
+1. **Happy path works** — the command produces correct output for valid input
+2. **Integration verified** — the command is wired to its underlying logic end-to-end
+3. **Edge cases handled** — invalid args, missing config, empty input
+4. **Error handling present** — failures exit with the correct exit code and a clear stderr message
+5. **Hardened** — stable under repeated invocation; no leftover temp files or leaked state
+
+---
+
+## Known Constraints
+
+- [e.g., "Requires Python 3.11+"]
+- [e.g., "Config file at ~/.config/<name>/config.yaml — no XDG override in v1"]
+- [e.g., "Read-only by default; destructive ops require --force flag"]

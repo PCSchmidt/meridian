@@ -1,0 +1,64 @@
+# SPEC.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+
+Brief one-sentence description of what this tool does.
+
+---
+
+Each `##` heading below becomes one entry in FEATURES.json. Run:
+
+```bash
+MERIDIAN_PROJECT_DIR=. bash path/to/meridian/scripts/features-init.sh
+```
+
+For CLI tools, each heading typically maps to one command or one major capability.
+Use noun-phrase style ("Config Sync", not "Implement config sync").
+
+---
+
+## [Primary Command — e.g., "Sync"]
+
+[What this command does from the user's perspective. What input does it accept,
+what does it output, and what side-effect does it produce? A one-paragraph
+description is enough — the detailed arg/flag/exit-code contract goes in
+COMMANDS_SPEC.md at the next gate.]
+
+---
+
+## [Secondary Command — e.g., "Init"]
+
+[Description.]
+
+---
+
+## [Secondary Command — e.g., "Status"]
+
+[Description.]
+
+---
+
+## [Config / Settings]
+
+[How the tool is configured — config file, environment variables, or both.
+This is a feature in its own right: users need to know where to put config
+and how to override it.]
+
+---
+
+## [Error Handling and Exit Codes]
+
+[Describe the exit-code contract at a high level. Detail goes in COMMANDS_SPEC.md,
+but record here that this is a first-class feature — not an afterthought — so it
+appears in the lifecycle tracker.]
+
+---
+
+<!-- Remove this comment block before running features-init.sh
+     Headings excluded from FEATURES.json (treated as boilerplate):
+       Overview, Purpose, Goals, Non-Goals, Out of Scope,
+       References, Appendix, Changelog, Table of Contents,
+       Feature List, Features, Feature Overview
+-->

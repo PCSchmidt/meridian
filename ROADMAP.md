@@ -391,12 +391,16 @@ Each phase has:
 - Installation test end-to-end (AeroIntel, 2026-06-02) ✓
 
 #### G4.2: Recipe: cli-tool
-**Estimated:** 10 hours  
+**Status:** COMPLETE  
+**Estimated:** 10 hours | **Actual:** 2 hours | **Ratio:** 5.0x  
 **Deliverables:**
-- `recipes/cli-tool/gates.yaml`
-- `recipes/cli-tool/README.md` - Reference implementation (Python + Click)
-- `recipes/cli-tool/foundation/`
-- Installation test
+
+- `recipes/cli-tool/gates.yaml` — 5-gate DAG (confirmed → commands_approved → tests_passing → [usability_check] → package_ready) ✓
+- `recipes/cli-tool/README.md` — reference implementation (Python + Click) ✓
+- `recipes/cli-tool/foundation/CONTRACT.md.template` ✓
+- `recipes/cli-tool/foundation/SPEC.md.template` ✓
+- `recipes/cli-tool/foundation/COMMANDS_SPEC.md.template` — CLI contract template (unique to cli-tool recipe) ✓
+- Installation test (temp dir, 2026-06-03) ✓
 
 #### G4.3: Recipe: ml-research
 **Estimated:** 14 hours  

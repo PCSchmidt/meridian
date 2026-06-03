@@ -1,0 +1,105 @@
+# COMMANDS_SPEC.md
+
+**Project:** [Project name]
+**Date:** [YYYY-MM-DD]
+
+The CLI contract. Every command, flag, argument, exit code, and output format
+is locked here before implementation begins. Agents use this document as ground
+truth — if it's not here, it doesn't get built.
+
+---
+
+## Global Flags
+
+These flags apply to every command:
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--help` | `-h` | flag | — | Show help and exit |
+| `--version` | `-V` | flag | — | Show version and exit |
+| `--verbose` | `-v` | flag | false | Increase output verbosity |
+| `--quiet` | `-q` | flag | false | Suppress non-error output |
+| `--config` | `-c` | path | `~/.config/<name>/config.yaml` | Config file path |
+
+---
+
+## Command: `[command-name]`
+
+**Usage:** `<tool> [command-name] [OPTIONS] ARGS`
+
+**Description:** [One-sentence description.]
+
+**Arguments:**
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `ARG1` | yes | [Description] |
+| `ARG2` | no | [Description — note default] |
+
+**Options:**
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--output` | `-o` | path | stdout | Write output to file instead of stdout |
+| `--format` | `-f` | enum | `text` | Output format: `text`, `json` |
+| `--dry-run` | | flag | false | Show what would happen without doing it |
+| `--force` | | flag | false | Skip confirmation prompt |
+
+**Exit Codes:**
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | User error (bad args, missing input) |
+| 2 | Runtime error (file not found, network failure) |
+| 3 | [Add tool-specific codes as needed] |
+
+**Stdout:** [Describe format. E.g., "One result per line" or "JSON array when --format json"]
+
+**Stderr:** [Describe error format. E.g., "ERROR: <message>" on failure; empty on success]
+
+**Example:**
+```bash
+# Happy path
+$ <tool> [command-name] myarg
+[example output]
+
+# Error case
+$ <tool> [command-name] --bad-flag
+ERROR: unknown flag: --bad-flag
+$ echo $?
+1
+```
+
+---
+
+## Command: `[command-name-2]`
+
+[Repeat the table structure above for each command.]
+
+---
+
+## Output Format Conventions
+
+Applies to all commands unless overridden:
+
+- Normal output → stdout
+- Errors and warnings → stderr
+- `--quiet` suppresses stdout; never suppresses stderr errors
+- `--format json` wraps all output in a JSON envelope: `{"ok": true, "data": ...}` on success, `{"ok": false, "error": "..."}` on failure
+- Progress indicators (spinners, counters) → stderr so they don't pollute piped output
+
+---
+
+## Config File Schema
+
+Location: `~/.config/<name>/config.yaml` (or `--config` override)
+
+```yaml
+# All fields optional; defaults shown
+default_format: text       # text | json
+verbose: false
+[field]: [default]
+```
+
+Environment variable overrides: `<TOOLNAME>_CONFIG`, `<TOOLNAME>_VERBOSE`, etc.
