@@ -1,6 +1,6 @@
 # Meridian - Architectural Decisions & Blueprint
 **Date:** 2026-05-26  
-**Status:** Phase 2 In Progress (5/6 gates, 46h/54h so far). Phase 1 complete (7/7 gates, 40h/40h — 2026-06-01). Updated 2026-06-02.  
+**Status:** Phases 0–4 complete. Phase 5 (Multi-Tier Platform Support) in planning. Updated 2026-06-03.  
 **Repository:** https://github.com/PCSchmidt/meridian
 
 ---

@@ -4,9 +4,8 @@ A next-generation agent harness framework for AI coding assistants.
 
 ![Status](https://img.shields.io/badge/status-in%20development-green)
 ![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
-![Phase 1](https://img.shields.io/badge/phase%201-complete-brightgreen)
-![Phase 2](https://img.shields.io/badge/phase%202-5%2F6%20gates-brightgreen)
-![Tests](https://img.shields.io/badge/tests-111%20passing-brightgreen)
+![Phases 0-4](https://img.shields.io/badge/phases%200--4-complete-brightgreen)
+![Tests](https://img.shields.io/badge/tests-186%20passing-brightgreen)
 
 ---
 
@@ -25,45 +24,40 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ---
 
-## Status: Phase 2 In Progress (5/6 gates)
+## Status: Phases 0–4 Complete
 
-**Current phase:** Phase 2 — Core Hooks & Skills (5/6 gates, 46h/54h so far)
+**Current status:** Phase 4 complete — all three recipes shipped (fullstack-web, cli-tool, ml-research). Phase 5 (Multi-Tier Platform Support) is next.
 
-**Last completed:** G2.5 — Skill Progressive Disclosure (2026-06-02). Phase 1 — Foundation closed at 7/7 gates, 40h/40h, on 2026-06-01.
-
-**Tests:** 111 passing across 9 suites.
+**Tests:** 186 passing across 13 suites.
 
 ### Phase Progress
 
 | Phase | Status | Estimated | Actual |
-|-------|--------|-----------|--------|
+| ----- | ------ | --------- | ------ |
 | 0. Planning & Validation | ✅ Complete | 8h | 6h |
 | 1. Foundation | ✅ Complete | 40h | 40h |
 | 2. Core Hooks & Skills | ✅ Complete | 60h | 46h |
-| 3. Prove the Thesis *(redirected — evaluator, drift sensor, real-project validation)* | 🔄 2/5 gates | 32h | 7h |
-| 4. Recipes | ⏳ Deferred | 40h | — |
-| 5. Multi-Tier Support *(was Phase 3)* | ⏳ Deferred | 30h | — |
-| (former 5) Subagents → merged into Phase 3 | — | — | — |
+| 3. Prove the Thesis *(evaluator, drift sensor, real-project validation)* | ✅ Complete | 32h | 16h |
+| 4. Recipes *(fullstack-web, cli-tool, ml-research)* | ✅ Complete | 40h | ~8.5h |
+| 5. Multi-Tier Support *(Claude Code verify + Cursor/Windsurf + Advisory)* | ⏳ Not Started | 30h | — |
 | 6. Documentation | ⏳ Upcoming | 25h | — |
 | 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |
 
-### Phase 2 Gates (Complete)
-
-- ✅ G2.1: Security Hooks — `block-dangerous.sh`, first hook that blocks (exit 2)
-- ✅ G2.2: Gate Enforcement Hooks — validators, `run-tests`, `run-evaluator`, `gate-engine verify`
-- ✅ G2.3: Memory Management Hooks — `write-reflexion`, `global-memory-sync`, `context-trim`
-- ✅ G2.4: Core Skills — 12 skill docs + backing scripts
-- ✅ G2.5: Skill Progressive Disclosure — frontmatter metadata + `skill-manifest.sh`
-- ✅ G2.6: Phase 2 Integration Test — 131 tests across 10 suites, all passing
-
-### Phase 3 Gates (In Progress)
+### Phase 3 Gates (Complete)
 
 - ✅ G3.1: Gate Evaluator Subagent — `gate-evaluator.md`, `spec-reviewer.md`, `/evaluate`, `/review`
-- ✅ G3.2: Lifecycle-Aware Completion — `FEATURES.json`, `features-init.sh`, `features-report.sh`, `/status` upgrade
-- ⏳ G3.3: Continuous Drift Sensor
-- ⏳ G3.4: Calibrate the Judge
-- ⏳ G3.5: Minimal Installer + Real-Project Validation
+- ✅ G3.2: Lifecycle-Aware Completion — `FEATURES.json`, `features-init.sh`, `features-report.sh`
+- ✅ G3.3: Continuous Drift Sensor — `drift-evaluator.md`, `drift-report.sh`, advisory drift checks
+- ✅ G3.4: Calibrate the Judge — threshold experiment (< 5 = drifted, < 7 = warn), 3-fixture validation
+- ✅ G3.5: Minimal Installer + Real-Project Validation — `install.sh`, AeroIntel north-star test
+
+### Phase 4 Gates (Complete)
+
+- ✅ G4.1: fullstack-web recipe — gate DAG (6 gates) + README + templates
+- ✅ G4.2: cli-tool recipe — gate DAG (5 gates) + README + COMMANDS_SPEC template
+- ✅ G4.3: ml-research recipe — gate DAG (6 gates) + DATA_CONTRACT template + MODEL_CARD template
+- ✅ G4.4: Recipe Adaptation Guide — `docs/recipes.md` (stack substitution, gate customization, DAG reshape examples)
 
 See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 
@@ -76,7 +70,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 3. **Schema-validated memory** — Integrity-guaranteed JSONL storage with deduplication
 4. **Generator-Evaluator separation** — Independent evaluation prevents self-grading (validated by experiment: -3.0 point delta)
 5. **ASSUMPTIONS.md governance** — Every harness assumption documented, pruned as models improve
-6. **Pattern-based recipes** — Stack-flexible (`fullstack-web`, `cli-tool`, `ml-research`)
+6. **Pattern-based recipes** — Stack-flexible (`fullstack-web`, `cli-tool`, `ml-research`) with `DATA_CONTRACT` gate for ML methodology enforcement
 
 ---
 
@@ -114,6 +108,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 |--------|---------|
 | `scripts/features-init.sh` | Seed `.meridian/FEATURES.json` from SPEC.md headings |
 | `scripts/features-report.sh` | Two metrics: happy-path % vs full-lifecycle % |
+| `scripts/drift-report.sh` | Run drift evaluator and emit advisory drift verdict |
 
 ### Subagents (`.claude/agents/`)
 
@@ -121,6 +116,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 |-------|---------|
 | `gate-evaluator.md` | Adversarial 4-dimension scorer; pass/warn/fail verdict |
 | `spec-reviewer.md` | Spec completeness reviewer; gap and contradiction detection |
+| `drift-evaluator.md` | SPEC/FEATURES alignment scorer; advisory drift detection |
 
 ### Hook System
 
@@ -175,48 +171,57 @@ Eight event types in `.meridian/telemetry.jsonl`:
 - `memory_write`
 - `error`
 
-### Recipes (Gate Definitions)
+### Recipes (Gate Definitions + Foundation Templates)
 
 ```
 recipes/
-  fullstack-web/gates.yaml    # Frontend + backend + database gate model
-  cli-tool/gates.yaml         # Command-line tool gate model
-  ml-research/gates.yaml      # ML pipeline gate model (unique to Meridian)
+  fullstack-web/
+    gates.yaml                        # 6-gate DAG: frontend + backend + database
+    README.md                         # Reference implementation (Next.js + FastAPI + Supabase)
+    foundation/CONTRACT.md.template
+    foundation/SPEC.md.template
+  cli-tool/
+    gates.yaml                        # 5-gate DAG: commands → tests → package
+    README.md                         # Reference implementation (Python + Click)
+    foundation/CONTRACT.md.template
+    foundation/SPEC.md.template
+    foundation/COMMANDS_SPEC.md.template   # CLI contract: every command/flag/exit code
+  ml-research/
+    gates.yaml                        # 6-gate DAG: data_contract → pipeline → model_eval → deploy
+    README.md                         # Reference implementation (PyTorch + FastAPI)
+    foundation/DATA_CONTRACT.md.template   # The unique differentiator: methodology decisions locked before training
+    foundation/CONTRACT.md.template
+    foundation/SPEC.md.template
+    foundation/MODEL_CARD.md.template
+```
+
+**The `DATA_CONTRACT` gate** — unique to Meridian — enforces that the human defines the target metric, evaluation thresholds, baseline, and approach constraints before a line of training code runs. No other agent framework enforces ML methodological decisions.
+
+### Documentation
+
+```
+docs/
+  recipes.md    # Recipe adaptation guide: stack substitution, gate customization, DAG reshape examples
 ```
 
 ---
 
 ## What's Coming
 
-### Remaining in Phase 3
+### Phase 5: Multi-Tier Platform Support
 
-- [ ] G3.3 — Continuous Drift Sensor (advisory warning light)
-- [ ] G3.4 — Calibrate the Judge (fixture-based discrimination test)
-- [ ] G3.5 — Minimal Installer + Real-Project Validation
+- [ ] G5.1 — Tier 1 (Claude Code): verify full enforcement in a clean session, update installation guide
+- [ ] G5.2 — Tier 2 (Cursor/Windsurf): convert hooks to auto-applied rules (~60-70% compliance)
+- [ ] G5.3 — Tier 3 (Advisory): generate markdown guidance from hook logic (~50-60% compliance)
+- [ ] G5.4 — Platform detection: `detect-runtime.sh` auto-adapts installation to platform tier
 
-### Core Architecture (Phase 5)
+### Phase 6: Documentation
 
-- [ ] Multi-tier platform support (Claude Code, Cursor/Windsurf, Advisory)
-- [ ] Live in-loop Gate Evaluator **subagent** (G5.1) — the verdict *contract* is already enforced by `run-evaluator.sh`
-- [ ] Cost capture wired to a token source (aggregation already built in `cost-report.sh`)
+- Full user guide, API reference, getting-started tutorial
 
-### Shipped in Phase 2
+### Phase 7: Dogfooding & Refinement
 
-- [x] `block-dangerous.sh` — security rule enforcement (exit 2)
-- [x] `validate-contract.sh` / `validate-spec.sh` / `validate-roadmap.sh` — gate artifact checks
-- [x] `run-evaluator.sh` — generator-evaluator verdict enforcement
-- [x] `write-reflexion.sh` — reflexion writer
-- [x] `global-memory-sync.sh` — cross-project pattern sync
-- [x] `context-trim.sh` — episodic memory trimming
-- [x] 14 skills (`/start`, `/deploy`, `/rollback`, `/security`, `/costs`, `/testing`, `/build-rules`, `/critical-thinker`, `/research`, `/health`, `/status`, `/memory`, `/evaluate`, `/review`) with progressive disclosure
-- [x] `features-init.sh` / `features-report.sh` — lifecycle-aware completion (happy-path % vs full-lifecycle %)
-- [x] `gate-evaluator.md` / `spec-reviewer.md` — adversarial subagents for generator-evaluator separation
-
-### Recipes (Phase 4)
-
-- [ ] `fullstack-web` — full gate model with reference implementation (Next.js + FastAPI + Supabase)
-- [ ] `cli-tool` — full gate model with reference implementation (Python + Click)
-- [ ] `ml-research` — full gate model with reference implementation (PyTorch + FastAPI) — **unique to Meridian**
+- Run Meridian on 2-3 real projects; tighten based on friction
 
 ---
 
@@ -246,18 +251,21 @@ meridian/
 
   .claude/                    # Claude Code integration
     hooks/                    # PreToolUse / PostToolUse enforcement
-    skills/                   # Slash-command skill definitions
-    agents/                   # Subagent definitions (Phase 5)
+    skills/                   # 14 slash-command skill definitions
+    agents/                   # 3 subagent definitions
 
   scripts/                    # Core framework scripts
-  recipes/                    # Pattern-based gate definitions
+  recipes/                    # Pattern-based gate definitions + foundation templates
     fullstack-web/
     cli-tool/
     ml-research/
 
-  tests/                      # Test suites (111 tests passing)
-  experiment/                 # Generator-Evaluator validation
-  docs/                       # Documentation (Phase 6)
+  docs/                       # Framework documentation
+    recipes.md                # Recipe adaptation guide
+
+  tests/                      # 13 test suites (186 tests passing)
+  experiment/                 # Generator-Evaluator validation experiment
+  install.sh                  # One-command project installer
 
   README.md
   ROADMAP.md                  # Gate progress and calibration tracking
@@ -268,7 +276,7 @@ meridian/
 
 ---
 
-## Installation (Coming in Phase 6)
+## Installation
 
 ```bash
 # Clone the framework
@@ -276,11 +284,15 @@ git clone https://github.com/PCSchmidt/meridian
 
 # Install to your project
 cd your-project
-bash ../meridian/install.sh --recipe fullstack-web
+bash ../meridian/install.sh . --recipe fullstack-web
+# or: --recipe cli-tool
+# or: --recipe ml-research
 
 # Verify installation
-bash meridian-doctor.sh
+bash scripts/gate-engine.sh validate .meridian/gates.yaml
 ```
+
+See [docs/recipes.md](docs/recipes.md) for adapting the recipe to your stack.
 
 ---
 
@@ -289,16 +301,20 @@ bash meridian-doctor.sh
 ```bash
 bash tests/test-hooks.sh               # Hook system (7 tests)
 bash tests/test-telemetry.sh           # Telemetry pipeline (8 tests)
+bash tests/test-security.sh            # Security blocklist (14 tests)
 bash tests/test-health.sh              # /health report (12 tests)
 bash tests/test-status.sh              # /status command (11 tests)
-bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
-bash tests/test-security.sh            # Security blocklist (14 tests)
 bash tests/test-gate-enforcement.sh    # Gate validators + evaluator (19 tests)
 bash tests/test-memory-hooks.sh        # Reflexion / sync / trim (14 tests)
-bash tests/test-skills.sh              # Core skills + manifest (18 tests)
+bash tests/test-skills.sh              # Core skills + manifest (19 tests)
+bash tests/test-lifecycle.sh           # Lifecycle-aware completion (19 tests)
+bash tests/test-drift.sh               # Drift sensor (15 tests)
+bash tests/test-calibration.sh         # Judge calibration (21 tests)
+bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
+bash tests/test-integration-phase2.sh  # Phase 2 end-to-end (19 tests)
 ```
 
-All 9 suites — **111 tests** — pass on Windows / Git Bash.
+All 13 suites — **186 tests** — pass on Windows / Git Bash.
 
 ---
 
@@ -308,6 +324,7 @@ All 9 suites — **111 tests** — pass on Windows / Git Bash.
 - [ROADMAP.md](ROADMAP.md) — Gate progress and calibration data
 - [PHILOSOPHY.md](PHILOSOPHY.md) — Design principles and rationale
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — Harness assumptions governance
+- [Recipe Adaptation Guide](docs/recipes.md) — How to adapt recipes to your stack
 - [Hook System](.claude/hooks/README.md) — Hook architecture and usage
 
 ---
@@ -344,4 +361,4 @@ Built on research and patterns from:
 
 ---
 
-**Phase 1 complete; Phase 2 at 5/6 gates.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, and 12 progressively-disclosed skills have all shipped (111 tests passing). Next: the Phase 2 integration test (G2.6). Target: v0.1.0 by 2026-09-10.
+**Phases 0–4 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer validated on a real project, and three complete recipes (fullstack-web, cli-tool, ml-research) have all shipped (186 tests passing). Next: Phase 5 multi-tier platform support (Cursor/Windsurf/advisory). Target: v0.1.0 by 2026-09-10.

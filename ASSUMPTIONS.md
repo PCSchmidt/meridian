@@ -16,7 +16,7 @@
 
 **Rule:** The Coding Agent is prompted to work on exactly one feature per session. `FEATURES.json` tracks feature state, and the agent is instructed to mark only one feature as `in_progress` at a time.
 
-**Implementation status:** PLANNED (Phase 2/4). `FEATURES.json` is a framework-delivered artifact for *end-user projects* built with Meridian — it ships as part of the recipes and install flow (G4.x), with schema validation via the gate-enforcement hooks (G2.2). It is not yet implemented. Meridian's *own* development follows the one-feature/one-gate discipline through the gate model in [ROADMAP.md](ROADMAP.md) and the reflexion log in `.meridian/memory/corrections.jsonl`, not a `FEATURES.json` file.
+**Implementation status:** IMPLEMENTED (Phase 4 complete). `FEATURES.json` is a framework-delivered artifact for *end-user projects* built with Meridian — it ships via `install.sh` with any recipe (G3.5/G4.x), seeded from SPEC.md headings by `features-init.sh`, and schema validation runs via the gate-enforcement hooks (G2.2). Meridian's *own* development follows the one-feature/one-gate discipline through the gate model in [ROADMAP.md](ROADMAP.md) and the reflexion log in `.meridian/memory/corrections.jsonl`, not a `FEATURES.json` file.
 
 **Review trigger:** Model reliably self-limits scope without the constraint. Evidence: successful multi-feature implementations across 10+ sessions without context overflow.
 
@@ -34,7 +34,7 @@
 
 **Rule:** `FEATURES.json` uses JSON format instead of markdown. Agents are explicitly told not to remove or edit feature entries, only to update the `passing` field. A JSON schema validates all writes via PostToolUse hook.
 
-**Implementation status:** PLANNED (Phase 2/4) — see A001. The JSON-not-markdown principle is already proven in Phase 1 by the schema-validated memory system (`.meridian/memory/*.json[l]` validated via `validate-memory.sh` on PostToolUse). `FEATURES.json` applies that same discipline to feature tracking for end-user projects; it ships with the recipes and install flow, not yet built.
+**Implementation status:** IMPLEMENTED (Phase 4 complete) — see A001. The JSON-not-markdown principle is proven in Phase 1 by the schema-validated memory system (`.meridian/memory/*.json[l]` validated via `validate-memory.sh` on PostToolUse). `FEATURES.json` applies that same discipline to feature tracking for end-user projects and ships with the recipes and install flow.
 
 **Review trigger:** Model reliably respects markdown task lists without modification across 10+ sessions. Evidence: no false completion markers, no deleted entries, no format corruption.
 
