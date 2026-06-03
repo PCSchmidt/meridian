@@ -1,0 +1,110 @@
+# MODEL_CARD.md
+
+**Project:** [Project name]
+**Model version:** [e.g., v1.0.0]
+**Date trained:** [YYYY-MM-DD]
+**Owner:** [Your name]
+
+Required at the `model_eval` gate. Captures what the model is, how it was
+trained, what it can and cannot do, and how to reproduce it.
+
+---
+
+## Model Details
+
+| Field | Value |
+|-------|-------|
+| Architecture | [e.g., IsolationForest / RandomForestClassifier / 3-layer MLP] |
+| Framework | [e.g., scikit-learn 1.4.2 / PyTorch 2.3] |
+| Input | [e.g., "6 numeric features: icao24, latitude, longitude, altitude, velocity, heading"] |
+| Output | [e.g., "Binary anomaly flag (0/1) + anomaly score (float)"] |
+| Training data | [Reference to DATA_CONTRACT.md data source and date range] |
+| Model file | [e.g., `models/anomaly_detector_v1.pkl` / `models/checkpoint_epoch42.pt`] |
+| Checkpoint size | [e.g., "4.2 MB"] |
+
+---
+
+## Training Configuration
+
+```yaml
+# Reproduce this run:
+model:
+  type: [ModelClass]
+  hyperparameters:
+    [param_1]: [value]
+    [param_2]: [value]
+
+data:
+  source: [reference to DATA_CONTRACT.md]
+  train_cutoff: [YYYY-MM-DD]
+  val_cutoff: [YYYY-MM-DD]
+  test_cutoff: [YYYY-MM-DD]
+
+training:
+  random_seed: [e.g., 42]
+  [other reproducibility fields]
+```
+
+---
+
+## Evaluation Results
+
+Evaluated on held-out test set. Full results in EVAL_RESULTS.md.
+
+| Metric | Contract threshold | Actual |
+|--------|-------------------|--------|
+| [e.g., Precision] | ≥ [threshold] | [actual value] |
+| [e.g., Recall] | ≥ [threshold] | [actual value] |
+| [e.g., Inference latency p95] | ≤ [threshold] | [actual value] |
+
+**Baseline comparison:** [e.g., "Beats IsolationForest baseline by +0.12 precision, +0.08 recall"]
+
+---
+
+## Intended Use
+
+- **Intended use:** [What this model is built for. e.g., "Real-time flight anomaly detection for AeroIntel dashboard"]
+- **Intended users:** [Who operates this system. e.g., "Air traffic monitoring analysts"]
+- **Out-of-scope use:** [What this model should NOT be used for. e.g., "Not validated for non-commercial aviation or military aircraft"]
+
+---
+
+## Limitations and Risks
+
+- [e.g., "Performance degrades significantly below 1000 training samples per class"]
+- [e.g., "Model has not been evaluated on non-European airspace data"]
+- [e.g., "Anomaly scores are not calibrated probabilities — do not treat them as such"]
+- [e.g., "Model is sensitive to input feature scaling — preprocessing pipeline must be applied"]
+
+---
+
+## Fairness and Bias
+
+[For most infrastructure/technical ML projects this is N/A. If the model
+makes decisions about people, document relevant bias analysis here.]
+
+---
+
+## How to Load and Run
+
+```python
+import pickle
+
+# Load
+with open("models/[model_file]", "rb") as f:
+    model = pickle.load(f)
+
+# Predict (apply the same preprocessing as training)
+from pipeline import preprocess
+X = preprocess(raw_input)
+prediction = model.predict(X)
+score = model.decision_function(X)  # if applicable
+```
+
+---
+
+## Changelog
+
+| Version | Date | Change |
+|---------|------|--------|
+| v1.0.0 | [YYYY-MM-DD] | Initial model |

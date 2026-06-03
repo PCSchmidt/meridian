@@ -403,13 +403,18 @@ Each phase has:
 - Installation test (temp dir, 2026-06-03) ✓
 
 #### G4.3: Recipe: ml-research
-**Estimated:** 14 hours  
+**Status:** COMPLETE  
+**Estimated:** 14 hours | **Actual:** 2 hours | **Ratio:** 7.0x  
 **Deliverables:**
-- `recipes/ml-research/gates.yaml` - ML-specific gate model (DATA_CONTRACT → PIPELINE_VALIDATED → MODEL_EVAL → DEPLOY)
-- `recipes/ml-research/README.md` - Reference implementation (PyTorch + FastAPI)
-- `recipes/ml-research/foundation/`
-- Installation test
-- **This is the unique differentiator**
+
+- `recipes/ml-research/gates.yaml` — 6-gate DAG with DATA_CONTRACT as first gate ✓
+- `recipes/ml-research/README.md` — reference implementation (PyTorch + FastAPI), DATA_CONTRACT pattern explained ✓
+- `recipes/ml-research/foundation/DATA_CONTRACT.md.template` — the unique differentiator artifact ✓
+- `recipes/ml-research/foundation/CONTRACT.md.template` ✓
+- `recipes/ml-research/foundation/SPEC.md.template` ✓
+- `recipes/ml-research/foundation/MODEL_CARD.md.template` ✓
+- Installation test (temp dir, 2026-06-03) ✓
+- **This is the unique differentiator** — no other agent framework enforces human methodological decisions before model training
 
 #### G4.4: Recipe Adaptation Guide
 **Estimated:** 2 hours  

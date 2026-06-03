@@ -1,0 +1,122 @@
+# DATA_CONTRACT.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+**Framework:** Meridian (ml-research recipe)
+
+This document is the single source of truth for what this ML experiment is
+trying to do. The agent implements; the human decides. Fill every section
+before the `data_contract` gate is approved.
+
+---
+
+## Problem Statement
+
+[One paragraph: what real-world decision or task does this model support?
+Who uses the output, and what do they do with it?]
+
+---
+
+## Data Source
+
+| Field | Value |
+|-------|-------|
+| Source | [e.g., OpenSky Network REST API / PostgreSQL table `flights` / S3 bucket] |
+| Volume | [Approximate rows and size — e.g., "~500k rows, ~2GB uncompressed"] |
+| Freshness | [How often does the data update? e.g., "Real-time, polled every 60s"] |
+| Access | [How is data retrieved? e.g., "REST API with API key in env var OPENSKY_KEY"] |
+| License | [License or data use agreement, if applicable] |
+
+---
+
+## Schema
+
+```
+Field name       | Type    | Description
+-----------------|---------|---------------------------------------------
+[field_1]        | string  | [Description, e.g., "ICAO 24-bit aircraft address"]
+[field_2]        | float   | [Description, e.g., "Latitude in decimal degrees"]
+[field_3]        | float   | [Description]
+...
+```
+
+### Known Data Quality Issues
+
+- [e.g., "~3% of rows have null altitude — treat as missing, not zero"]
+- [e.g., "Callsign field is sparse for cargo aircraft"]
+- [None known — document this explicitly if true]
+
+---
+
+## Target
+
+| Field | Value |
+|-------|-------|
+| Column / output | [e.g., `anomaly_flag` (boolean)] |
+| Type | [Classification / Regression / Clustering / Generation] |
+| Class balance | [e.g., "~5% positive class at normal contamination rate"] |
+| Ground truth | [How is the target defined? Manual labels, heuristic, simulation?] |
+
+---
+
+## Train / Val / Test Split
+
+| Split | Size | Method |
+|-------|------|--------|
+| Train | [e.g., 70%] | [e.g., Random stratified / temporal cutoff YYYY-MM-DD] |
+| Validation | [e.g., 15%] | [same method] |
+| Test | [e.g., 15%] | [same method — held out until final eval] |
+
+**Temporal note:** [If time-series data: explicitly state that no future data
+leaks into training. e.g., "Train ends 2025-01-01; val 2025-01-01 to 2025-03-01;
+test 2025-03-01 onward."]
+
+---
+
+## Success Metric
+
+The model must meet **all** thresholds to pass the `model_eval` gate:
+
+| Metric | Threshold | Rationale |
+|--------|-----------|-----------|
+| [e.g., Precision] | ≥ [e.g., 0.85] | [e.g., "False positives waste analyst time"] |
+| [e.g., Recall] | ≥ [e.g., 0.70] | [e.g., "Missing 30% of anomalies is acceptable for v1"] |
+| [e.g., Inference latency] | ≤ [e.g., 50ms p95] | [e.g., "API SLA requires sub-100ms response"] |
+
+---
+
+## Baseline
+
+The model must beat this baseline to justify the added complexity:
+
+| Baseline | Description | Expected performance |
+|----------|-------------|----------------------|
+| [e.g., IsolationForest (default params)] | [Brief description] | [e.g., "Precision ~0.70, Recall ~0.60"] |
+
+**Why this baseline:** [One sentence. e.g., "IsolationForest is the simplest
+unsupervised anomaly detector; any supervised approach should outperform it."]
+
+---
+
+## Approach Constraints
+
+Human-approved decisions about the approach (not to be overridden by the agent):
+
+- **Model family:** [e.g., "Ensemble methods preferred; no LLMs for this task"]
+- **Feature engineering:** [e.g., "Use only the schema fields above; no external enrichment"]
+- **Hyperparameter search:** [e.g., "Grid search over 3 key hyperparameters; no AutoML"]
+- **Interpretability:** [e.g., "Feature importance required — black-box models need SHAP"]
+- **Rejected approaches:** [e.g., "Deep learning: overkill for tabular data at this volume"]
+
+---
+
+## Deployment Target
+
+| Field | Value |
+|-------|-------|
+| Serving | [e.g., FastAPI on Railway / Flask / AWS Lambda / batch job] |
+| Inference mode | [Real-time API / Batch / Embedded] |
+| Latency budget | [e.g., "p95 < 50ms per request"] |
+| Throughput | [e.g., "~100 req/min peak"] |
+| Model format | [e.g., "pickle / ONNX / TorchScript"] |

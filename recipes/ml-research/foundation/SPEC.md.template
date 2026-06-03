@@ -1,0 +1,78 @@
+# SPEC.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+
+Brief one-sentence description of what this project builds.
+
+---
+
+Each `##` heading below becomes one entry in FEATURES.json. Run:
+
+```bash
+MERIDIAN_PROJECT_DIR=. bash path/to/meridian/scripts/features-init.sh
+```
+
+For ML projects, features typically span the full stack: data pipeline,
+model training, API serving, and frontend (if any). Each is a feature
+in its own right — a 100%-happy-path / 0%-full-lifecycle split on any
+one of them is a meaningful signal.
+
+---
+
+## Data Pipeline
+
+[The full path from raw source to model-ready tensors/arrays. Includes
+data fetching, schema validation, preprocessing, and train/val/test split.
+"Done" means the pipeline runs end-to-end and produces reproducible splits
+that match DATA_CONTRACT.md.]
+
+---
+
+## Model Training
+
+[The training loop and evaluation harness. "Done" means the model meets
+all metric thresholds in DATA_CONTRACT.md and the training run is
+reproducible from a saved config.]
+
+---
+
+## Model Evaluation
+
+[Benchmark against the baseline defined in DATA_CONTRACT.md. Includes
+confusion matrix (classification), feature importance, and any
+contract-required visualizations. "Done" means EVAL_RESULTS.md
+and MODEL_CARD.md are complete and accurate.]
+
+---
+
+## Inference API
+
+[The serving layer — REST endpoint(s) that accept input, run inference,
+and return structured predictions. "Done" means latency budget from
+DATA_CONTRACT.md is met under realistic load.]
+
+---
+
+## [Frontend / Dashboard] (optional)
+
+[If the project has a UI: what it shows and to whom. Delete this section
+if there's no user-facing interface.]
+
+---
+
+## Monitoring and Logging
+
+[How predictions and errors are logged. Minimum: structured prediction
+log with input, output, latency, and timestamp. "Done" means the log
+is queryable and errors surface without tailing logs manually.]
+
+---
+
+<!-- Remove this comment block before running features-init.sh
+     Headings excluded from FEATURES.json (treated as boilerplate):
+       Overview, Purpose, Goals, Non-Goals, Out of Scope,
+       References, Appendix, Changelog, Table of Contents,
+       Feature List, Features, Feature Overview
+-->

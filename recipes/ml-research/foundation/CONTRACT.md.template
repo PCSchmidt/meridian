@@ -1,0 +1,68 @@
+# CONTRACT.md
+
+**Project:** [Project name]
+**Owner:** [Your name]
+**Date:** [YYYY-MM-DD]
+**Framework:** Meridian (ml-research recipe)
+
+---
+
+## What This Project Does
+
+[One paragraph: the product or research goal. What gets built, who uses it,
+and what decision or task does the ML component support?]
+
+---
+
+## Scope
+
+### In scope
+
+- [ML capability 1 — e.g., "Anomaly detection API endpoint"]
+- [ML capability 2 — e.g., "Model training pipeline"]
+- [Serving layer — e.g., "REST API on Railway"]
+- [Monitoring — e.g., "Basic prediction logging to Supabase"]
+
+### Out of scope
+
+- [e.g., "Online/continual learning — model is retrained manually"]
+- [e.g., "Multi-model ensembling beyond the approach in DATA_CONTRACT.md"]
+- [e.g., "User-facing explanation UI"]
+
+---
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| ML framework | [PyTorch / scikit-learn / TensorFlow / JAX] |
+| Data processing | [pandas / Polars / Spark] |
+| Experiment tracking | [MLflow / W&B / none] |
+| API serving | [FastAPI / Flask / AWS Lambda] |
+| Database | [PostgreSQL / Supabase / S3] |
+| Deploy | [Railway / Fly.io / AWS / GCP] |
+
+---
+
+## Acceptance Criteria
+
+A feature is not complete until:
+
+1. **Happy path works** — the feature produces correct output for valid input
+2. **Integration verified** — data flows end-to-end (source → pipeline → model → API)
+3. **Edge cases handled** — missing data, schema drift, empty batches
+4. **Error handling present** — failures surface as structured error responses, not tracebacks
+5. **Hardened** — stable under sustained load; model checkpoint persisted and recoverable
+
+Additionally for the ML component:
+- Model meets all thresholds in DATA_CONTRACT.md
+- MODEL_CARD.md is complete and accurate
+- Inference latency meets the latency budget in DATA_CONTRACT.md
+
+---
+
+## Known Constraints
+
+- [e.g., "Data is only available via REST API — no bulk export"]
+- [e.g., "GPU not available in production; model must run on CPU at acceptable latency"]
+- [e.g., "No PII in training data — audit required before any new data source is added"]
