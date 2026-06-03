@@ -466,14 +466,14 @@ Each phase has:
 ### Gates:
 
 #### G5.0: Reconcile & Close Tier-1 Gaps *(do first — blocks all others)*
-**Estimated:** 4 hours  
+**Status:** COMPLETE ✅  
+**Estimated:** 4 hours | **Actual:** 2 hours | **Ratio:** 2.0x  
 **Deliverables:**
-- Reconcile ROADMAP body with the summary table (remove stale duplicate phase blocks) ✓ (this edit)
-- `scripts/meridian-doctor.sh` — install validator promised in README + success criteria
-  (bash version, `jq`/`yq` presence, `gates.yaml` parses, no circular deps, hooks sourced-not-executed, memory schema valid; exits 0/1 with engineer-legible report)
-- Resolve the `yq`-less `get_current_gate()` gap (fallback parser **or** declare `yq` a hard prereq surfaced by `meridian-doctor`)
-- Fix stale cross-refs (ASSUMPTIONS A003, PHILOSOPHY multi-platform note → evaluator subagent landed in Phase 3 G3.1, not here)
-- `tests/test-doctor.sh`
+- Reconcile ROADMAP body with the summary table (remove stale duplicate phase blocks) ✓
+- `scripts/meridian-doctor.sh` — install validator: bash version, `jq`/`yq` presence, `gates.yaml` parse + circular-dep check, hooks sourced-not-executed, memory schema valid; engineer-legible report, exits 0 (GOOD/WARNING) / 1 (CRITICAL) ✓
+- `yq`-less gap resolved by **declaring `yq` a hard prereq surfaced loudly by `meridian-doctor`** (CRITICAL + install instructions), not a fragile awk DAG parser — a partial fallback would silently mishandle multi-line `requires:` lists and fake a boundary (Principle 1) ✓
+- Fix stale cross-refs (ASSUMPTIONS A003, PHILOSOPHY multi-platform note, CLAUDE enforcement note → evaluator subagent landed in Phase 3 G3.1) ✓
+- `tests/test-doctor.sh` — 8 tests; full suite now 194 tests / 14 suites, all green ✓
 
 #### G5.1: Tier 1 (Claude Code) — Verify with a Real Protocol
 **Estimated:** 3 hours  
