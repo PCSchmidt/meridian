@@ -417,10 +417,28 @@ Each phase has:
 - **This is the unique differentiator** — no other agent framework enforces human methodological decisions before model training
 
 #### G4.4: Recipe Adaptation Guide
-**Estimated:** 2 hours  
+**Status:** COMPLETE  
+**Estimated:** 2 hours | **Actual:** 1 hour | **Ratio:** 2.0x  
 **Deliverables:**
-- `docs/recipes.md` - How to adapt reference stacks
-- Examples of customizing gate models
+
+- `docs/recipes.md` — how to choose a recipe, substitute stacks, reshape gate DAGs ✓
+- Stack substitution tables for all three recipes ✓
+- Gate customization reference (all fields, required vs optional, adding/removing gates) ✓
+- Custom hook template and from-scratch recipe example ✓
+- Concrete examples: collapse fullstack DAG, add staging gate, add install-test gate, add drift-check gate ✓
+
+---
+
+## Phase 4 Reflexion
+
+**Phase status:** COMPLETE (4/4 gates)  
+**Estimated:** 40 hours | **Actual:** ~8.5 hours | **Phase ratio:** ~4.7x
+
+**Pattern:** All four gates in Phase 4 ran 2–7x faster than estimated. Root cause is consistent: the design and validation work happened in Phase 3 (G3.5 north-star test). By the time G4.x started, all three recipes were already proven concepts — the work was documentation, not design.
+
+**Corrected estimate for future recipe doc gates:** 1–2h each (not 10–14h). The 10–14h estimates assumed design-from-scratch work that didn't exist.
+
+**What the ratio means:** A 4.7x ratio here is not a calibration failure — it's a signal that Phase 3 did its job. The purpose of the north-star test was to validate before investing in breadth. It validated completely. Phase 4 was the breadth investment; it was cheap because Phase 3 was thorough.
 
 ---
 
