@@ -34,8 +34,12 @@ boundary is a Claude Code privilege; the commit boundary is universal.
 | Tier | Name | Platforms | Keystroke boundary | Commit/CI boundary |
 |------|------|-----------|--------------------|--------------------|
 | 1 | **Enforced** | Claude Code | Hooks block (exit 2) | Verifier blocks |
-| 2 | **Guided + CI** | Cursor, Windsurf | Editor rules (context, advisory) | Verifier blocks |
+| 2 | **Guided + CI** | Cursor, Windsurf, Cline | Editor rules (context, advisory) | Verifier blocks |
 | 3 | **Reference + CI** | Aider, Codex CLI, generic | Markdown guidance (context, advisory) | Verifier blocks |
+
+A platform is Tier 2 if it auto-loads a project rules file into context but has no
+exit-2-style hook to block a tool call. **Cline** qualifies (it loads `.clinerules`
+but cannot mechanically block) — same profile as Cursor/Windsurf.
 
 "Guided" and "Reference" describe the *context* layer honestly: it shapes behavior but
 does not block. The teeth on Tiers 2 and 3 come from the shared commit/CI boundary.
@@ -74,12 +78,23 @@ set*, but **always** installs the git/CI verifier:
 | Tier | Installed surfaces |
 |------|--------------------|
 | 1 | `.claude/hooks/` + `pre-commit` + CI workflow |
-| 2 | `.cursor/rules/*.mdc` + `.windsurfrules` (generated) + `pre-commit` + CI workflow |
+| 2 | generated editor rules + `pre-commit` + CI workflow |
 | 3 | `MERIDIAN.md` (generated) + `pre-commit` + CI workflow |
 
-Editor rules and advisory markdown are **generated from the same `gates.yaml` and
-`security-rules.yaml` the hooks read** (`gen-rules.sh`, `gen-guidance.sh`), so the context
-layer cannot silently drift from the enforced layer.
+The Tier-2 editor rules are generated per platform by `scripts/gen-rules.sh`:
+
+| Platform | Generated file |
+|----------|----------------|
+| Cursor | `.cursor/rules/meridian.mdc` (MDC, `alwaysApply: true`) |
+| Windsurf | `.windsurf/rules/meridian.md` |
+| Cline | `.clinerules/meridian.md` |
+| Advisory (Tier 3) | `MERIDIAN.md` |
+
+All four come from **one generator** reading the same `.meridian/gates.yaml` and
+`.meridian/security-rules.yaml` the hooks read, so the context layer cannot silently
+drift from the enforced layer. Output is deterministic (no timestamps): regenerating
+produces a byte-identical file, which the test suite asserts. Regenerate after editing
+either source: `bash scripts/gen-rules.sh --platform all`.
 
 ---
 
@@ -100,11 +115,11 @@ Tier definitions and this matrix are the design target for **Phase 5** (Portable
 & Multi-Tier Platform Support). Implementation gates:
 
 - **G5.2** ✅ — `meridian-verify.sh` + `templates/pre-commit` + `templates/meridian-ci.yml`, installed by `install.sh` for every tier. **The shared commit/CI boundary now exists and is proven end-to-end** (a failing verification rejects a real git commit). This is what gives Tiers 2 and 3 their teeth.
-- **G5.3** ☐ — `gen-rules.sh` (Tier 2 editor surfaces)
-- **G5.4** ☐ — `gen-guidance.sh` (Tier 3 surface)
-- **G5.5** ☐ — `detect-runtime.sh` + this matrix maintained as capabilities land
+- **G5.3** ✅ — `scripts/gen-rules.sh` generates the Tier-2 editor surfaces (Cursor, Windsurf, Cline) from the same source as the hooks; idempotent, round-trip tested.
+- **G5.4** ✅ — the same generator emits the Tier-3 `MERIDIAN.md` (`--platform advisory`); no separate `gen-guidance.sh` was needed.
+- **G5.5** ☐ — `detect-runtime.sh` + wiring `gen-rules.sh` into `install.sh` per detected platform; this matrix maintained as capabilities land.
 
-The commit/CI boundary (the "CI-Enforced" column above) is **live as of G5.2**. The Tier 2/3
-*context* surfaces (editor rules, advisory markdown) are still pending (G5.3–G5.4); until then,
-non-Claude platforms get enforcement via the verifier + git/CI, just not yet the generated
-in-editor guidance. See ROADMAP.md Phase 5 for gate status.
+The commit/CI boundary (the "CI-Enforced" column above) is **live as of G5.2**, and the Tier-2/3
+*context* surfaces are **generated as of G5.3/G5.4**. What remains (G5.5) is auto-detecting the
+platform so `install.sh` emits the right surface set automatically; until then, generate them
+explicitly with `bash scripts/gen-rules.sh --platform all`. See ROADMAP.md Phase 5 for status.

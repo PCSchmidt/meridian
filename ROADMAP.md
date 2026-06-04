@@ -495,20 +495,24 @@ Each phase has:
 - Dogfooded: `install.sh` into a fresh git repo produces a working pre-commit + CI + verifier that passes against the real cli-tool `gates.yaml` ✓
 - Full suite now 211 tests / 16 suites, all green ✓
 
-#### G5.3: Tier 2 (Cursor/Windsurf) — Rules from a Single Source of Truth
-**Estimated:** 8 hours  
+#### G5.3: Tier 2 (Cursor/Windsurf/Cline) — Rules from a Single Source of Truth
+**Status:** COMPLETE ✅  
+**Estimated:** 8 hours | **Actual:** 2.5 hours | **Ratio:** 3.2x  
 **Deliverables:**
-- `scripts/gen-rules.sh` — generates `.cursor/rules/*.mdc` and `.windsurfrules` from the **same** `gates.yaml` + `security-rules.yaml` the hooks read (editor rules cannot drift from enforced rules)
-- Paired with the G5.2 git hook: guided at keystroke, enforced at commit
-- Idempotent-regeneration round-trip test; documented in the parity matrix
-- No fabricated compliance percentage — capability stated qualitatively (a number requires a measurement harness, which does not exist)
+- `scripts/gen-rules.sh` — one generator core that renders Meridian's enforced rules from the **same** `.meridian/gates.yaml` + `security-rules.yaml` the hooks read, through per-platform adapters: Cursor (`.cursor/rules/meridian.mdc`, MDC `alwaysApply` frontmatter), Windsurf (`.windsurf/rules/meridian.md`), **Cline** (`.clinerules/meridian.md`), and advisory (`MERIDIAN.md`). Output has no timestamps → deterministic/idempotent, so surfaces provably can't drift from the hooks ✓
+- Renders the real gate DAG (deps, artifacts, pre-hooks) + the security blocklist (block/warn) + the working discipline (A001–A003), and points every platform at `meridian-verify.sh` as the real boundary ✓
+- `tests/test-gen-rules.sh` (7 tests): all adapters written, content-from-source, source-change reflected, Cursor frontmatter, **byte-identical regeneration**, single-platform isolation, missing-gates error ✓
+- **Cline added** as a first-class Tier-2 target (context-injection platform, no blocking hooks → Guided+CI) ✓
+- No fabricated compliance percentage — capability stated qualitatively in `docs/platform-tiers.md`
+- *Install wiring deferred to G5.5* (detect-runtime picks which adapters to emit)
 
 #### G5.4: Tier 3 (Advisory) — Reference + the Same Verifier
-**Estimated:** 4 hours  
+**Status:** COMPLETE ✅ (delivered by the G5.3 generator)  
+**Estimated:** 4 hours | **Actual:** 0h (folded into G5.3)  
 **Deliverables:**
-- `scripts/gen-guidance.sh` — emits structured `MERIDIAN.md` for Aider/Codex/etc. from the same source
-- CI template documented as the real enforcement path for this tier (markdown is the context layer, not the boundary)
-- No fabricated compliance percentage
+- `MERIDIAN.md` for Aider/Codex/generic emitted by `gen-rules.sh --platform advisory` from the same source (the planned separate `gen-guidance.sh` was unnecessary — one generator, an adapter each) ✓
+- CI template (`templates/meridian-ci.yml`, G5.2) documented as the real enforcement path for this tier; markdown is the context layer, not the boundary ✓
+- No fabricated compliance percentage ✓
 
 #### G5.5: Platform Detection + Honest Parity Matrix
 **Estimated:** 5 hours  

@@ -18,7 +18,7 @@ This repo is Meridian building itself (dogfooding).
 - `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`; plus tracked `security-rules.yaml`, `*-schema.{json,yaml}`
 - `recipes/` — pattern-based `gates.yaml` + foundation templates for fullstack-web, cli-tool, ml-research
 - `docs/` — framework documentation (`recipes.md` — recipe adaptation guide; `platform-tiers.md` — tier definitions + feature parity matrix)
-- `tests/` — bash test suites (211 passing across 16 suites, as of Phase 5 G5.2)
+- `tests/` — bash test suites (218 passing across 17 suites, as of Phase 5 G5.3/G5.4)
 - `ROADMAP.md` — gate progress + calibration data (single source of truth for status)
 
 ## Development model
