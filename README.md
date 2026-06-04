@@ -272,7 +272,7 @@ meridian/
 
   .claude/                    # Claude Code integration
     hooks/                    # PreToolUse / PostToolUse enforcement
-    skills/                   # 14 slash-command skill definitions
+    skills/                   # 15 slash-command skill definitions
     agents/                   # 3 subagent definitions
 
   scripts/                    # Core framework scripts
@@ -408,4 +408,4 @@ Built on research and patterns from:
 
 ---
 
-**Phases 0–5 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer, three complete recipes (fullstack-web, cli-tool, ml-research), and **portable enforcement** — a platform-neutral verifier wired to a git pre-commit + CI boundary, plus rule surfaces generated from source for Cursor/Windsurf/Cline/advisory — have all shipped (226 tests passing). Documentation is complete (Phase 6): quickstart, gate model, memory, observability, Windows install, troubleshooting, API reference, and contributing guides. Next: Phase 7 (Dogfooding & Refinement). Target: v0.1.0 by 2026-09-10.
+**Phases 0–6 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 15 progressively-disclosed skills, a calibrated drift sensor, a one-command installer, three complete recipes (fullstack-web, cli-tool, ml-research), and **portable enforcement** — a platform-neutral verifier wired to a git pre-commit + CI boundary, plus rule surfaces generated from source for Cursor/Windsurf/Cline/advisory — have all shipped (226 tests passing). Documentation is complete (Phase 6): quickstart, gate model, memory, observability, Windows install, troubleshooting, API reference, and contributing guides. Next: Phase 7 (Dogfooding & Refinement). Target: v0.1.0 by 2026-09-10.

@@ -1,6 +1,6 @@
 # Meridian - Architectural Decisions & Blueprint
 **Date:** 2026-05-26  
-**Status:** Phases 0–4 complete. Phase 5 (Multi-Tier Platform Support) in planning. Updated 2026-06-03.  
+**Status:** Phases 0–6 complete (foundation, hooks/skills, thesis, recipes, portable enforcement, docs). Phase 7 (Dogfooding & Refinement) next. 226 tests passing. Updated 2026-06-04.  
 **Repository:** https://github.com/PCSchmidt/meridian
 
 ---
@@ -48,7 +48,7 @@ workflow. Tier 2/3 surfaces (editor rules, advisory markdown) are generated from
 `gates.yaml`/`security-rules.yaml` the hooks read, so they can't drift. Tiers renamed
 **Enforced / Guided+CI / Reference+CI**. Compliance percentages are not published without a
 measurement harness. See `docs/platform-tiers.md` (parity matrix) and `ASSUMPTIONS.md` A005.
-This is the design target for Phase 5.
+This shipped in Phase 5 (G5.2–G5.5, complete 2026-06-04).
 
 ---
 
@@ -563,6 +563,6 @@ the roadmap with evidence before starting Phase 4.
 
 ---
 
-**Status:** Phases 0–4 complete. Phase 5 (Portable Enforcement & Multi-Tier) in planning. 186 tests passing.
+**Status:** Phases 0–6 complete. Phase 7 (Dogfooding & Refinement) next. 226 tests passing.
 
 **Last updated:** 2026-06-03

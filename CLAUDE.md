@@ -14,11 +14,11 @@ This repo is Meridian building itself (dogfooding).
 
 - `scripts/` — core framework scripts (gate engine, memory, telemetry, health, status)
 - `.claude/hooks/` — PreToolUse / PostToolUse enforcement (source `hook-wrapper.sh`, never execute it)
-- `.claude/skills/` — 14 slash-command skill docs with progressive-disclosure frontmatter (`/start`, `/health`, `/status`, `/memory`, `/security`, `/testing`, `/costs`, `/rollback`, `/deploy`, `/build-rules`, `/critical-thinker`, `/research`, `/evaluate`, `/review`)
+- `.claude/skills/` — 15 slash-command skill docs with progressive-disclosure frontmatter (`/start`, `/health`, `/status`, `/memory`, `/security`, `/testing`, `/costs`, `/rollback`, `/deploy`, `/build-rules`, `/critical-thinker`, `/research`, `/evaluate`, `/review`, `/drift-check`)
 - `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`; plus tracked `security-rules.yaml`, `*-schema.{json,yaml}`
 - `recipes/` — pattern-based `gates.yaml` + foundation templates for fullstack-web, cli-tool, ml-research
 - `docs/` — framework documentation: `quickstart.md`, `gate-model.md`, `memory.md`, `observability.md`, `assumptions.md`, `windows-install.md`, `troubleshooting.md`, `api-reference.md`, `recipes.md`, `platform-tiers.md`, `tier1-verification.md` (+ root `CONTRIBUTING.md`)
-- `tests/` — bash test suites (226 passing across 18 suites, as of Phase 5 complete)
+- `tests/` — bash test suites (226 passing across 18 suites; Phase 6 was docs-only)
 - `ROADMAP.md` — gate progress + calibration data (single source of truth for status)
 
 ## Development model
