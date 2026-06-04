@@ -184,7 +184,9 @@ GITIGNORE="$TARGET/.gitignore"
 MERIDIAN_BLOCK="# Meridian runtime state (auto-generated, not for version control)
 .meridian/memory/
 .meridian/telemetry.jsonl
-.meridian/session.json"
+.meridian/session.json
+.meridian/hooks.log
+.meridian/drift/"
 
 if [ -f "$GITIGNORE" ]; then
     if grep -q "\.meridian/memory" "$GITIGNORE" 2>/dev/null; then

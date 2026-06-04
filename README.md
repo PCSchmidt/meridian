@@ -4,7 +4,7 @@ A next-generation agent harness framework for AI coding assistants.
 
 ![Status](https://img.shields.io/badge/status-in%20development-green)
 ![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
-![Phases 0-5](https://img.shields.io/badge/phases%200--5-complete-brightgreen)
+![Phases 0-6](https://img.shields.io/badge/phases%200--6-complete-brightgreen)
 ![Tests](https://img.shields.io/badge/tests-226%20passing-brightgreen)
 
 ---
@@ -24,9 +24,9 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ---
 
-## Status: Phases 0–5 Complete
+## Status: Phases 0–6 Complete
 
-**Current status:** Phase 5 complete — portable enforcement shipped: a platform-neutral verifier wired to a git pre-commit + CI boundary, with rule surfaces generated from source for Cursor/Windsurf/Cline and an advisory `MERIDIAN.md`. Phase 6 (Documentation) is next.
+**Current status:** Phase 6 complete — the full documentation set shipped (quickstart, gate model, memory, observability, assumptions, Windows install, troubleshooting, API reference, contributing). Portable enforcement (Phase 5) and three recipes (Phase 4) are in place. Phase 7 (Dogfooding & Refinement) is next.
 
 **Tests:** 226 passing across 18 suites.
 
@@ -40,8 +40,8 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | 3. Prove the Thesis *(evaluator, drift sensor, real-project validation)* | ✅ Complete | 32h | 12.5h |
 | 4. Recipes *(fullstack-web, cli-tool, ml-research)* | ✅ Complete | 40h | ~8.5h |
 | 5. Portable Enforcement & Multi-Tier *(verifier + git/CI + Cursor/Windsurf/Cline + Advisory)* | ✅ Complete | 34h | ~13.5h |
-| 6. Documentation | ⏳ Next | 25h | — |
-| 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
+| 6. Documentation | ✅ Complete | 25h | ~4.5h |
+| 7. Dogfooding & Refinement | ⏳ Next | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |
 
 ### Phase 3 Gates (Complete)
@@ -206,6 +206,9 @@ docs/
   memory.md              # The three schema-validated memory types
   observability.md       # Telemetry, /health, /status, costs
   assumptions.md         # Maintaining ASSUMPTIONS.md in practice
+  windows-install.md     # Git Bash + WSL2 setup
+  troubleshooting.md     # Field-tested fixes for common issues
+  api-reference.md       # Scripts, hooks, skills, schemas, exit codes
   recipes.md             # Recipe adaptation guide: stack substitution, gate customization, DAG reshape examples
   platform-tiers.md      # Tier definitions + feature parity matrix (Claude Code / Cursor / advisory)
   tier1-verification.md  # Claude Code hook stdin contract + live-session verification protocol
@@ -228,13 +231,18 @@ for the feature parity matrix and tier definitions.
 - [x] G5.4 — Tier 3 (Advisory): generated `MERIDIAN.md`, enforced via CI ✅ (same generator)
 - [x] G5.5 — Platform detection (`detect-runtime.sh`) + install wiring + published parity matrix ✅
 
-### Phase 6: Documentation
+### Phase 6: Documentation ✅ Complete
 
-- Full user guide, API reference, getting-started tutorial
+- [x] G6.1 — Component docs: quickstart, gate model, memory, observability, assumptions
+- [x] G6.2 — Windows installation guide (Git Bash + WSL2)
+- [x] G6.3 — Troubleshooting guide (field-tested fixes)
+- [x] G6.4 — API reference (scripts, hooks, skills, schemas, exit codes)
+- [x] G6.5 — Contributing guide
 
 ### Phase 7: Dogfooding & Refinement
 
-- Run Meridian on 2-3 real projects; tighten based on friction
+- Run Meridian on real projects; tighten based on friction (AeroIntel is already
+  installed and self-verifying as of Phase 5)
 
 ---
 
@@ -279,6 +287,9 @@ meridian/
     memory.md                 # Schema-validated memory types
     observability.md          # Telemetry + dashboards
     assumptions.md            # Assumption governance in practice
+    windows-install.md        # Git Bash + WSL2 setup
+    troubleshooting.md        # Field-tested fixes
+    api-reference.md          # Scripts, hooks, skills, schemas
     recipes.md                # Recipe adaptation guide
     platform-tiers.md         # Tier definitions + feature parity matrix
     tier1-verification.md     # Claude Code hook contract + verification protocol
@@ -350,13 +361,17 @@ All 18 suites — **226 tests** — pass on Windows / Git Bash.
 - [Platform Tiers](docs/platform-tiers.md) — Tier definitions and feature parity matrix
 - [Tier 1 Verification](docs/tier1-verification.md) — Claude Code hook stdin contract and verification protocol
 - [Maintaining ASSUMPTIONS.md](docs/assumptions.md) — assumption governance, in practice
+- [Windows Install](docs/windows-install.md) — Git Bash and WSL2 setup
+- [Troubleshooting](docs/troubleshooting.md) — field-tested fixes for common issues
 
 **Reference**
 
+- [API Reference](docs/api-reference.md) — scripts, hooks, skills, schemas, exit codes
 - [Architecture Decisions](MERIDIAN_ARCHITECTURE_DECISIONS.md) — Complete design blueprint
 - [ROADMAP.md](ROADMAP.md) — Gate progress and calibration data
 - [PHILOSOPHY.md](PHILOSOPHY.md) — Design principles and rationale
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — Harness assumptions governance
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Development model, standards, PR process
 - [Hook System](.claude/hooks/README.md) — Hook architecture and usage
 
 ---
@@ -393,4 +408,4 @@ Built on research and patterns from:
 
 ---
 
-**Phases 0–5 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer, three complete recipes (fullstack-web, cli-tool, ml-research), and **portable enforcement** — a platform-neutral verifier wired to a git pre-commit + CI boundary, plus rule surfaces generated from source for Cursor/Windsurf/Cline/advisory — have all shipped (226 tests passing). Next: Phase 6 (Documentation). Target: v0.1.0 by 2026-09-10.
+**Phases 0–5 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer, three complete recipes (fullstack-web, cli-tool, ml-research), and **portable enforcement** — a platform-neutral verifier wired to a git pre-commit + CI boundary, plus rule surfaces generated from source for Cursor/Windsurf/Cline/advisory — have all shipped (226 tests passing). Documentation is complete (Phase 6): quickstart, gate model, memory, observability, Windows install, troubleshooting, API reference, and contributing guides. Next: Phase 7 (Dogfooding & Refinement). Target: v0.1.0 by 2026-09-10.
