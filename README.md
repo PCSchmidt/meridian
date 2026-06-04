@@ -201,6 +201,11 @@ recipes/
 
 ```
 docs/
+  quickstart.md          # Meridian in 10 minutes (install → first gate)
+  gate-model.md          # The composable gate DAG and how it's enforced
+  memory.md              # The three schema-validated memory types
+  observability.md       # Telemetry, /health, /status, costs
+  assumptions.md         # Maintaining ASSUMPTIONS.md in practice
   recipes.md             # Recipe adaptation guide: stack substitution, gate customization, DAG reshape examples
   platform-tiers.md      # Tier definitions + feature parity matrix (Claude Code / Cursor / advisory)
   tier1-verification.md  # Claude Code hook stdin contract + live-session verification protocol
@@ -269,6 +274,11 @@ meridian/
     ml-research/
 
   docs/                       # Framework documentation
+    quickstart.md             # Meridian in 10 minutes
+    gate-model.md             # Composable gate DAG + enforcement
+    memory.md                 # Schema-validated memory types
+    observability.md          # Telemetry + dashboards
+    assumptions.md            # Assumption governance in practice
     recipes.md                # Recipe adaptation guide
     platform-tiers.md         # Tier definitions + feature parity matrix
     tier1-verification.md     # Claude Code hook contract + verification protocol
@@ -330,13 +340,23 @@ All 18 suites — **226 tests** — pass on Windows / Git Bash.
 
 ## Documentation
 
+**Guides**
+
+- [Quickstart](docs/quickstart.md) — Meridian in 10 minutes (install → first gate)
+- [Gate Model](docs/gate-model.md) — the composable gate DAG and how it's enforced
+- [Memory System](docs/memory.md) — the three schema-validated memory types
+- [Observability](docs/observability.md) — telemetry, `/health`, `/status`, costs
+- [Recipe Adaptation Guide](docs/recipes.md) — How to adapt recipes to your stack
+- [Platform Tiers](docs/platform-tiers.md) — Tier definitions and feature parity matrix
+- [Tier 1 Verification](docs/tier1-verification.md) — Claude Code hook stdin contract and verification protocol
+- [Maintaining ASSUMPTIONS.md](docs/assumptions.md) — assumption governance, in practice
+
+**Reference**
+
 - [Architecture Decisions](MERIDIAN_ARCHITECTURE_DECISIONS.md) — Complete design blueprint
 - [ROADMAP.md](ROADMAP.md) — Gate progress and calibration data
 - [PHILOSOPHY.md](PHILOSOPHY.md) — Design principles and rationale
 - [ASSUMPTIONS.md](ASSUMPTIONS.md) — Harness assumptions governance
-- [Recipe Adaptation Guide](docs/recipes.md) — How to adapt recipes to your stack
-- [Platform Tiers](docs/platform-tiers.md) — Tier definitions and feature parity matrix
-- [Tier 1 Verification](docs/tier1-verification.md) — Claude Code hook stdin contract and verification protocol
 - [Hook System](.claude/hooks/README.md) — Hook architecture and usage
 
 ---

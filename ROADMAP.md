@@ -572,20 +572,22 @@ real install) — that's where the bugs live, and it's worth the e2e tests every
 
 ## Phase 6: Documentation (Weeks 10-11)
 
-**Status:** Not Started  
+**Status:** In Progress (G6.1 ✅)  
 **Estimated:** 25 hours  
 **Target completion:** 2026-08-20
 
 ### Gates:
 
 #### G6.1: Component Documentation
-**Estimated:** 12 hours  
+**Status:** COMPLETE ✅  
+**Estimated:** 12 hours | **Actual:** 2.5 hours | **Ratio:** 4.8x  
 **Deliverables:**
-- `docs/quickstart.md` - Zero to `/init` in 10 minutes
-- `docs/gate-model.md` - Composable gates explained
-- `docs/memory.md` - Memory system guide
-- `docs/observability.md` - Telemetry and `/health report`
-- `docs/assumptions.md` - How to maintain ASSUMPTIONS.md
+- `docs/quickstart.md` — Meridian in 10 minutes (install → first gate), grounded in real scripts ✓
+- `docs/gate-model.md` — the composable gate DAG, `gates.yaml` structure, the engine, both enforcement boundaries ✓
+- `docs/memory.md` — the three schema-validated memory types, validation, the reflexion-write gotcha ✓
+- `docs/observability.md` — telemetry schema + `jq` queries, `/health`/`/status`/`/costs` ✓
+- `docs/assumptions.md` — how to add/review/retire assumptions, mapped to their mechanical rules ✓
+- Linked from README (Guides/Reference split); written against implemented behavior, no overclaiming ✓
 
 #### G6.2: Windows Installation Guide
 **Estimated:** 4 hours  
