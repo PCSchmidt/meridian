@@ -148,23 +148,35 @@ parse_tool_use() {
     if command -v jq >/dev/null 2>&1; then
         # Check if stdin is available
         if [ ! -t 0 ]; then
-            # Read stdin and parse JSON
+            # Read stdin and parse JSON.
+            #
+            # Claude Code's live PreToolUse/PostToolUse contract delivers:
+            #   { "hook_event_name": "PreToolUse",
+            #     "tool_name": "Bash",
+            #     "tool_input": { "command": "...", "file_path": "...", ... } }
+            # (PostToolUse additionally carries "tool_response").
+            #
+            # We read those real keys first and fall back to the legacy
+            # .tool / .arguments shape for backward compatibility. See
+            # docs/tier1-verification.md for the full contract and why this
+            # matters (the env-var test path never exercised this).
             local tool_data
             tool_data=$(cat)
 
-            export TOOL_NAME=$(echo "$tool_data" | jq -r '.tool // "unknown"')
-            export TOOL_ARGS=$(echo "$tool_data" | jq -c '.arguments // {}')
+            export TOOL_NAME=$(echo "$tool_data" | jq -r '.tool_name // .tool // "unknown"')
+            export TOOL_ARGS=$(echo "$tool_data" | jq -c '.tool_input // .arguments // {}')
 
-            # For specific tools, extract common parameters
+            # Common parameters, extracted from tool_input (legacy: arguments).
+            export FILE_PATH=$(echo "$tool_data" | jq -r '.tool_input.file_path // .arguments.file_path // ""')
+            export COMMAND=$(echo "$tool_data" | jq -r '.tool_input.command // .arguments.command // ""')
+
+            # Written text for content-target security scanning (Edit/Write).
             case "$TOOL_NAME" in
-                Edit|Write)
-                    export FILE_PATH=$(echo "$tool_data" | jq -r '.arguments.file_path // ""')
+                Write)
+                    export CONTENT=$(echo "$tool_data" | jq -r '.tool_input.content // .arguments.content // ""')
                     ;;
-                Bash)
-                    export COMMAND=$(echo "$tool_data" | jq -r '.arguments.command // ""')
-                    ;;
-                Read)
-                    export FILE_PATH=$(echo "$tool_data" | jq -r '.arguments.file_path // ""')
+                Edit)
+                    export CONTENT=$(echo "$tool_data" | jq -r '.tool_input.new_string // .arguments.new_string // ""')
                     ;;
             esac
         fi

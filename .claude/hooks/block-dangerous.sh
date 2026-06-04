@@ -98,9 +98,11 @@ resolve_content() {
         return 0
     fi
     if [ -n "${TOOL_ARGS:-}" ] && command -v jq >/dev/null 2>&1; then
+        # TOOL_ARGS is the tool_input object (Claude Code contract); keys are
+        # direct. Fall back to the legacy .arguments.* shape for safety.
         case "${TOOL_NAME:-}" in
-            Write) jq -r '.arguments.content // ""'    <<<"$TOOL_ARGS" 2>/dev/null ;;
-            Edit)  jq -r '.arguments.new_string // ""' <<<"$TOOL_ARGS" 2>/dev/null ;;
+            Write) jq -r '.content // .arguments.content // ""'       <<<"$TOOL_ARGS" 2>/dev/null ;;
+            Edit)  jq -r '.new_string // .arguments.new_string // ""' <<<"$TOOL_ARGS" 2>/dev/null ;;
         esac
     fi
 }

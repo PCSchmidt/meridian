@@ -1,0 +1,15 @@
+{
+  "session_id": "test-session-0004",
+  "transcript_path": "/tmp/transcript.jsonl",
+  "cwd": "/home/user/project",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/home/user/project/src/app.py",
+    "content": "print('hello')\n"
+  },
+  "tool_response": {
+    "filePath": "/home/user/project/src/app.py",
+    "success": true
+  }
+}

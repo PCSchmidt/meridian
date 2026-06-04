@@ -476,11 +476,14 @@ Each phase has:
 - `tests/test-doctor.sh` — 8 tests; full suite now 194 tests / 14 suites, all green ✓
 
 #### G5.1: Tier 1 (Claude Code) — Verify with a Real Protocol
-**Estimated:** 3 hours  
+**Status:** COMPLETE ✅  
+**Estimated:** 3 hours | **Actual:** 3 hours | **Ratio:** 1.0x  
 **Deliverables:**
-- `docs/tier1-verification.md` — exact `PreToolUse`/`PostToolUse` stdin contract, the tool calls that must trigger each hook, and what "pass" means (the 186-test suite simulates hooks via subprocess; it has never asserted the live stdin shape)
-- Captured live-session fixture + documented manual protocol
-- `meridian-doctor` green on a clean clone; installation guide updated
+- `docs/tier1-verification.md` — the exact `PreToolUse`/`PostToolUse` stdin contract (`.tool_name` / `.tool_input.*`), per-tool key table, manual live-session protocol, and fixture-capture instructions ✓
+- Real-shaped fixtures in `tests/fixtures/hook-stdin/` + `tests/test-hook-contract.sh` (9 tests: parse assertions, legacy fallback, and end-to-end block/allow through `PreToolUse.sh` via live stdin) ✓
+- **Found + fixed a live-contract bug:** `parse_tool_use()` read the wrong keys (`.tool` / `.arguments.*`), so in a real session `TOOL_NAME=unknown`, `COMMAND=""`, and `block-dangerous.sh` exited 0 — the security boundary silently did not fire. The env-var test path had masked it. Fixed in `hook-wrapper.sh` + `block-dangerous.sh` (`resolve_content`) ✓
+- Full suite now 203 tests / 15 suites, all green ✓
+- *Operator task:* run the manual live-session protocol after any Claude Code update (documented, not automatable)
 
 #### G5.2: Portable Verifier + git/CI Boundary *(keystone)*
 **Estimated:** 10 hours  

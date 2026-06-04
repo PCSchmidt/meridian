@@ -1,0 +1,11 @@
+{
+  "session_id": "test-session-0002",
+  "transcript_path": "/tmp/transcript.jsonl",
+  "cwd": "/home/user/project",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "echo hello world",
+    "description": "print a greeting"
+  }
+}
