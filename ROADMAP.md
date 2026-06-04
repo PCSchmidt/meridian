@@ -515,12 +515,48 @@ Each phase has:
 - No fabricated compliance percentage ✓
 
 #### G5.5: Platform Detection + Honest Parity Matrix
-**Estimated:** 5 hours  
+**Status:** COMPLETE ✅ — closes Phase 5  
+**Estimated:** 5 hours | **Actual:** 2 hours | **Ratio:** 2.5x  
 **Deliverables:**
-- `scripts/detect-runtime.sh` — detect Claude Code / Cursor / Windsurf / generic; `install.sh` installs the right surface set but **always** installs the git/CI verifier
-- `docs/platform-tiers.md` — per-capability parity matrix; tiers renamed to what they are: **Enforced / Guided+CI / Reference+CI**
-- New `A005` in ASSUMPTIONS.md (enforcement-boundary relocation)
-- `tests/test-detect.sh`
+- `scripts/detect-runtime.sh` — prints `claude-code|cursor|windsurf|cline|generic`. Reliable env signal for Claude Code (`CLAUDECODE`/`CLAUDE_CODE_*`, checked first since Cline also runs in VS Code); editors inferred from project markers; honest `generic` default ✓
+- `install.sh` wired (new step 11): auto-detects (or `--platform` override), **always** generates advisory `MERIDIAN.md`, plus the detected editor's surface; Claude Code uses hooks (no editor rules); the git/CI verifier is installed for every platform regardless ✓
+- `docs/platform-tiers.md` — parity matrix finalized; tiers named **Enforced / Guided+CI / Reference+CI**; Cline added; per-platform generated-file table ✓
+- `A005` in ASSUMPTIONS.md (enforcement-boundary relocation) — present; status updated to IMPLEMENTED ✓
+- `tests/test-detect.sh` (8 tests): all signals + env-over-marker precedence + install-integration (declared platform emits only its surface + advisory) ✓
+- Full suite now 226 tests / 18 suites, all green ✓
+
+---
+
+## Phase 5 Reflexion
+
+**Phase status:** COMPLETE (6/6 gates: G5.0–G5.5)  
+**Estimated:** 34 hours | **Actual:** ~13.5 hours | **Phase ratio:** ~2.5x
+
+**Per-gate:** G5.0 2h, G5.1 3h, G5.2 4h, G5.3 2.5h, G5.4 0h (folded into G5.3), G5.5 2h.
+
+**The thesis that reshaped the phase:** off-Claude platforms cannot block at the keystroke
+boundary, so "Tier 2 = 60-70% enforcement" was an honor-system claim that violated Principle 1.
+The phase relocated enforcement to the **git/CI boundary** (shared by every platform) via
+`meridian-verify.sh` + a generated pre-commit hook + CI workflow. Tier 1 keeps keystroke-level
+blocking; every tier gets commit-level blocking; editor rules are generated from the same source
+as the hooks so the context layer can't drift from what's enforced. Fabricated compliance
+percentages were removed; the parity matrix replaced them.
+
+**Two real bugs surfaced by doing the work honestly (not asserted):**
+1. G5.1 — `parse_tool_use()` read the wrong stdin keys (`.tool`/`.arguments.*` vs Claude Code's
+   `.tool_name`/`.tool_input.*`), so the security boundary silently never fired in a live session.
+   The env-var test path had masked it. Fixed + pinned with end-to-end fixtures.
+2. G5.2 — `install.sh` never copied `scripts/`, so installed hooks referenced engines that didn't
+   exist; earlier installs (AeroIntel) had non-functional hooks. Fixed; logged for re-install.
+
+**Why faster than estimated:** much of Phase 5 wrapped engines that already existed (gate-engine,
+validate-memory, drift-check, evaluator). The "one generator, per-platform adapters" reframe
+collapsed G5.3+G5.4. The genuinely-new, higher-risk work (live stdin contract, git/CI templates)
+was tested end-to-end per the G5.1 lesson, not mocked.
+
+**Apply to future estimates:** "wrap existing engines behind a new surface" gates ≈ 2-4h, not
+8-12h. But budget separately for the *integration reality* (real stdin shapes, real git hooks,
+real install) — that's where the bugs live, and it's worth the e2e tests every time.
 
 ---
 
@@ -688,16 +724,16 @@ Each phase has:
 | 2. Core Hooks & Skills | ✅ Complete | 60h | 49h | 1.22x | 2026-06-02 |
 | 3. Prove the Thesis *(was Phase 5/8, redirected)* | ✅ Complete | 32h | 12.5h | 2.56x | 2026-06-02 |
 | 4. Recipes *(was Phase 4, unchanged)* | ✅ Complete | 40h | ~8.5h | ~4.7x | 2026-06-03 |
-| 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ⏳ Next | 34h | — | — | TBD |
-| 6. Documentation | ⏳ Deferred | 25h | — | — | TBD |
+| 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ✅ Complete | 34h | ~13.5h | ~2.5x | 2026-06-04 |
+| 6. Documentation | ⏳ Next | 25h | — | — | TBD |
 | 7. Dogfooding & Refinement | ⏳ Deferred | 40h | — | — | TBD |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
-| **TOTAL** | | **294h** | **116h** | | TBD |
+| **TOTAL** | | **294h** | **~129.5h** | | TBD |
 
 ### Hours Breakdown
 - **Total estimated:** ~294 hours (Phase 5 re-scoped 30h → 34h; subagents folded into Phase 3)
-- **Total actual so far:** 116 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h, Phase 3: 12.5h, Phase 4: ~8.5h)
-- **Remaining:** ~178 hours estimated across Phases 5–8
+- **Total actual so far:** ~129.5 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h, Phase 3: 12.5h, Phase 4: ~8.5h, Phase 5: ~13.5h)
+- **Remaining:** ~80 hours estimated across Phases 6–8
 
 ### Working Pace Assumptions
 - **If full-time (40h/week):** 7.3 weeks remaining
@@ -729,6 +765,7 @@ As we complete phases, we'll track actual vs estimated time to calibrate future 
 | 2 | 1.22x (0.82x) | 0.90x |
 | 3 | 2.56x (0.39x) | — |
 | 4 | ~4.7x (0.21x) | — |
+| 5 | ~2.5x (0.40x) | — |
 
 Per-gate calibration in Phase 2 (estimate/actual): G2.1 1.14x, G2.2 1.09x,
 G2.3 1.20x, G2.4 1.20x, G2.5 1.33x — steady mild over-estimation on
@@ -783,6 +820,6 @@ from first principles, not from the 0.2–0.4x recipe-doc multipliers.
 
 ---
 
-**Status:** Phases 0–4 complete. Phase 5 (Portable Enforcement & Multi-Tier) next.  
-**Last updated:** 2026-06-03  
+**Status:** Phases 0–5 complete. Phase 6 (Documentation) next.  
+**Last updated:** 2026-06-04  
 **Next milestone:** G1.1 (Gate DAG Engine) - Estimated 8h

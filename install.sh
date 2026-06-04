@@ -11,6 +11,8 @@
 #   scripts/          — engines the hooks + verifier call (gate-engine, verify, ...)
 #   .git/hooks/pre-commit         — runs meridian-verify.sh at the commit boundary
 #   .github/workflows/meridian.yml — same verifier in CI (the cross-platform boundary)
+#   MERIDIAN.md + editor rules    — generated context surfaces (Tier 2/3), per
+#                                   detected/declared platform (gen-rules.sh)
 #
 # Does NOT install Meridian's own test suite. The target project provides its own.
 
@@ -19,14 +21,19 @@ set -euo pipefail
 MERIDIAN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET=""
 RECIPE=""
+PLATFORM=""   # cursor|windsurf|cline|claude-code|generic|all; empty = auto-detect
 
 # ─── Arg parse ────────────────────────────────────────────────────────────────
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --recipe) RECIPE="$2"; shift 2 ;;
+        --platform) PLATFORM="$2"; shift 2 ;;
         --help|-h)
-            echo "Usage: bash install.sh <target-project-dir> [--recipe fullstack-web|cli-tool|ml-research]"
+            echo "Usage: bash install.sh <target-project-dir> [--recipe fullstack-web|cli-tool|ml-research] [--platform cursor|windsurf|cline|all]"
+            echo ""
+            echo "  --platform  Which editor rule surface to generate. Omit to auto-detect"
+            echo "              (detect-runtime.sh); advisory MERIDIAN.md is always generated."
             exit 0 ;;
         *)
             if [ -z "$TARGET" ]; then TARGET="$1"; shift
@@ -54,7 +61,7 @@ err()  { echo "  ✗ $1"; ERRORS=$((ERRORS+1)); }
 
 # ─── 1. .claude/hooks/ ────────────────────────────────────────────────────────
 
-echo "[1/10] Copying .claude/hooks/"
+echo "[1/11] Copying .claude/hooks/"
 if [ -d "$MERIDIAN_DIR/.claude/hooks" ]; then
     mkdir -p "$TARGET/.claude/hooks"
     cp -r "$MERIDIAN_DIR/.claude/hooks/." "$TARGET/.claude/hooks/"
@@ -65,7 +72,7 @@ fi
 
 # ─── 2. .claude/skills/ ───────────────────────────────────────────────────────
 
-echo "[2/10] Copying .claude/skills/"
+echo "[2/11] Copying .claude/skills/"
 if [ -d "$MERIDIAN_DIR/.claude/skills" ]; then
     mkdir -p "$TARGET/.claude/skills"
     cp -r "$MERIDIAN_DIR/.claude/skills/." "$TARGET/.claude/skills/"
@@ -76,7 +83,7 @@ fi
 
 # ─── 3. .claude/agents/ ───────────────────────────────────────────────────────
 
-echo "[3/10] Copying .claude/agents/"
+echo "[3/11] Copying .claude/agents/"
 if [ -d "$MERIDIAN_DIR/.claude/agents" ]; then
     mkdir -p "$TARGET/.claude/agents"
     cp -r "$MERIDIAN_DIR/.claude/agents/." "$TARGET/.claude/agents/"
@@ -87,7 +94,7 @@ fi
 
 # ─── 4. .meridian/ tracked schemas + security rules ──────────────────────────
 
-echo "[4/10] Installing .meridian/ skeleton"
+echo "[4/11] Installing .meridian/ skeleton"
 mkdir -p "$TARGET/.meridian"
 
 # Copy tracked schema files
@@ -109,7 +116,7 @@ fi
 
 # ─── 5. .meridian/ runtime skeleton ──────────────────────────────────────────
 
-echo "[5/10] Creating runtime skeleton"
+echo "[5/11] Creating runtime skeleton"
 
 # telemetry.jsonl — empty, append-only event log
 if [ ! -f "$TARGET/.meridian/telemetry.jsonl" ]; then
@@ -136,7 +143,7 @@ fi
 
 # ─── 6. gates.yaml recipe ─────────────────────────────────────────────────────
 
-echo "[6/10] gates.yaml"
+echo "[6/11] gates.yaml"
 if [ -n "$RECIPE" ]; then
     RECIPE_FILE="$MERIDIAN_DIR/recipes/$RECIPE/gates.yaml"
     if [ -f "$RECIPE_FILE" ]; then
@@ -157,7 +164,7 @@ fi
 
 # ─── 7. CLAUDE.md template ────────────────────────────────────────────────────
 
-echo "[7/10] CLAUDE.md"
+echo "[7/11] CLAUDE.md"
 CLAUDE_TEMPLATE="$MERIDIAN_DIR/templates/CLAUDE.md"
 if [ -f "$CLAUDE_TEMPLATE" ]; then
     if [ -f "$TARGET/CLAUDE.md" ]; then
@@ -172,7 +179,7 @@ fi
 
 # ─── 8. .gitignore entries ────────────────────────────────────────────────────
 
-echo "[8/10] .gitignore"
+echo "[8/11] .gitignore"
 GITIGNORE="$TARGET/.gitignore"
 MERIDIAN_BLOCK="# Meridian runtime state (auto-generated, not for version control)
 .meridian/memory/
@@ -193,7 +200,7 @@ fi
 
 # ─── 9. scripts/ (engines the hooks + verifier call) ─────────────────────────
 
-echo "[9/10] Copying scripts/"
+echo "[9/11] Copying scripts/"
 if [ -d "$MERIDIAN_DIR/scripts" ]; then
     mkdir -p "$TARGET/scripts"
     cp -r "$MERIDIAN_DIR/scripts/." "$TARGET/scripts/"
@@ -205,7 +212,7 @@ fi
 
 # ─── 10. git/CI enforcement boundary (portable verifier) ─────────────────────
 
-echo "[10/10] Installing git/CI enforcement boundary"
+echo "[10/11] Installing git/CI enforcement boundary"
 
 # pre-commit hook — runs meridian-verify.sh at the commit boundary (all tiers)
 if [ -d "$TARGET/.git" ]; then
@@ -236,6 +243,45 @@ if [ -f "$MERIDIAN_DIR/templates/meridian-ci.yml" ]; then
     fi
 else
     warn "templates/meridian-ci.yml not found — skipping CI workflow"
+fi
+
+# ─── 11. platform context rules (Tier 2/3 surfaces) ─────────────────────────
+
+echo "[11/11] Generating platform context rules"
+GENR="$MERIDIAN_DIR/scripts/gen-rules.sh"
+if [ ! -f "$TARGET/.meridian/gates.yaml" ]; then
+    warn "no gates.yaml — skipping rule generation (install a recipe first)"
+elif ! command -v yq >/dev/null 2>&1; then
+    warn "yq not found — skipping rule generation (install yq, then: bash scripts/gen-rules.sh --platform all)"
+elif [ ! -f "$GENR" ]; then
+    warn "gen-rules.sh not found in Meridian source — skipping"
+else
+    PLAT="$PLATFORM"
+    if [ -z "$PLAT" ]; then
+        PLAT="$(MERIDIAN_PROJECT_DIR="$TARGET" bash "$MERIDIAN_DIR/scripts/detect-runtime.sh" "$TARGET")"
+        ok "Detected platform: $PLAT (override with --platform)"
+    else
+        ok "Platform (declared): $PLAT"
+    fi
+    # Advisory MERIDIAN.md is always useful and platform-agnostic.
+    if MERIDIAN_PROJECT_DIR="$TARGET" bash "$GENR" "$TARGET" --platform advisory >/dev/null 2>&1; then
+        ok "MERIDIAN.md generated (advisory context, any platform)"
+    fi
+    # Plus the editor surface for the detected/declared platform.
+    case "$PLAT" in
+        cursor|windsurf|cline)
+            if MERIDIAN_PROJECT_DIR="$TARGET" bash "$GENR" "$TARGET" --platform "$PLAT" >/dev/null 2>&1; then
+                ok "$PLAT editor rules generated"
+            fi ;;
+        all)
+            if MERIDIAN_PROJECT_DIR="$TARGET" bash "$GENR" "$TARGET" --platform all >/dev/null 2>&1; then
+                ok "all editor rule surfaces generated"
+            fi ;;
+        claude-code)
+            ok "Claude Code uses hooks for enforcement — no editor rules needed (advisory MERIDIAN.md kept)" ;;
+        generic|*)
+            ok "Generic platform — advisory MERIDIAN.md only (use --platform to target an editor)" ;;
+    esac
 fi
 
 # ─── Validate ─────────────────────────────────────────────────────────────────

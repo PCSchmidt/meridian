@@ -115,8 +115,11 @@ platform, because every platform commits to git. Editor rules (Tier 2) and advis
 (Tier 3) are the *context* layer; the git/CI verifier is the *boundary* layer. Compliance
 percentages are not published without a measurement harness.
 
-**Implementation status:** PLANNED (Phase 5, G5.2–G5.5). Tier definitions and the per-capability
-parity matrix live in `docs/platform-tiers.md`.
+**Implementation status:** IMPLEMENTED (Phase 5 complete, 2026-06-04). The git/CI boundary is
+`scripts/meridian-verify.sh` + `templates/pre-commit` + `templates/meridian-ci.yml` (G5.2); the
+Tier-2/3 context surfaces are generated from source by `scripts/gen-rules.sh` (G5.3/G5.4);
+`scripts/detect-runtime.sh` + `install.sh` pick the surface set per platform (G5.5). Tier
+definitions and the per-capability parity matrix live in `docs/platform-tiers.md`.
 
 **Review trigger:** A non-Claude platform exposes a real pre-execution hook API capable of
 blocking tool calls (exit-2-equivalent). At that point, revisit whether keystroke-boundary

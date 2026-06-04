@@ -4,8 +4,8 @@ A next-generation agent harness framework for AI coding assistants.
 
 ![Status](https://img.shields.io/badge/status-in%20development-green)
 ![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
-![Phases 0-4](https://img.shields.io/badge/phases%200--4-complete-brightgreen)
-![Tests](https://img.shields.io/badge/tests-218%20passing-brightgreen)
+![Phases 0-5](https://img.shields.io/badge/phases%200--5-complete-brightgreen)
+![Tests](https://img.shields.io/badge/tests-226%20passing-brightgreen)
 
 ---
 
@@ -24,11 +24,11 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ---
 
-## Status: Phases 0–4 Complete
+## Status: Phases 0–5 Complete
 
-**Current status:** Phase 4 complete — all three recipes shipped (fullstack-web, cli-tool, ml-research). Phase 5 (Multi-Tier Platform Support) is next.
+**Current status:** Phase 5 complete — portable enforcement shipped: a platform-neutral verifier wired to a git pre-commit + CI boundary, with rule surfaces generated from source for Cursor/Windsurf/Cline and an advisory `MERIDIAN.md`. Phase 6 (Documentation) is next.
 
-**Tests:** 218 passing across 17 suites.
+**Tests:** 226 passing across 18 suites.
 
 ### Phase Progress
 
@@ -39,8 +39,8 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | 2. Core Hooks & Skills | ✅ Complete | 60h | 49h |
 | 3. Prove the Thesis *(evaluator, drift sensor, real-project validation)* | ✅ Complete | 32h | 12.5h |
 | 4. Recipes *(fullstack-web, cli-tool, ml-research)* | ✅ Complete | 40h | ~8.5h |
-| 5. Portable Enforcement & Multi-Tier *(verifier + git/CI + Cursor/Windsurf + Advisory)* | ⏳ Not Started | 34h | — |
-| 6. Documentation | ⏳ Upcoming | 25h | — |
+| 5. Portable Enforcement & Multi-Tier *(verifier + git/CI + Cursor/Windsurf/Cline + Advisory)* | ✅ Complete | 34h | ~13.5h |
+| 6. Documentation | ⏳ Next | 25h | — |
 | 7. Dogfooding & Refinement | ⏳ Upcoming | 40h | — |
 | 8. Community Preparation | ⏳ Upcoming | 15h | — |
 
@@ -221,7 +221,7 @@ for the feature parity matrix and tier definitions.
 - [x] G5.2 — Portable verifier: `meridian-verify.sh` + generated `pre-commit` hook + CI workflow (the shared boundary) ✅ (end-to-end git block proven)
 - [x] G5.3 — Tier 2 (Cursor/Windsurf/Cline): editor rules generated from the same source as the hooks ✅ (idempotent, round-trip tested)
 - [x] G5.4 — Tier 3 (Advisory): generated `MERIDIAN.md`, enforced via CI ✅ (same generator)
-- [ ] G5.5 — Platform detection (`detect-runtime.sh`) + published parity matrix
+- [x] G5.5 — Platform detection (`detect-runtime.sh`) + install wiring + published parity matrix ✅
 
 ### Phase 6: Documentation
 
@@ -273,7 +273,7 @@ meridian/
     platform-tiers.md         # Tier definitions + feature parity matrix
     tier1-verification.md     # Claude Code hook contract + verification protocol
 
-  tests/                      # 17 test suites (218 tests passing)
+  tests/                      # 18 test suites (226 tests passing)
   experiment/                 # Generator-Evaluator validation experiment
   install.sh                  # One-command project installer
 
@@ -324,7 +324,7 @@ bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
 bash tests/test-integration-phase2.sh  # Phase 2 end-to-end (19 tests)
 ```
 
-All 17 suites — **218 tests** — pass on Windows / Git Bash.
+All 18 suites — **226 tests** — pass on Windows / Git Bash.
 
 ---
 
@@ -373,4 +373,4 @@ Built on research and patterns from:
 
 ---
 
-**Phases 0–4 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer validated on a real project, and three complete recipes (fullstack-web, cli-tool, ml-research) have all shipped (218 tests passing). Next: Phase 5 — portable enforcement (a platform-neutral verifier + git/CI boundary) and multi-tier support (Cursor/Windsurf/advisory). Target: v0.1.0 by 2026-09-10.
+**Phases 0–5 complete.** Blocking security enforcement, gate-transition validators, the generator-evaluator verdict contract, memory-management hooks, 14 progressively-disclosed skills, a calibrated drift sensor, a one-command installer, three complete recipes (fullstack-web, cli-tool, ml-research), and **portable enforcement** — a platform-neutral verifier wired to a git pre-commit + CI boundary, plus rule surfaces generated from source for Cursor/Windsurf/Cline/advisory — have all shipped (226 tests passing). Next: Phase 6 (Documentation). Target: v0.1.0 by 2026-09-10.

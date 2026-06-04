@@ -117,9 +117,10 @@ Tier definitions and this matrix are the design target for **Phase 5** (Portable
 - **G5.2** ✅ — `meridian-verify.sh` + `templates/pre-commit` + `templates/meridian-ci.yml`, installed by `install.sh` for every tier. **The shared commit/CI boundary now exists and is proven end-to-end** (a failing verification rejects a real git commit). This is what gives Tiers 2 and 3 their teeth.
 - **G5.3** ✅ — `scripts/gen-rules.sh` generates the Tier-2 editor surfaces (Cursor, Windsurf, Cline) from the same source as the hooks; idempotent, round-trip tested.
 - **G5.4** ✅ — the same generator emits the Tier-3 `MERIDIAN.md` (`--platform advisory`); no separate `gen-guidance.sh` was needed.
-- **G5.5** ☐ — `detect-runtime.sh` + wiring `gen-rules.sh` into `install.sh` per detected platform; this matrix maintained as capabilities land.
+- **G5.5** ✅ — `scripts/detect-runtime.sh` + `install.sh` wiring: auto-detect (or `--platform`), always emit advisory `MERIDIAN.md`, plus the detected editor's surface; the git/CI verifier installs for every platform regardless.
 
-The commit/CI boundary (the "CI-Enforced" column above) is **live as of G5.2**, and the Tier-2/3
-*context* surfaces are **generated as of G5.3/G5.4**. What remains (G5.5) is auto-detecting the
-platform so `install.sh` emits the right surface set automatically; until then, generate them
-explicitly with `bash scripts/gen-rules.sh --platform all`. See ROADMAP.md Phase 5 for status.
+**Phase 5 is complete.** The commit/CI boundary (the "CI-Enforced" column above) is live, the
+Tier-2/3 context surfaces are generated from source, and `install.sh` selects the right surface
+set per detected platform (override with `--platform`). Detection is best-effort: reliable for
+Claude Code (env), heuristic for editors (project markers), `generic` otherwise. See ROADMAP.md
+Phase 5 for the full record.

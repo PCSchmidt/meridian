@@ -18,7 +18,7 @@ This repo is Meridian building itself (dogfooding).
 - `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`; plus tracked `security-rules.yaml`, `*-schema.{json,yaml}`
 - `recipes/` — pattern-based `gates.yaml` + foundation templates for fullstack-web, cli-tool, ml-research
 - `docs/` — framework documentation (`recipes.md` — recipe adaptation guide; `platform-tiers.md` — tier definitions + feature parity matrix)
-- `tests/` — bash test suites (218 passing across 17 suites, as of Phase 5 G5.3/G5.4)
+- `tests/` — bash test suites (226 passing across 18 suites, as of Phase 5 complete)
 - `ROADMAP.md` — gate progress + calibration data (single source of truth for status)
 
 ## Development model
@@ -50,6 +50,8 @@ and exits 2 on deterministic dangerous ops (G2.1); `gate-engine.sh verify` runs 
 gate's pre-hooks and blocks on failure; `run-evaluator.sh` blocks a gate without a
 passing independent verdict (G2.2). Heuristic checks still warn (non-blocking) by
 design. The live Evaluator *subagent* that produces verdicts landed in Phase 3
-(G3.1, `.claude/agents/gate-evaluator.md`). Phase 5 relocates enforcement to the
-git/CI boundary for non-Claude platforms (see `docs/platform-tiers.md`). Don't
-claim enforcement that isn't wired — but blocking now is.
+(G3.1, `.claude/agents/gate-evaluator.md`). Phase 5 relocated enforcement to the
+git/CI boundary for non-Claude platforms: `scripts/meridian-verify.sh` runs the
+same engines and exits non-zero from a generated pre-commit hook + CI workflow
+(see `docs/platform-tiers.md`). Don't claim enforcement that isn't wired — but
+blocking now is, at both the keystroke (Tier 1) and commit/CI (all tiers) boundaries.
