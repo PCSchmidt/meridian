@@ -99,10 +99,12 @@ at commit/CI; the rest is advisory context.
 Tier definitions and this matrix are the design target for **Phase 5** (Portable Enforcement
 & Multi-Tier Platform Support). Implementation gates:
 
-- **G5.2** — `meridian-verify.sh` + `pre-commit` + CI workflow (the shared boundary)
-- **G5.3** — `gen-rules.sh` (Tier 2 surfaces)
-- **G5.4** — `gen-guidance.sh` (Tier 3 surface)
-- **G5.5** — `detect-runtime.sh` + this matrix maintained as capabilities land
+- **G5.2** ✅ — `meridian-verify.sh` + `templates/pre-commit` + `templates/meridian-ci.yml`, installed by `install.sh` for every tier. **The shared commit/CI boundary now exists and is proven end-to-end** (a failing verification rejects a real git commit). This is what gives Tiers 2 and 3 their teeth.
+- **G5.3** ☐ — `gen-rules.sh` (Tier 2 editor surfaces)
+- **G5.4** ☐ — `gen-guidance.sh` (Tier 3 surface)
+- **G5.5** ☐ — `detect-runtime.sh` + this matrix maintained as capabilities land
 
-Until those gates close, this document describes the intended contract, not shipped behavior.
-See ROADMAP.md Phase 5 for gate status.
+The commit/CI boundary (the "CI-Enforced" column above) is **live as of G5.2**. The Tier 2/3
+*context* surfaces (editor rules, advisory markdown) are still pending (G5.3–G5.4); until then,
+non-Claude platforms get enforcement via the verifier + git/CI, just not yet the generated
+in-editor guidance. See ROADMAP.md Phase 5 for gate status.

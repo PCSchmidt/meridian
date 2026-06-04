@@ -1,0 +1,21 @@
+#!/bin/bash
+# Meridian pre-commit hook
+# Installed by install.sh into .git/hooks/pre-commit.
+#
+# Runs the portable verifier at the commit boundary — the platform-neutral
+# enforcement point that works on any editor/agent (Claude Code, Cursor,
+# Windsurf, Aider, plain git). A non-zero exit rejects the commit.
+#
+# Bypass for a single commit with:  git commit --no-verify
+
+repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+verify="$repo/scripts/meridian-verify.sh"
+
+if [ -f "$verify" ]; then
+    bash "$verify" "$repo"
+    exit $?
+fi
+
+# Don't block commits on a broken/partial install — warn instead.
+echo "meridian: scripts/meridian-verify.sh not found; skipping verification" >&2
+exit 0

@@ -8,6 +8,9 @@
 #   .claude/agents/   — subagent docs (gate-evaluator, drift-evaluator, spec-reviewer)
 #   .meridian/        — tracked schemas + security-rules.yaml + runtime skeleton
 #   gates.yaml        — starter gate DAG (if --recipe provided)
+#   scripts/          — engines the hooks + verifier call (gate-engine, verify, ...)
+#   .git/hooks/pre-commit         — runs meridian-verify.sh at the commit boundary
+#   .github/workflows/meridian.yml — same verifier in CI (the cross-platform boundary)
 #
 # Does NOT install Meridian's own test suite. The target project provides its own.
 
@@ -51,7 +54,7 @@ err()  { echo "  ✗ $1"; ERRORS=$((ERRORS+1)); }
 
 # ─── 1. .claude/hooks/ ────────────────────────────────────────────────────────
 
-echo "[1/8] Copying .claude/hooks/"
+echo "[1/10] Copying .claude/hooks/"
 if [ -d "$MERIDIAN_DIR/.claude/hooks" ]; then
     mkdir -p "$TARGET/.claude/hooks"
     cp -r "$MERIDIAN_DIR/.claude/hooks/." "$TARGET/.claude/hooks/"
@@ -62,7 +65,7 @@ fi
 
 # ─── 2. .claude/skills/ ───────────────────────────────────────────────────────
 
-echo "[2/8] Copying .claude/skills/"
+echo "[2/10] Copying .claude/skills/"
 if [ -d "$MERIDIAN_DIR/.claude/skills" ]; then
     mkdir -p "$TARGET/.claude/skills"
     cp -r "$MERIDIAN_DIR/.claude/skills/." "$TARGET/.claude/skills/"
@@ -73,7 +76,7 @@ fi
 
 # ─── 3. .claude/agents/ ───────────────────────────────────────────────────────
 
-echo "[3/8] Copying .claude/agents/"
+echo "[3/10] Copying .claude/agents/"
 if [ -d "$MERIDIAN_DIR/.claude/agents" ]; then
     mkdir -p "$TARGET/.claude/agents"
     cp -r "$MERIDIAN_DIR/.claude/agents/." "$TARGET/.claude/agents/"
@@ -84,7 +87,7 @@ fi
 
 # ─── 4. .meridian/ tracked schemas + security rules ──────────────────────────
 
-echo "[4/8] Installing .meridian/ skeleton"
+echo "[4/10] Installing .meridian/ skeleton"
 mkdir -p "$TARGET/.meridian"
 
 # Copy tracked schema files
@@ -106,7 +109,7 @@ fi
 
 # ─── 5. .meridian/ runtime skeleton ──────────────────────────────────────────
 
-echo "[5/8] Creating runtime skeleton"
+echo "[5/10] Creating runtime skeleton"
 
 # telemetry.jsonl — empty, append-only event log
 if [ ! -f "$TARGET/.meridian/telemetry.jsonl" ]; then
@@ -133,7 +136,7 @@ fi
 
 # ─── 6. gates.yaml recipe ─────────────────────────────────────────────────────
 
-echo "[6/8] gates.yaml"
+echo "[6/10] gates.yaml"
 if [ -n "$RECIPE" ]; then
     RECIPE_FILE="$MERIDIAN_DIR/recipes/$RECIPE/gates.yaml"
     if [ -f "$RECIPE_FILE" ]; then
@@ -154,7 +157,7 @@ fi
 
 # ─── 7. CLAUDE.md template ────────────────────────────────────────────────────
 
-echo "[7/8] CLAUDE.md"
+echo "[7/10] CLAUDE.md"
 CLAUDE_TEMPLATE="$MERIDIAN_DIR/templates/CLAUDE.md"
 if [ -f "$CLAUDE_TEMPLATE" ]; then
     if [ -f "$TARGET/CLAUDE.md" ]; then
@@ -169,7 +172,7 @@ fi
 
 # ─── 8. .gitignore entries ────────────────────────────────────────────────────
 
-echo "[8/8] .gitignore"
+echo "[8/10] .gitignore"
 GITIGNORE="$TARGET/.gitignore"
 MERIDIAN_BLOCK="# Meridian runtime state (auto-generated, not for version control)
 .meridian/memory/
@@ -186,6 +189,53 @@ if [ -f "$GITIGNORE" ]; then
 else
     printf "%s\n" "$MERIDIAN_BLOCK" > "$GITIGNORE"
     ok "Created .gitignore with Meridian entries"
+fi
+
+# ─── 9. scripts/ (engines the hooks + verifier call) ─────────────────────────
+
+echo "[9/10] Copying scripts/"
+if [ -d "$MERIDIAN_DIR/scripts" ]; then
+    mkdir -p "$TARGET/scripts"
+    cp -r "$MERIDIAN_DIR/scripts/." "$TARGET/scripts/"
+    chmod +x "$TARGET/scripts/"*.sh 2>/dev/null || true
+    ok "scripts/ installed ($(ls "$TARGET/scripts/"*.sh 2>/dev/null | wc -l | tr -d ' ') scripts) — engines for hooks + meridian-verify.sh"
+else
+    err "scripts/ not found in Meridian source"
+fi
+
+# ─── 10. git/CI enforcement boundary (portable verifier) ─────────────────────
+
+echo "[10/10] Installing git/CI enforcement boundary"
+
+# pre-commit hook — runs meridian-verify.sh at the commit boundary (all tiers)
+if [ -d "$TARGET/.git" ]; then
+    if [ -f "$MERIDIAN_DIR/templates/pre-commit" ]; then
+        mkdir -p "$TARGET/.git/hooks"
+        if [ -f "$TARGET/.git/hooks/pre-commit" ] && ! grep -q "meridian-verify" "$TARGET/.git/hooks/pre-commit" 2>/dev/null; then
+            warn "existing .git/hooks/pre-commit found — not overwriting (add 'bash scripts/meridian-verify.sh' manually)"
+        else
+            cp "$MERIDIAN_DIR/templates/pre-commit" "$TARGET/.git/hooks/pre-commit"
+            chmod +x "$TARGET/.git/hooks/pre-commit"
+            ok "pre-commit hook installed (.git/hooks/pre-commit) — bypass with git commit --no-verify"
+        fi
+    else
+        warn "templates/pre-commit not found — skipping pre-commit hook"
+    fi
+else
+    warn "$TARGET is not a git repo — skipping pre-commit (run 'git init', then re-run install for the hook)"
+fi
+
+# CI workflow — the same verifier on every push/PR (the boundary for non-Claude tiers)
+if [ -f "$MERIDIAN_DIR/templates/meridian-ci.yml" ]; then
+    mkdir -p "$TARGET/.github/workflows"
+    if [ -f "$TARGET/.github/workflows/meridian.yml" ]; then
+        ok ".github/workflows/meridian.yml already exists (preserved)"
+    else
+        cp "$MERIDIAN_DIR/templates/meridian-ci.yml" "$TARGET/.github/workflows/meridian.yml"
+        ok "CI workflow installed (.github/workflows/meridian.yml)"
+    fi
+else
+    warn "templates/meridian-ci.yml not found — skipping CI workflow"
 fi
 
 # ─── Validate ─────────────────────────────────────────────────────────────────

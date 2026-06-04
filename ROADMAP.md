@@ -486,11 +486,14 @@ Each phase has:
 - *Operator task:* run the manual live-session protocol after any Claude Code update (documented, not automatable)
 
 #### G5.2: Portable Verifier + git/CI Boundary *(keystone)*
-**Estimated:** 10 hours  
+**Status:** COMPLETE ✅  
+**Estimated:** 10 hours | **Actual:** 4 hours | **Ratio:** 2.5x  
 **Deliverables:**
-- `scripts/meridian-verify.sh` — single platform-agnostic entry point wrapping `gate-engine.sh verify`, `drift-check.sh`, `validate-memory.sh`, and the evaluator contract; exits non-zero on any gate failure; emits JSONL (telemetry) + human summary
-- Generated `pre-commit` hook and `.github/workflows/meridian.yml` template, installed by `install.sh` for **every** tier
-- `tests/test-verify.sh` covering pass / fail / drift paths
+- `scripts/meridian-verify.sh` — platform-neutral verifier wrapping `gate-engine.sh` (validate + circular), `validate-memory.sh`, standing evaluator verdicts, and the drift sensor; exits non-zero on any blocking failure; emits telemetry (`tool_used`/`gate_blocked`) + human summary. Drift is advisory by default; `MERIDIAN_DRIFT_BLOCK=1` promotes it (A004) ✓
+- `templates/pre-commit` + `templates/meridian-ci.yml`, installed by `install.sh` for **every** tier (new install steps 9–10). Install also now copies `scripts/` so the hooks + verifier have their engines — a real prior gap ✓
+- `tests/test-verify.sh` (8 tests): clean-pass, circular-DAG block, invalid-memory block, standing-FAIL-verdict block, drift advisory + opt-in block, and **two end-to-end git pre-commit tests** (a failing commit is rejected with no HEAD; a clean commit succeeds) ✓
+- Dogfooded: `install.sh` into a fresh git repo produces a working pre-commit + CI + verifier that passes against the real cli-tool `gates.yaml` ✓
+- Full suite now 211 tests / 16 suites, all green ✓
 
 #### G5.3: Tier 2 (Cursor/Windsurf) — Rules from a Single Source of Truth
 **Estimated:** 8 hours  
