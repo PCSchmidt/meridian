@@ -42,10 +42,22 @@ fail() {
 }
 
 # Run the doctor against a project dir; capture combined output and exit code.
-# Sets DOCTOR_OUT and DOCTOR_RC. Never aborts the suite (set -e safe).
+# Sets DOCTOR_OUT and DOCTOR_RC. Caches result per-dir so repeat calls are free.
+DOCTOR_CACHE_DIR=""
+DOCTOR_CACHE_OUT=""
+DOCTOR_CACHE_RC=0
+
 run_doctor() {
     local dir="$1"
+    if [ "$dir" = "$DOCTOR_CACHE_DIR" ]; then
+        DOCTOR_OUT="$DOCTOR_CACHE_OUT"
+        DOCTOR_RC="$DOCTOR_CACHE_RC"
+        return
+    fi
     DOCTOR_OUT="$(MERIDIAN_PROJECT_DIR="$dir" bash "$DOCTOR" 2>&1)" && DOCTOR_RC=0 || DOCTOR_RC=$?
+    DOCTOR_CACHE_DIR="$dir"
+    DOCTOR_CACHE_OUT="$DOCTOR_OUT"
+    DOCTOR_CACHE_RC="$DOCTOR_RC"
 }
 
 #######################################
@@ -150,6 +162,70 @@ test_gates_yaml_detected() {
 }
 
 #######################################
+# Test (G7.4): expanded core scripts appear in structure output
+#######################################
+test_core_scripts_expanded() {
+    echo ""
+    echo "Test: G7.4 core scripts (session.sh, log-episodic.sh, write-reflexion.sh) reported"
+    run_doctor "$PROJECT_DIR"
+
+    local ok=1
+    for script in session.sh log-episodic.sh write-reflexion.sh; do
+        if echo "$DOCTOR_OUT" | grep -q "$script"; then
+            pass "core script reported: $script"
+        else
+            fail "core script not reported: $script"
+            ok=0
+        fi
+    done
+}
+
+#######################################
+# Test (G7.4): schema parse results reported (not just presence)
+#######################################
+test_schema_parse_reported() {
+    echo ""
+    echo "Test: G7.4 schema parse validation appears in output"
+    run_doctor "$PROJECT_DIR"
+
+    if echo "$DOCTOR_OUT" | grep -qE "schema valid|schema present"; then
+        pass "schema parse results reported"
+    else
+        fail "no schema parse output found (expected 'schema valid' or 'schema present')"
+    fi
+}
+
+#######################################
+# Test (G7.4): SessionStart.sh hook checked
+#######################################
+test_session_start_hook_checked() {
+    echo ""
+    echo "Test: G7.4 SessionStart.sh appears in hook integrity output"
+    run_doctor "$PROJECT_DIR"
+
+    if echo "$DOCTOR_OUT" | grep -q "SessionStart.sh"; then
+        pass "SessionStart.sh reported in hook integrity"
+    else
+        fail "SessionStart.sh not mentioned in hook integrity"
+    fi
+}
+
+#######################################
+# Test (G7.4): .claude/settings.json check present
+#######################################
+test_settings_json_checked() {
+    echo ""
+    echo "Test: G7.4 .claude/settings.json validated in hook integrity"
+    run_doctor "$PROJECT_DIR"
+
+    if echo "$DOCTOR_OUT" | grep -q "settings.json"; then
+        pass "settings.json checked in hook integrity"
+    else
+        fail "settings.json not checked in hook integrity"
+    fi
+}
+
+#######################################
 # Test: healthy repo passes structure, hooks, and memory checks
 #######################################
 test_repo_core_checks_pass() {
@@ -177,6 +253,10 @@ main() {
     test_dependency_checks
     test_missing_meridian_is_critical
     test_gates_yaml_detected
+    test_core_scripts_expanded
+    test_schema_parse_reported
+    test_session_start_hook_checked
+    test_settings_json_checked
     test_repo_core_checks_pass
 
     echo ""

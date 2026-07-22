@@ -640,7 +640,7 @@ was none. (Same lesson as Phase 4 recipes — front-loaded work makes the docs c
 
 ## Phase 7: Dogfooding & Refinement (Weeks 11-12)
 
-**Status:** In Progress (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4–G7.5 pending)
+**Status:** In Progress (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4 ✅, G7.5 pending)
 **Estimated:** 40 hours  
 **Target completion:** TBD
 
@@ -717,14 +717,24 @@ infrastructure, not a post-hoc add-on.
   previously-passing suites. New-red suites (not in baseline) warn but don't block; only
   regressions (was passing, now failing) exit 2. Baseline updated on all-green runs.
 
-#### G7.4: meridian-doctor Final Polish
-**Estimated:** 3 hours  
+#### G7.4: meridian-doctor Final Polish ✅
+
+**Status:** COMPLETE  
+**Estimated:** 3 hours | **Actual:** ~0.5 hours (6x faster — scope was fully pre-specified)  
+**Completed:** 2026-07-22
+
 **Deliverables:**
-- `meridian-doctor.sh` validates complete installation
-- Checks all dependencies
-- Tests all hooks
-- Validates all schemas
-- Clear error messages
+
+- ✅ **Expanded core-script check:** `check_structure()` now validates `write-reflexion.sh`,
+  `session.sh`, and `log-episodic.sh` alongside the original three — all added in G7.3
+- ✅ **Schema parse validation:** JSON schemas parsed with `jq empty`; YAML schemas parsed with
+  `yq '.'`; failure is CRITICAL (malformed schema silently degrades enforcement)
+- ✅ **Hook completeness:** `check_hooks()` now covers `SessionStart.sh` (G7.3 addition),
+  runs `bash -n` syntax-check on each hook, and validates `.claude/settings.json` as valid JSON
+- ✅ **4 new tests in `test-doctor.sh`:** G7.4 coverage for core-script list, schema parsing,
+  SessionStart hook, and settings.json wiring — 14/14 passing
+- ✅ **Test cache optimization:** `run_doctor()` now caches same-dir results, eliminating 6 of 7
+  redundant full-doctor invocations in the test suite
 
 #### G7.5: Pre-Release Checklist
 **Estimated:** 2 hours  
@@ -795,7 +805,7 @@ infrastructure, not a post-hoc add-on.
 | 4. Recipes *(was Phase 4, unchanged)* | ✅ Complete | 40h | ~8.5h | ~4.7x | 2026-06-03 |
 | 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ✅ Complete | 34h | ~13.5h | ~2.5x | 2026-06-04 |
 | 6. Documentation | ✅ Complete | 25h | ~4.5h | ~5.6x | 2026-06-04 |
-| 7. Dogfooding & Refinement | 🔄 In Progress (G7.1 ✅ G7.2 ✅ G7.3 ✅ G7.4–G7.5 pending) | 40h | — | — | TBD |
+| 7. Dogfooding & Refinement | 🔄 In Progress (G7.1 ✅ G7.2 ✅ G7.3 ✅ G7.4 ✅ G7.5 pending) | 40h | — | — | TBD |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
 | **TOTAL** | | **294h** | **~134h** | | TBD |
 

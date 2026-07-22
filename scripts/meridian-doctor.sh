@@ -132,19 +132,42 @@ check_structure() {
     fi
     ok ".meridian/ present"
 
-    # Schema files (tracked, ship with the framework)
+    # Schema files (tracked, ship with the framework) — check presence and parse
     local schema
-    for schema in memory-schema.json telemetry-schema.json gate-schema.yaml; do
-        if [ -f "$MERIDIAN_DIR/$schema" ]; then
-            ok "schema present: $schema"
-        else
+    for schema in memory-schema.json telemetry-schema.json gate-schema.yaml features-schema.json; do
+        if [ ! -f "$MERIDIAN_DIR/$schema" ]; then
             add_warning "schema missing: .meridian/$schema"
+            continue
         fi
+        case "$schema" in
+            *.json)
+                if command -v jq >/dev/null 2>&1; then
+                    if jq empty "$MERIDIAN_DIR/$schema" >/dev/null 2>&1; then
+                        ok "schema valid (JSON): $schema"
+                    else
+                        add_critical "schema malformed JSON: $schema (run: jq empty .meridian/$schema)"
+                    fi
+                else
+                    ok "schema present: $schema (JSON not parsed — jq missing)"
+                fi
+                ;;
+            *.yaml)
+                if command -v yq >/dev/null 2>&1; then
+                    if yq '.' "$MERIDIAN_DIR/$schema" >/dev/null 2>&1; then
+                        ok "schema valid (YAML): $schema"
+                    else
+                        add_critical "schema malformed YAML: $schema (run: yq . .meridian/$schema)"
+                    fi
+                else
+                    ok "schema present: $schema (YAML not parsed — yq missing)"
+                fi
+                ;;
+        esac
     done
 
     # Core scripts that the hooks depend on
     local s
-    for s in gate-engine.sh validate-memory.sh log-event.sh; do
+    for s in gate-engine.sh validate-memory.sh log-event.sh write-reflexion.sh session.sh log-episodic.sh; do
         if [ -f "$SCRIPT_DIR/$s" ]; then
             ok "core script present: $s"
         else
@@ -204,17 +227,37 @@ check_hooks() {
         add_critical "hook-wrapper.sh is missing its sourced-not-executed guard"
     fi
 
-    # Entry hooks should source the wrapper, not re-implement it
+    # Entry hooks should source the wrapper, not re-implement it; also check syntax
     local h
-    for h in PreToolUse.sh PostToolUse.sh; do
-        if [ -f "$HOOKS_DIR/$h" ]; then
-            if grep -q "hook-wrapper.sh" "$HOOKS_DIR/$h"; then
-                ok "$h sources hook-wrapper.sh"
-            else
-                add_warning "$h does not source hook-wrapper.sh"
-            fi
+    for h in PreToolUse.sh PostToolUse.sh SessionStart.sh; do
+        [ -f "$HOOKS_DIR/$h" ] || continue
+        if grep -q "hook-wrapper.sh" "$HOOKS_DIR/$h"; then
+            ok "$h sources hook-wrapper.sh"
+        else
+            add_warning "$h does not source hook-wrapper.sh"
+        fi
+        if bash -n "$HOOKS_DIR/$h" 2>/dev/null; then
+            ok "$h syntax OK"
+        else
+            add_critical "$h has a bash syntax error (run: bash -n .claude/hooks/$h)"
         fi
     done
+
+    # .claude/settings.json must exist and be valid JSON for hook registration
+    local settings="$PROJECT_DIR/.claude/settings.json"
+    if [ -f "$settings" ]; then
+        if command -v jq >/dev/null 2>&1; then
+            if jq empty "$settings" >/dev/null 2>&1; then
+                ok ".claude/settings.json present and valid JSON"
+            else
+                add_critical ".claude/settings.json is malformed JSON (run: jq empty .claude/settings.json)"
+            fi
+        else
+            ok ".claude/settings.json present (JSON not validated — jq missing)"
+        fi
+    else
+        add_warning ".claude/settings.json not found — hooks (SessionStart, PreToolUse, PostToolUse) may not be registered with Claude Code"
+    fi
 }
 
 #######################################
