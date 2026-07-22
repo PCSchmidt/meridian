@@ -640,35 +640,83 @@ was none. (Same lesson as Phase 4 recipes — front-loaded work makes the docs c
 
 ## Phase 7: Dogfooding & Refinement (Weeks 11-12)
 
-**Status:** Not Started  
+**Status:** In Progress (G7.1 ✅, G7.2 ✅, G7.3–G7.5 pending)
 **Estimated:** 40 hours  
-**Target completion:** 2026-09-03
+**Target completion:** TBD
 
 ### Gates:
 
-#### G7.1: Build Real Project #1 with Meridian
-**Estimated:** 15 hours  
-**Deliverables:**
-- Use Meridian to build a real project (from your 17-project roadmap)
-- Track observability data (gate pass rates, token costs, calibration)
-- Document issues found
-- Fix critical bugs
+#### G7.1: Build Real Project #1 with Meridian ✅
 
-#### G7.2: Build Real Project #2 with Meridian
-**Estimated:** 12 hours  
+**Status:** COMPLETE (AeroIntel — partial validation)
+**Estimated:** 15 hours | **Actual:** ~2 hours (installer + gate passage only; production app already existed)
+**Completed:** 2026-06-02 (as part of G3.5)
 **Deliverables:**
-- Second real project
-- Different recipe than Project #1
-- Compare calibration data across projects
-- Validate cross-project learning
+
+- Installed Meridian into AeroIntel (FastAPI + Next.js + ML pipeline, deployed on Fly.io + Vercel) ✓
+- Wrote CONTRACT.md and SPEC.md; seeded 13 features via `features-init.sh` ✓
+- Lifecycle report: **100% happy-path / 0% full-lifecycle** — "90% done" illusion confirmed on production project ✓
+- Drift sensor: score 7 (aligned), caught 1 real `feature_lag` staleness ✓
+- Findings report: `G3.5-FINDINGS.md` ✓
+
+**Note:** AeroIntel was a retrofit (Meridian installed into an existing production project).
+G7.1's value was installer validation and north-star test confirmation. A ground-up build
+was needed for full dogfooding — that is G7.2 (HPI).
+
+#### G7.2: Build Real Project #2 with Meridian ✅
+
+**Status:** COMPLETE (Hard Power Intelligence — full ground-up dogfood)
+**Estimated:** 12 hours | **Actual:** ~7 weeks of active development (the full project build)
+**Completed:** 2026-07-21
+**Project:** Hard Power Intelligence — local `HardPowerIntelligence/`
+**Live:** <https://hardpowerintel.com/>
+**Recipe:** fullstack-web + intelligence-pipeline (custom 9-gate DAG)
+
+**Deliverables:**
+
+- Installed Meridian before writing any application code (D010) ✓
+- Passed all 9 gates in sequence: confirmed → backend_approved → data_pipeline_live → brief_verified
+  → web_reader_live (parallel: frontend_approved) → tests_passing → security_scan → deploy_ready ✓
+- Full stack deployed: Next.js/Vercel + FastAPI/Fly.io + Supabase + Lemon Squeezy ✓
+- Intelligence engine: USAspending + SAM.gov + EDGAR + feeds + GDELT adapters; entity resolver;
+  brief generator; citation eval; convergence graph ✓
+- 3 desks live (Defense / AI / Energy) plus convergence graph at `/graph` ✓
+- 700+ backend tests, 82+ frontend tests green ✓
+- `meridian-verify` fired and passed on every commit (logged in telemetry.jsonl) ✓
+- `FEATURES.json` initialized: 17 features tracked ✓
+- **5 concrete Meridian findings** documented in `docs/MERIDIAN_DOGFOOD.md` ✓
+
+**Key calibration finding:** gate system held through 6 design/specification gates before any
+code was written; the pre-commit verifier prevented spec/code divergence throughout the build.
+`brief_verified` (Gate 5) was the most valuable gate — it forced citation eval to be built as
+infrastructure, not a post-hoc add-on.
 
 #### G7.3: Refinement Based on Dogfooding
-**Estimated:** 8 hours  
-**Deliverables:**
-- Fix bugs discovered during Projects #1 and #2
-- Improve error messages
-- Adjust gate models based on real usage
-- Update documentation with lessons learned
+
+**Status:** NEXT — 5 concrete work items from HPI findings
+**Estimated:** 8 hours
+
+**Deliverables (from `docs/MERIDIAN_DOGFOOD.md` F1–F5):**
+
+- **F1 — corrections.jsonl decoupled from hour estimates:** `write-reflexion.sh` requires
+  `--predicted`/`--actual` hours; `corrections.jsonl` schema requires `predicted_hours` /
+  `actual_hours` / `delta_ratio`. Projects that don't track per-gate hours have no inputs.
+  Fix: make hours optional; add `root_cause` / `action_next` fields for non-time reflexions.
+- **F2 — episodic.jsonl has no automatic writer:** schema + doctor exist but nothing produces
+  events. `session.sh start` writes to `telemetry.jsonl`, not `episodic.jsonl`. Fix: add
+  `log-episodic.sh` (or extend `log-event.sh` to dual-write) wired to `session_start` /
+  `gate_passed` / `gate_blocked` / `feature_complete` / `stop_event` hooks.
+- **F3 — session lifecycle not auto-started:** installed `session.json` has no `session_id`;
+  `session.sh start` must be called manually. Fix: wire `session.sh start` to the
+  `SessionStart` hook so every session gets an id and a logged start event automatically.
+- **F4 — semantic patterns can't reach HIGH confidence from one project:** a fresh pattern is
+  `confidence: LOW` and only matures via `global-memory-sync.sh` across projects. Document
+  this; consider allowing within-project re-validation to bump confidence, or make the
+  multi-project requirement explicit in the skill.
+- **F5 — enforce-tests hook deadlocks TDD red phase:** the hook blocks all non-test source
+  writes when the suite is red. Writing a failing test first makes the suite red, then blocks
+  writing the implementation — a deadlock. Fix: scope the block to *previously-green* files
+  only (don't block on failures in newly-added test files).
 
 #### G7.4: meridian-doctor Final Polish
 **Estimated:** 3 hours  
@@ -748,7 +796,7 @@ was none. (Same lesson as Phase 4 recipes — front-loaded work makes the docs c
 | 4. Recipes *(was Phase 4, unchanged)* | ✅ Complete | 40h | ~8.5h | ~4.7x | 2026-06-03 |
 | 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ✅ Complete | 34h | ~13.5h | ~2.5x | 2026-06-04 |
 | 6. Documentation | ✅ Complete | 25h | ~4.5h | ~5.6x | 2026-06-04 |
-| 7. Dogfooding & Refinement | ⏳ Next | 40h | — | — | TBD |
+| 7. Dogfooding & Refinement | 🔄 In Progress (G7.1 ✅ G7.2 ✅ G7.3–G7.5 pending) | 40h | — | — | TBD |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
 | **TOTAL** | | **294h** | **~134h** | | TBD |
 
@@ -843,6 +891,6 @@ from first principles, not from the 0.2–0.4x recipe-doc multipliers.
 
 ---
 
-**Status:** Phases 0–6 complete. Phase 7 (Dogfooding & Refinement) next.  
-**Last updated:** 2026-06-04  
+**Status:** Phases 0–6 complete. Phase 7 in progress — G7.1 (AeroIntel) ✅ G7.2 (HPI, live) ✅ G7.3 (refinement) next.
+**Last updated:** 2026-07-21
 **Next milestone:** G1.1 (Gate DAG Engine) - Estimated 8h
