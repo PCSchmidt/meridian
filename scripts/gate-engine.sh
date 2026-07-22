@@ -323,6 +323,13 @@ mark_gate_passed() {
     echo "$new_state" > "$STATE_FILE"
 
     success "Gate '$gate_id' marked as passed"
+
+    # Episodic memory (best-effort)
+    local log_episodic="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-episodic.sh"
+    if [ -f "$log_episodic" ]; then
+        MERIDIAN_PROJECT_DIR="${MERIDIAN_PROJECT_DIR:-.}" bash "$log_episodic" gate_passed \
+            --gate "$gate_id" --outcome pass >/dev/null 2>&1 || true
+    fi
 }
 
 #######################################
@@ -403,6 +410,11 @@ verify_gate() {
         if [ "$rc" -eq 2 ]; then
             [ -f "$log_event" ] && bash "$log_event" gate_blocked gate="$gate_id" \
                 reason="pre-hook $hook failed" >/dev/null 2>&1 || true
+            local log_episodic="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-episodic.sh"
+            [ -f "$log_episodic" ] && MERIDIAN_PROJECT_DIR="${MERIDIAN_PROJECT_DIR:-.}" \
+                bash "$log_episodic" gate_blocked \
+                --gate "$gate_id" --outcome block \
+                --notes "pre-hook $hook failed" >/dev/null 2>&1 || true
             error "Gate '$gate_id' verification FAILED: pre-hook '$hook' blocked (exit 2)" 2
         elif [ "$rc" -ne 0 ]; then
             warn "Pre-hook '$hook' exited $rc (non-blocking)"

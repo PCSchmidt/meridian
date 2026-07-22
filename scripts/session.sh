@@ -16,6 +16,7 @@ set -euo pipefail
 PROJECT_DIR="${MERIDIAN_PROJECT_DIR:-$(pwd)}"
 SESSION_FILE="$PROJECT_DIR/.meridian/session.json"
 LOG_EVENT="$(dirname "${BASH_SOURCE[0]}")/log-event.sh"
+LOG_EPISODIC="$(dirname "${BASH_SOURCE[0]}")/log-episodic.sh"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -74,6 +75,12 @@ EOF
         MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$LOG_EVENT" session_start \
             "current_gate=$current_gate" 2>/dev/null || true
     fi
+
+    # Episodic memory
+    if [ -f "$LOG_EPISODIC" ]; then
+        MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$LOG_EPISODIC" session_start \
+            --notes "gate:$current_gate" 2>/dev/null || true
+    fi
 }
 
 #######################################
@@ -103,6 +110,12 @@ end_session() {
             "tools_used=$tools_used" \
             "gates_passed=$gates_passed" \
             "errors=$errors" 2>/dev/null || true
+    fi
+
+    # Episodic memory
+    if [ -f "$LOG_EPISODIC" ]; then
+        MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$LOG_EPISODIC" session_end \
+            --notes "tools:$tools_used gates:$gates_passed errors:$errors" 2>/dev/null || true
     fi
 
     echo -e "${GREEN}Session ended:${NC} $session_id"

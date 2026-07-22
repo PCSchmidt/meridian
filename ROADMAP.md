@@ -640,7 +640,7 @@ was none. (Same lesson as Phase 4 recipes — front-loaded work makes the docs c
 
 ## Phase 7: Dogfooding & Refinement (Weeks 11-12)
 
-**Status:** In Progress (G7.1 ✅, G7.2 ✅, G7.3–G7.5 pending)
+**Status:** In Progress (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4–G7.5 pending)
 **Estimated:** 40 hours  
 **Target completion:** TBD
 
@@ -691,32 +691,31 @@ code was written; the pre-commit verifier prevented spec/code divergence through
 `brief_verified` (Gate 5) was the most valuable gate — it forced citation eval to be built as
 infrastructure, not a post-hoc add-on.
 
-#### G7.3: Refinement Based on Dogfooding
+#### G7.3: Refinement Based on Dogfooding ✅
 
-**Status:** NEXT — 5 concrete work items from HPI findings
+**Status:** COMPLETE
 **Estimated:** 8 hours
+**Actual:** ~3 hours
+**Variance:** 2.7x faster (fixes were surgical; all 5 changes were self-contained)
+**Completed:** 2026-07-22
 
 **Deliverables (from `docs/MERIDIAN_DOGFOOD.md` F1–F5):**
 
-- **F1 — corrections.jsonl decoupled from hour estimates:** `write-reflexion.sh` requires
-  `--predicted`/`--actual` hours; `corrections.jsonl` schema requires `predicted_hours` /
-  `actual_hours` / `delta_ratio`. Projects that don't track per-gate hours have no inputs.
-  Fix: make hours optional; add `root_cause` / `action_next` fields for non-time reflexions.
-- **F2 — episodic.jsonl has no automatic writer:** schema + doctor exist but nothing produces
-  events. `session.sh start` writes to `telemetry.jsonl`, not `episodic.jsonl`. Fix: add
-  `log-episodic.sh` (or extend `log-event.sh` to dual-write) wired to `session_start` /
-  `gate_passed` / `gate_blocked` / `feature_complete` / `stop_event` hooks.
-- **F3 — session lifecycle not auto-started:** installed `session.json` has no `session_id`;
-  `session.sh start` must be called manually. Fix: wire `session.sh start` to the
-  `SessionStart` hook so every session gets an id and a logged start event automatically.
-- **F4 — semantic patterns can't reach HIGH confidence from one project:** a fresh pattern is
-  `confidence: LOW` and only matures via `global-memory-sync.sh` across projects. Document
-  this; consider allowing within-project re-validation to bump confidence, or make the
-  multi-project requirement explicit in the skill.
-- **F5 — enforce-tests hook deadlocks TDD red phase:** the hook blocks all non-test source
-  writes when the suite is red. Writing a failing test first makes the suite red, then blocks
-  writing the implementation — a deadlock. Fix: scope the block to *previously-green* files
-  only (don't block on failures in newly-added test files).
+- ✅ **F1 — hours optional in reflexion:** `write-reflexion.sh` `--predicted`/`--actual`
+  now optional (must be paired); schema `required` drops `predicted_hours`/`actual_hours`/
+  `delta_ratio`; `validate-memory.sh` validates hours only when present. 4 new tests added.
+- ✅ **F2 — episodic auto-writer:** new `scripts/log-episodic.sh` writes schema-validated
+  events to `episodic.jsonl`. Wired into `session.sh` (`session_start`/`session_end`) and
+  `gate-engine.sh` (`gate_passed`/`gate_blocked`). Write-ahead validation before append.
+  4 new tests added.
+- ✅ **F3 — SessionStart hook:** new `.claude/hooks/SessionStart.sh` calls `session.sh start`
+  automatically at conversation start. `.claude/settings.json` created to register
+  `SessionStart`/`PreToolUse`/`PostToolUse` hooks with Claude Code.
+- ✅ **F4 — confidence ceiling documented:** `docs/memory.md` now explains the multi-project
+  requirement for semantic confidence (LOW→MEDIUM→HIGH) and the manual bump escape hatch.
+- ✅ **F5 — TDD red-phase fix:** `run-tests.sh` now tracks `.meridian/test-baseline.txt` of
+  previously-passing suites. New-red suites (not in baseline) warn but don't block; only
+  regressions (was passing, now failing) exit 2. Baseline updated on all-green runs.
 
 #### G7.4: meridian-doctor Final Polish
 **Estimated:** 3 hours  
@@ -796,7 +795,7 @@ infrastructure, not a post-hoc add-on.
 | 4. Recipes *(was Phase 4, unchanged)* | ✅ Complete | 40h | ~8.5h | ~4.7x | 2026-06-03 |
 | 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ✅ Complete | 34h | ~13.5h | ~2.5x | 2026-06-04 |
 | 6. Documentation | ✅ Complete | 25h | ~4.5h | ~5.6x | 2026-06-04 |
-| 7. Dogfooding & Refinement | 🔄 In Progress (G7.1 ✅ G7.2 ✅ G7.3–G7.5 pending) | 40h | — | — | TBD |
+| 7. Dogfooding & Refinement | 🔄 In Progress (G7.1 ✅ G7.2 ✅ G7.3 ✅ G7.4–G7.5 pending) | 40h | — | — | TBD |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
 | **TOTAL** | | **294h** | **~134h** | | TBD |
 

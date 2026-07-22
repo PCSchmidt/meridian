@@ -193,7 +193,7 @@ validate_corrections() {
         fi
 
         # Check required fields
-        local required_fields=("session_id" "gate" "date" "project" "predicted_hours" "actual_hours" "delta_ratio" "root_cause" "action_next")
+        local required_fields=("session_id" "gate" "date" "project" "root_cause" "action_next")
 
         for field in "${required_fields[@]}"; do
             local value
@@ -203,23 +203,18 @@ validate_corrections() {
             fi
         done
 
-        # Validate numeric fields are positive
-        local predicted
-        predicted=$(echo "$line" | jq -r '.predicted_hours')
-        # Convert to integer for comparison (multiply by 100 to handle decimals)
-        local predicted_int
-        predicted_int=$(echo "$predicted" | awk '{print int($1 * 100)}')
-        if [ "$predicted_int" -le 0 ]; then
-            error "predicted_hours must be > 0 at line $line_num" $ERR_SCHEMA_VALIDATION
-        fi
-
-        local actual
-        actual=$(echo "$line" | jq -r '.actual_hours')
-        local actual_int
-        actual_int=$(echo "$actual" | awk '{print int($1 * 100)}')
-        if [ "$actual_int" -le 0 ]; then
-            error "actual_hours must be > 0 at line $line_num" $ERR_SCHEMA_VALIDATION
-        fi
+        # Hours are optional — validate > 0 when present (must appear together)
+        for hour_field in predicted_hours actual_hours; do
+            local hv
+            hv=$(echo "$line" | jq -r ".$hour_field // null")
+            if [ "$hv" != "null" ]; then
+                local hint
+                hint=$(echo "$hv" | awk '{print int($1 * 100)}')
+                if [ "$hint" -le 0 ]; then
+                    error "$hour_field must be > 0 at line $line_num in $file" $ERR_SCHEMA_VALIDATION
+                fi
+            fi
+        done
 
     done < "$file"
 

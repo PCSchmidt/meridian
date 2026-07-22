@@ -129,9 +129,6 @@
         "gate",
         "date",
         "project",
-        "predicted_hours",
-        "actual_hours",
-        "delta_ratio",
         "root_cause",
         "action_next"
       ],

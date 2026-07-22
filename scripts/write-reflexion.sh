@@ -32,9 +32,11 @@ success() { echo -e "${GREEN}✓${NC} $1"; }
 
 usage() {
     cat >&2 <<'USAGE'
-Usage: write-reflexion.sh --gate <id> --predicted <h> --actual <h> \
-                          --root-cause "<why>" --action-next "<next>" \
-                          [--errors-open N] [--errors-close N]
+Usage: write-reflexion.sh --gate <id> --root-cause "<why>" --action-next "<next>" \
+                          [--predicted <h> --actual <h>] [--errors-open N] [--errors-close N]
+
+--predicted and --actual are optional but must be provided together.
+When omitted, the entry is written without calibration metrics.
 USAGE
     exit 1
 }
@@ -59,20 +61,27 @@ done
 
 # Required fields
 [ -n "$GATE" ]        || { warn "missing --gate"; usage; }
-[ -n "$PREDICTED" ]   || { warn "missing --predicted"; usage; }
-[ -n "$ACTUAL" ]      || { warn "missing --actual"; usage; }
 [ -n "$ROOT_CAUSE" ]  || { warn "missing --root-cause"; usage; }
 [ -n "$ACTION_NEXT" ] || { warn "missing --action-next"; usage; }
 
+# Hours are optional — but must be provided together (can't compute delta from one)
+if [ -n "$PREDICTED" ] && [ -z "$ACTUAL" ]; then
+    error "--actual is required when --predicted is provided"
+fi
+if [ -n "$ACTUAL" ] && [ -z "$PREDICTED" ]; then
+    error "--predicted is required when --actual is provided"
+fi
+
 command -v jq >/dev/null 2>&1 || error "jq is required to write reflexion entries"
 
-# Validate numerics > 0
-awk -v p="$PREDICTED" 'BEGIN{exit !(p+0 > 0)}' || error "--predicted must be a positive number"
-awk -v a="$ACTUAL"    'BEGIN{exit !(a+0 > 0)}' || error "--actual must be a positive number"
-
-# Derived metrics (awk for float math; no bc on Git Bash)
-DELTA_RATIO=$(awk -v p="$PREDICTED" -v a="$ACTUAL" 'BEGIN{printf "%.2f", p/a}')
-VARIANCE=$(awk -v p="$PREDICTED" -v a="$ACTUAL" 'BEGIN{printf "%.1f", (a-p)/p*100}')
+# When hours provided, validate numerics > 0 and compute derived metrics
+DELTA_RATIO=""; VARIANCE=""
+if [ -n "$PREDICTED" ] && [ -n "$ACTUAL" ]; then
+    awk -v p="$PREDICTED" 'BEGIN{exit !(p+0 > 0)}' || error "--predicted must be a positive number"
+    awk -v a="$ACTUAL"    'BEGIN{exit !(a+0 > 0)}' || error "--actual must be a positive number"
+    DELTA_RATIO=$(awk -v p="$PREDICTED" -v a="$ACTUAL" 'BEGIN{printf "%.2f", p/a}')
+    VARIANCE=$(awk -v p="$PREDICTED" -v a="$ACTUAL" 'BEGIN{printf "%.1f", (a-p)/p*100}')
+fi
 
 # Session context
 SESSION_ID="00000000"; PROJECT="$(basename "$PROJECT_DIR")"
@@ -82,18 +91,28 @@ if [ -f "$SESSION_FILE" ]; then
 fi
 DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S")
 
-# Build the entry
-ENTRY=$(jq -c -n \
-    --arg sid "$SESSION_ID" --arg gate "$GATE" --arg date "$DATE" --arg project "$PROJECT" \
-    --argjson predicted "$PREDICTED" --argjson actual "$ACTUAL" \
-    --argjson delta "$DELTA_RATIO" --argjson variance "$VARIANCE" \
-    --arg root "$ROOT_CAUSE" --arg next "$ACTION_NEXT" \
-    --argjson eopen "$ERRORS_OPEN" --argjson eclose "$ERRORS_CLOSE" \
-    '{session_id:$sid, gate:$gate, date:$date, project:$project,
-      predicted_hours:$predicted, actual_hours:$actual,
-      delta_ratio:$delta, variance_percent:$variance,
-      root_cause:$root, action_next:$next,
-      errors_open:$eopen, errors_close:$eclose}')
+# Build the entry — include hour fields only when both are present
+if [ -n "$PREDICTED" ] && [ -n "$ACTUAL" ]; then
+    ENTRY=$(jq -c -n \
+        --arg sid "$SESSION_ID" --arg gate "$GATE" --arg date "$DATE" --arg project "$PROJECT" \
+        --argjson predicted "$PREDICTED" --argjson actual "$ACTUAL" \
+        --argjson delta "$DELTA_RATIO" --argjson variance "$VARIANCE" \
+        --arg root "$ROOT_CAUSE" --arg next "$ACTION_NEXT" \
+        --argjson eopen "$ERRORS_OPEN" --argjson eclose "$ERRORS_CLOSE" \
+        '{session_id:$sid, gate:$gate, date:$date, project:$project,
+          predicted_hours:$predicted, actual_hours:$actual,
+          delta_ratio:$delta, variance_percent:$variance,
+          root_cause:$root, action_next:$next,
+          errors_open:$eopen, errors_close:$eclose}')
+else
+    ENTRY=$(jq -c -n \
+        --arg sid "$SESSION_ID" --arg gate "$GATE" --arg date "$DATE" --arg project "$PROJECT" \
+        --arg root "$ROOT_CAUSE" --arg next "$ACTION_NEXT" \
+        --argjson eopen "$ERRORS_OPEN" --argjson eclose "$ERRORS_CLOSE" \
+        '{session_id:$sid, gate:$gate, date:$date, project:$project,
+          root_cause:$root, action_next:$next,
+          errors_open:$eopen, errors_close:$eclose}')
+fi
 
 mkdir -p "$MEM_DIR"
 

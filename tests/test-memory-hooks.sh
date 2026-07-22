@@ -206,6 +206,108 @@ test_trim_no_file() {
 }
 
 #######################################
+# write-reflexion.sh — F1: hours optional
+#######################################
+test_reflexion_no_hours() {
+    echo ""; echo "Test: write-reflexion succeeds without hour args"
+    local p; p=$(new_project)
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/write-reflexion.sh" \
+        --gate G7.3 --root-cause "no estimates available" --action-next "add estimates next time")
+    if [ "$rc" -eq 0 ] && [ -f "$p/.meridian/memory/corrections.jsonl" ]; then
+        pass "Hours-free entry written (exit 0)"
+    else
+        fail "Expected append + exit 0 (got $rc)"
+    fi
+}
+
+test_reflexion_no_hours_no_calibration_fields() {
+    echo ""; echo "Test: hours-free entry omits predicted_hours / actual_hours"
+    local p; p=$(new_project)
+    MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/write-reflexion.sh" \
+        --gate G7.3 --root-cause "no estimates" --action-next "add later" >/dev/null 2>&1
+    local phours ahours
+    phours=$(jq -r '.predicted_hours // "absent"' "$p/.meridian/memory/corrections.jsonl" | tr -d '\r')
+    ahours=$(jq -r '.actual_hours // "absent"' "$p/.meridian/memory/corrections.jsonl" | tr -d '\r')
+    if [ "$phours" = "absent" ] && [ "$ahours" = "absent" ]; then
+        pass "No hour fields in hours-free entry"
+    else
+        fail "Unexpected hour fields: predicted=$phours actual=$ahours"
+    fi
+}
+
+test_reflexion_partial_hours_rejected() {
+    echo ""; echo "Test: write-reflexion errors when only one of predicted/actual is given"
+    local p; p=$(new_project)
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/write-reflexion.sh" \
+        --gate G7.3 --predicted 4 --root-cause "x" --action-next "y")
+    [ "$rc" -ne 0 ] && pass "Partial hours rejected (exit $rc)" \
+        || fail "Expected non-zero, got $rc"
+}
+
+test_reflexion_no_hours_validates() {
+    echo ""; echo "Test: hours-free entry passes validate-memory corrections"
+    local p; p=$(new_project)
+    MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/write-reflexion.sh" \
+        --gate G7.3 --root-cause "no estimates available" --action-next "add next time" >/dev/null 2>&1
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/validate-memory.sh" \
+        corrections "$p/.meridian/memory/corrections.jsonl")
+    [ "$rc" -eq 0 ] && pass "Hours-free entry is schema-valid" \
+        || fail "validate-memory rejected hours-free entry (got $rc)"
+}
+
+#######################################
+# log-episodic.sh — F2
+#######################################
+test_episodic_append() {
+    echo ""; echo "Test: log-episodic.sh writes a valid session_start event"
+    local p; p=$(new_project)
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/log-episodic.sh" \
+        session_start)
+    if [ "$rc" -eq 0 ] && [ -f "$p/.meridian/memory/episodic.jsonl" ]; then
+        pass "Episodic event written (exit 0)"
+    else
+        fail "Expected episodic.jsonl + exit 0 (got $rc)"
+    fi
+}
+
+test_episodic_event_fields() {
+    echo ""; echo "Test: log-episodic.sh event has required fields"
+    local p; p=$(new_project)
+    MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/log-episodic.sh" \
+        gate_passed --gate G7.3 --outcome pass >/dev/null 2>&1
+    local et gate outcome
+    et=$(jq -r '.event_type' "$p/.meridian/memory/episodic.jsonl" | tr -d '\r')
+    gate=$(jq -r '.gate' "$p/.meridian/memory/episodic.jsonl" | tr -d '\r')
+    outcome=$(jq -r '.outcome' "$p/.meridian/memory/episodic.jsonl" | tr -d '\r')
+    if [ "$et" = "gate_passed" ] && [ "$gate" = "G7.3" ] && [ "$outcome" = "pass" ]; then
+        pass "Fields correct: event_type=$et gate=$gate outcome=$outcome"
+    else
+        fail "Field mismatch: event_type=$et gate=$gate outcome=$outcome"
+    fi
+}
+
+test_episodic_invalid_type_rejected() {
+    echo ""; echo "Test: log-episodic.sh rejects unknown event_type"
+    local p; p=$(new_project)
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/log-episodic.sh" \
+        bogus_event)
+    [ "$rc" -ne 0 ] && pass "Unknown event_type rejected (exit $rc)" \
+        || fail "Expected non-zero, got $rc"
+}
+
+test_episodic_validates() {
+    echo ""; echo "Test: log-episodic.sh events pass validate-memory episodic"
+    local p; p=$(new_project)
+    MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/log-episodic.sh" session_start >/dev/null 2>&1
+    MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/log-episodic.sh" gate_passed \
+        --gate G7.3 --outcome pass >/dev/null 2>&1
+    local rc; rc=$(rc_of env MERIDIAN_PROJECT_DIR="$p" bash "$SCRIPTS/validate-memory.sh" \
+        episodic "$p/.meridian/memory/episodic.jsonl")
+    [ "$rc" -eq 0 ] && pass "Episodic events are schema-valid" \
+        || fail "validate-memory rejected episodic events (got $rc)"
+}
+
+#######################################
 # Runner
 #######################################
 main() {
@@ -218,6 +320,10 @@ main() {
     test_reflexion_missing_arg
     test_reflexion_bad_actual
     test_reflexion_validates
+    test_reflexion_no_hours
+    test_reflexion_no_hours_no_calibration_fields
+    test_reflexion_partial_hours_rejected
+    test_reflexion_no_hours_validates
     test_sync_status
     test_sync_push
     test_sync_idempotent
@@ -227,6 +333,10 @@ main() {
     test_trim_archives
     test_trim_idempotent
     test_trim_no_file
+    test_episodic_append
+    test_episodic_event_fields
+    test_episodic_invalid_type_rejected
+    test_episodic_validates
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

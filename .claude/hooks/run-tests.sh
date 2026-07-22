@@ -64,17 +64,41 @@ main() {
     done < <(find "$TARGET_DIR/tests" -maxdepth 1 -name 'test-*.sh' 2>/dev/null | sort)
     if [ "${#suites[@]}" -gt 0 ]; then
         info "Running ${#suites[@]} bash test suite(s) in tests/"
-        local failed=0 s
+        local BASELINE="$TARGET_DIR/.meridian/test-baseline.txt"
+        local failed=0 regressions=0 new_reds=0 s
+        local -a passed_names=()
         for s in "${suites[@]}"; do
+            local name; name=$(basename "$s")
             if bash "$s" >/dev/null 2>&1; then
-                info "  PASS $(basename "$s")"
+                info "  PASS $name"
+                passed_names+=("$name")
             else
-                warn "  FAIL $(basename "$s")"
+                warn "  FAIL $name"
                 failed=$((failed + 1))
+                # Regression = suite was passing in the last all-green run
+                if [ -f "$BASELINE" ] && grep -qx "$name" "$BASELINE" 2>/dev/null; then
+                    regressions=$((regressions + 1))
+                    warn "  ↳ REGRESSION: $name was passing — fix before proceeding"
+                else
+                    new_reds=$((new_reds + 1))
+                    warn "  ↳ TDD red phase: $name is new — write implementation to make it green"
+                fi
             fi
         done
         if [ "$failed" -gt 0 ]; then
-            block "$failed of ${#suites[@]} bash test suite(s) FAILED"
+            if [ "$regressions" -gt 0 ]; then
+                block "$regressions regression(s) in ${#suites[@]} suite(s) — previously-passing suite(s) now FAILED"
+            else
+                # Only new-red tests failing (TDD red phase) — warn but allow
+                warn "$new_reds new-red suite(s) in TDD red phase — implement to make green"
+                timer_end
+                exit 0
+            fi
+        fi
+        # All-green: update baseline so future runs know what was passing
+        if [ -d "$TARGET_DIR/.meridian" ]; then
+            printf '%s\n' "${passed_names[@]}" > "$BASELINE"
+            info "Test baseline updated (${#passed_names[@]} suites)"
         fi
         info "All ${#suites[@]} bash test suite(s) passed"; timer_end; exit 0
     fi

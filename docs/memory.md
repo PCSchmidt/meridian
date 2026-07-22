@@ -83,3 +83,29 @@ You can answer "how has my calibration trended?" with a one-line `jq` over
 Global patterns and the operator multiplier aggregate under `~/.meridian/global/`
 (synced by `scripts/global-memory-sync.sh`), so calibration learned on one project
 informs estimates on the next.
+
+## Single-project confidence ceiling (F4)
+
+Semantic patterns require cross-project validation to reach HIGH confidence. The
+ceiling is intentional: a pattern observed only once, in one project, might be
+project-specific noise rather than a generalizable rule.
+
+| `validated_count` | Confidence ceiling | Requirement |
+|-------------------|--------------------|-------------|
+| 1 | LOW | First observation |
+| 2–3 | MEDIUM | Validated in ≥ 2 projects |
+| 4+ | HIGH | Validated across ≥ 3 projects |
+
+**Within a single project**, a pattern stays LOW regardless of how many times it
+appears, because all observations share the same codebase, stack, and working
+conditions. Run `scripts/global-memory-sync.sh push` after completing a project to
+contribute its patterns to the global pool, and `pull` on the next project to
+import them — that cross-project pass is what lifts confidence.
+
+If a pattern is demonstrably universal (e.g. "all Fly.io free-tier machines
+cold-start in 2–5s"), you can manually bump its `validated_count` and
+`source_projects` via a direct write to `semantic.json`, then validate:
+
+```bash
+bash scripts/validate-memory.sh semantic .meridian/memory/semantic.json
+```
