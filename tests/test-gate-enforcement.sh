@@ -110,12 +110,14 @@ test_runtests_pass() {
 }
 
 test_runtests_fail() {
-    echo ""; echo "Test: run-tests blocks when a bash suite fails"
-    mkdir -p "$WORK/proj_bad/tests"
+    echo ""; echo "Test: run-tests blocks when a previously-passing suite regresses"
+    mkdir -p "$WORK/proj_bad/tests" "$WORK/proj_bad/.meridian"
     printf '#!/bin/bash\nexit 0\n' > "$WORK/proj_bad/tests/test-a.sh"
     printf '#!/bin/bash\nexit 1\n' > "$WORK/proj_bad/tests/test-b.sh"
+    # Seed baseline so test-b.sh is treated as a regression (was passing, now failing)
+    printf 'test-a.sh\ntest-b.sh\n' > "$WORK/proj_bad/.meridian/test-baseline.txt"
     local rc; rc=$(rc_of bash "$HOOKS/run-tests.sh" "$WORK/proj_bad")
-    [ "$rc" -eq 2 ] && pass "Failing suite blocked (exit 2)" || fail "Expected 2, got $rc"
+    [ "$rc" -eq 2 ] && pass "Regression blocked (exit 2)" || fail "Expected 2, got $rc"
 }
 
 test_runtests_none() {

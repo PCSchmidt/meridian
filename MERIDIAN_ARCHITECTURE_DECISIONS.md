@@ -434,16 +434,16 @@ Run: `bash install.sh`
 ## Success Criteria for v0.1.0
 
 **Must Have:**
-- [ ] All 3 tiers working (Claude Code, Cursor/Windsurf, Advisory)
-- [ ] All 3 recipes functional end-to-end
-- [ ] Observability layer complete (`/health report`, `/status`, telemetry)
-- [ ] Memory system with schema validation
-- [ ] Composable gate DAG (users can customize)
-- [ ] Generator-Evaluator validated and working
-- [ ] All documentation written
-- [ ] Successfully built 2-3 real projects with Meridian
-- [ ] `meridian-doctor` validates installation
-- [ ] Bash hooks working on Windows (Git Bash tested)
+- [x] All 3 tiers working (Claude Code, Cursor/Windsurf, Advisory) — Phase 5 complete
+- [x] All 3 recipes functional end-to-end — G7.5 verified (cli-tool, fullstack-web, ml-research)
+- [x] Observability layer complete (`/health report`, `/status`, telemetry) — Phase 1+2
+- [x] Memory system with schema validation — Phase 1 (G1.2)
+- [x] Composable gate DAG (users can customize) — Phase 1 (G1.1) + docs/recipes.md
+- [x] Generator-Evaluator validated and working — Phase 3 (G3.1, G3.4; -3.0 pt delta experiment)
+- [x] All documentation written — Phase 6 complete
+- [x] Successfully built 2-3 real projects with Meridian — G7.1 (AeroIntel) + G7.2 (HPI, live)
+- [x] `meridian-doctor` validates installation — G5.0, G7.4 (final polish)
+- [x] Bash hooks working on Windows (Git Bash tested) — validated throughout on this machine
 
 **Nice to Have (can defer):**
 - Dashboard UI

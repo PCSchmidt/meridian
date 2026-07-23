@@ -33,10 +33,11 @@ platform context rules for your editor. It preserves any existing `gates.yaml`,
 If your project isn't a git repo yet, run `git init` first so the pre-commit
 boundary installs.
 
-## 2. Wire the hooks (Claude Code)
+## 2. Hooks are wired automatically (Claude Code)
 
-Point your Claude Code settings (`.claude/settings.json`) `PreToolUse` and
-`PostToolUse` at `.claude/hooks/PreToolUse.sh` and `.claude/hooks/PostToolUse.sh`.
+`install.sh` creates `.claude/settings.json` and registers `SessionStart`,
+`PreToolUse`, and `PostToolUse` with Claude Code. Nothing extra needed.
+
 On Cursor/Windsurf/Cline there are no hooks — the generated editor rules guide the
 model and the git/CI boundary enforces. See [platform-tiers.md](platform-tiers.md).
 
@@ -105,4 +106,5 @@ Or the slash-command equivalents in-session: `/status`, `/health`.
 - Adapt the recipe to your stack → [recipes.md](recipes.md)
 - Understand the gate DAG → [gate-model.md](gate-model.md)
 - How memory + observability work → [memory.md](memory.md), [observability.md](observability.md)
-- Windows specifics and troubleshooting guides are added in Phase 6 (G6.2/G6.3).
+- Windows specifics → [windows-install.md](windows-install.md)
+- Common problems → [troubleshooting.md](troubleshooting.md)

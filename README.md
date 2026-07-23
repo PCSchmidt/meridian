@@ -1,11 +1,11 @@
 # Meridian
 
-A next-generation agent harness framework for AI coding assistants.
+**Without a harness, agents score their own work 5.5/10. An independent evaluator scores the same work 2.5/10.** That 3.0-point gap is why features get marked done while tests still fail. Meridian closes it mechanically.
 
-![Status](https://img.shields.io/badge/status-in%20development-green)
-![Version](https://img.shields.io/badge/version-0.1.0--dev-blue)
-![Phases 0-6](https://img.shields.io/badge/phases%200--6-complete-brightgreen)
-![Tests](https://img.shields.io/badge/tests-226%20passing-brightgreen)
+![Status](https://img.shields.io/badge/status-v0.1.0-blue)
+![Tests](https://img.shields.io/badge/tests-238%20passing-brightgreen)
+![Phases 0-7](https://img.shields.io/badge/phases%200--7-complete-brightgreen)
+![Dogfooded](https://img.shields.io/badge/dogfooded-2%20production%20projects-green)
 
 ---
 
@@ -24,11 +24,13 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 
 ---
 
-## Status: Phases 0–6 Complete
+## Status: v0.1.0 — Phases 0–7 Complete
 
-**Current status:** Phase 6 complete — the full documentation set shipped (quickstart, gate model, memory, observability, assumptions, Windows install, troubleshooting, API reference, contributing). Portable enforcement (Phase 5) and three recipes (Phase 4) are in place. Phase 7 (Dogfooding & Refinement) is next.
+**Current status:** v0.1.0 complete. Dogfooded on two production projects (AeroIntel + Hard Power Intelligence — live at hardpowerintel.com). 226 tests passing across 18 suites. All three recipes verified end-to-end. `meridian-doctor` passes GOOD. shellcheck clean on all hooks.
 
-**Tests:** 226 passing across 18 suites.
+**Experiment result:** Generator-Evaluator separation delta = **−3.0 points** (self: 5.5/10 vs independent: 2.5/10). This is the core finding the framework was built to mechanically enforce. See `experiment/GENERATOR_EVALUATOR_VALIDATION.md`.
+
+**Dogfood result (HPI):** 9 gates enforced through a production full-stack build (Next.js + FastAPI + Supabase). `brief_verified` (Gate 5) forced citation evaluation to be built as infrastructure, not a post-hoc add-on — exactly the kind of drift that a gate-less process would have let slip.
 
 ### Phase Progress
 
@@ -41,8 +43,8 @@ Meridian is an agent harness framework that sits between you and the AI model, p
 | 4. Recipes *(fullstack-web, cli-tool, ml-research)* | ✅ Complete | 40h | ~8.5h |
 | 5. Portable Enforcement & Multi-Tier *(verifier + git/CI + Cursor/Windsurf/Cline + Advisory)* | ✅ Complete | 34h | ~13.5h |
 | 6. Documentation | ✅ Complete | 25h | ~4.5h |
-| 7. Dogfooding & Refinement | ⏳ Next | 40h | — |
-| 8. Community Preparation | ⏳ Upcoming | 15h | — |
+| 7. Dogfooding & Refinement | ✅ Complete | 40h | ~13h |
+| 8. Community Preparation | ⏳ Next | 15h | — |
 
 ### Phase 3 Gates (Complete)
 
@@ -129,10 +131,11 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `.claude/hooks/validate-contract.sh` | Gate-transition validator for `CONTRACT.md` |
 | `.claude/hooks/validate-spec.sh` | Gate-transition validator for `SPEC.md` |
 | `.claude/hooks/validate-roadmap.sh` | Gate-transition validator for `ROADMAP.md` |
+| `.claude/hooks/SessionStart.sh` | Auto-start session on conversation open |
 | `.claude/hooks/run-tests.sh` | Auto-detect + run tests; blocks on failure |
 | `.claude/hooks/run-evaluator.sh` | Enforce generator-evaluator separation (A003) |
 
-### Skills (14, with progressive-disclosure frontmatter)
+### Skills (15, with progressive-disclosure frontmatter)
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
@@ -150,6 +153,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `research` | `/research` | Memory-first research workflow |
 | `evaluate` | `/evaluate` | Invoke gate-evaluator subagent for adversarial scoring |
 | `review` | `/review` | Invoke spec-reviewer subagent for spec completeness |
+| `drift-check` | `/drift-check` | Advisory scope drift check (never blocks) |
 
 ### Memory System
 
@@ -216,33 +220,22 @@ docs/
 
 ---
 
-## What's Coming
+## What's Next
 
-### Phase 5: Portable Enforcement & Multi-Tier Platform Support
+### Phase 8: Community Preparation
 
-Off-Claude platforms can't block at the keystroke boundary, so enforcement is relocated to the
-git/CI boundary — which every platform shares. See [docs/platform-tiers.md](docs/platform-tiers.md)
-for the feature parity matrix and tier definitions.
+- [ ] G8.1 — Benchmark task definitions (`bench/tasks/`, 8-10 tasks, 5-dimension scoring rubric)
+- [ ] G8.2 — Community benchmark guide (`docs/benchmark.md`)
+- [ ] G8.3 — v0.1.0 GitHub release + release notes
+- [ ] G8.4 — Post-release monitoring
 
-- [x] G5.0 — Reconcile roadmap, ship `meridian-doctor.sh`, close the `yq` gate-detection gap ✅
-- [x] G5.1 — Tier 1 (Claude Code): verify full enforcement with a real live-session protocol ✅ (found + fixed a live hook-contract bug; see `docs/tier1-verification.md`)
-- [x] G5.2 — Portable verifier: `meridian-verify.sh` + generated `pre-commit` hook + CI workflow (the shared boundary) ✅ (end-to-end git block proven)
-- [x] G5.3 — Tier 2 (Cursor/Windsurf/Cline): editor rules generated from the same source as the hooks ✅ (idempotent, round-trip tested)
-- [x] G5.4 — Tier 3 (Advisory): generated `MERIDIAN.md`, enforced via CI ✅ (same generator)
-- [x] G5.5 — Platform detection (`detect-runtime.sh`) + install wiring + published parity matrix ✅
+### Phase 7: Dogfooding & Refinement ✅ Complete
 
-### Phase 6: Documentation ✅ Complete
-
-- [x] G6.1 — Component docs: quickstart, gate model, memory, observability, assumptions
-- [x] G6.2 — Windows installation guide (Git Bash + WSL2)
-- [x] G6.3 — Troubleshooting guide (field-tested fixes)
-- [x] G6.4 — API reference (scripts, hooks, skills, schemas, exit codes)
-- [x] G6.5 — Contributing guide
-
-### Phase 7: Dogfooding & Refinement
-
-- Run Meridian on real projects; tighten based on friction (AeroIntel is already
-  installed and self-verifying as of Phase 5)
+- [x] G7.1 — AeroIntel (FastAPI + Next.js + ML): installed + validated, "90% done" illusion confirmed
+- [x] G7.2 — Hard Power Intelligence (full ground-up): 9 gates enforced through production deploy
+- [x] G7.3 — Refinement: hours optional in reflexion, episodic auto-writer, SessionStart hook, confidence ceiling docs, TDD red-phase fix
+- [x] G7.4 — meridian-doctor final polish: schema parse validation, expanded core-script + hook checks
+- [x] G7.5 — Pre-release checklist: shellcheck clean, all 3 recipes verified, CHANGELOG, v0.1.0 tag
 
 ---
 
@@ -345,7 +338,7 @@ bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
 bash tests/test-integration-phase2.sh  # Phase 2 end-to-end (19 tests)
 ```
 
-All 18 suites — **226 tests** — pass on Windows / Git Bash.
+All 18 suites — **238 tests** — pass on Windows / Git Bash.
 
 ---
 

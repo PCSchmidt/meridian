@@ -39,7 +39,9 @@ work as git pre-commit hooks and CI steps.
 | `rollback-gate.sh` | revert a gate transition | `rollback-gate.sh <id>` (skill `/rollback`) |
 | `security-audit.sh` | OWASP-style audit pass | `security-audit.sh` (skill `/security`) |
 | `global-memory-sync.sh` | sync patterns to `~/.meridian/global/` | `global-memory-sync.sh` |
-| `session.sh` / `start-session.sh` | session lifecycle | — |
+| `session.sh` | session lifecycle (start/end/id/status); auto-writes episodic events | — |
+| `log-episodic.sh` | write a schema-validated episodic event to `episodic.jsonl` | `log-episodic.sh <event_type> [k=v ...]` |
+| `start-session.sh` | session bootstrap skill backing script | — |
 | `context-trim.sh` | context-budget trimming | — |
 | `skill-manifest.sh` | list/validate skill frontmatter | — |
 
@@ -50,6 +52,7 @@ work as git pre-commit hooks and CI steps.
 | `hook-wrapper.sh` | (sourced, never executed) | logging, `block/warn/info`, `parse_tool_use`, `PROJECT_DIR` |
 | `PreToolUse.sh` | PreToolUse | gate checks + runs `block-dangerous.sh`; can exit 2 |
 | `PostToolUse.sh` | PostToolUse | validates memory writes, logs telemetry |
+| `SessionStart.sh` | SessionStart | starts the session (`session.sh start`); writes `session_start` episodic event |
 | `block-dangerous.sh` | (subprocess of PreToolUse) | scans command/content vs `security-rules.yaml`; exit 2 on a `block` rule |
 | `run-evaluator.sh` | gate verify | enforces the evaluator verdict contract (A003); exit 2 if no passing verdict |
 | `run-tests.sh` | gate pre-hook | runs the project test command |

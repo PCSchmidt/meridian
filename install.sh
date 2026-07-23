@@ -59,15 +59,61 @@ ok()   { echo "  ✓ $1"; }
 warn() { echo "  ⚠ $1"; }
 err()  { echo "  ✗ $1"; ERRORS=$((ERRORS+1)); }
 
-# ─── 1. .claude/hooks/ ────────────────────────────────────────────────────────
+# ─── 1. .claude/hooks/ + settings.json ───────────────────────────────────────
 
-echo "[1/11] Copying .claude/hooks/"
+echo "[1/11] Copying .claude/hooks/ + settings.json"
 if [ -d "$MERIDIAN_DIR/.claude/hooks" ]; then
     mkdir -p "$TARGET/.claude/hooks"
     cp -r "$MERIDIAN_DIR/.claude/hooks/." "$TARGET/.claude/hooks/"
     ok "Hooks installed ($(ls "$TARGET/.claude/hooks/" | wc -l | tr -d ' ') files)"
 else
     err ".claude/hooks/ not found in Meridian source"
+fi
+
+# .claude/settings.json — registers hooks with Claude Code (SessionStart/PreToolUse/PostToolUse)
+SETTINGS="$TARGET/.claude/settings.json"
+if [ -f "$SETTINGS" ]; then
+    ok ".claude/settings.json already exists (preserved)"
+else
+    cat > "$SETTINGS" <<'SETTINGS_EOF'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/SessionStart.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/PreToolUse.sh\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/PostToolUse.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
+SETTINGS_EOF
+    ok ".claude/settings.json created — hooks registered with Claude Code"
 fi
 
 # ─── 2. .claude/skills/ ───────────────────────────────────────────────────────

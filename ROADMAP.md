@@ -640,7 +640,7 @@ was none. (Same lesson as Phase 4 recipes — front-loaded work makes the docs c
 
 ## Phase 7: Dogfooding & Refinement (Weeks 11-12)
 
-**Status:** In Progress (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4 ✅, G7.5 pending)
+**Status:** COMPLETE ✅ (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4 ✅, G7.5 ✅)
 **Estimated:** 40 hours  
 **Target completion:** TBD
 
@@ -736,16 +736,23 @@ infrastructure, not a post-hoc add-on.
 - ✅ **Test cache optimization:** `run_doctor()` now caches same-dir results, eliminating 6 of 7
   redundant full-doctor invocations in the test suite
 
-#### G7.5: Pre-Release Checklist
-**Estimated:** 2 hours  
+#### G7.5: Pre-Release Checklist ✅
+
+**Status:** COMPLETE  
+**Estimated:** 2 hours | **Actual:** ~1 hour (2x faster — items were already mostly done)  
+**Completed:** 2026-07-23
+
 **Deliverables:**
-- All todos from architecture doc completed
-- README opens with real benchmark number
-- All 3 recipes tested end-to-end
-- `meridian-doctor` passes clean
-- ASSUMPTIONS.md has ≥5 entries, all sourced
-- shellcheck passes on all hooks
-- CHANGELOG.md documents v0.1.0
+
+- ✅ **Architecture doc todos:** all 10 `[ ]` items in MERIDIAN_ARCHITECTURE_DECISIONS.md marked `[x]` with gate references
+- ✅ **README benchmark:** opens with the −3.0 pt generator-evaluator delta + HPI dogfood result; status updated to v0.1.0 / Phases 0–7 complete
+- ✅ **All 3 recipes tested end-to-end:** `cli-tool`, `fullstack-web`, `ml-research` each installed via `install.sh`, `gate-engine validate` passes, `meridian-doctor` runs clean
+- ✅ **`meridian-doctor` passes GOOD:** all checks green on the Meridian repo itself
+- ✅ **ASSUMPTIONS.md ≥5 entries, all sourced:** A001–A005 all ACTIVE with experiment/research citations
+- ✅ **shellcheck passes on all hooks:** installed shellcheck v0.11.0; fixed SC2155 (6×, separate assign/export), SC2034 `GREEN` (removed unused color), SC2034 `mode` (removed unused var in run-evaluator.sh); `shellcheck -x *.sh` exits 0
+- ✅ **CHANGELOG.md:** created; documents all phases, key fixes, experiment results, active assumptions
+- ✅ **Bonus — install.sh creates `.claude/settings.json`:** new projects now get hook registration automatically, resolving the doctor WARNING on fresh installs
+- ✅ **Bonus — test regression fix:** `test_runtests_fail` in test-gate-enforcement.sh updated to seed a baseline (G7.3 F5 had changed behavior; test was outdated)
 
 ---
 
@@ -805,7 +812,7 @@ infrastructure, not a post-hoc add-on.
 | 4. Recipes *(was Phase 4, unchanged)* | ✅ Complete | 40h | ~8.5h | ~4.7x | 2026-06-03 |
 | 5. Portable Enforcement & Multi-Tier *(was Phase 3, deferred + re-scoped)* | ✅ Complete | 34h | ~13.5h | ~2.5x | 2026-06-04 |
 | 6. Documentation | ✅ Complete | 25h | ~4.5h | ~5.6x | 2026-06-04 |
-| 7. Dogfooding & Refinement | 🔄 In Progress (G7.1 ✅ G7.2 ✅ G7.3 ✅ G7.4 ✅ G7.5 pending) | 40h | — | — | TBD |
+| 7. Dogfooding & Refinement | ✅ Complete (G7.1–G7.5 all complete) | 40h | ~14h | ~2.9x | 2026-07-23 |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
 | **TOTAL** | | **294h** | **~134h** | | TBD |
 

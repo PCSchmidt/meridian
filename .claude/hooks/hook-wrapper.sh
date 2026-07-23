@@ -22,7 +22,6 @@ HOOK_NAME="${HOOK_NAME:-unknown}"
 
 # Colors for output
 RED='\033[0;31m'
-GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
@@ -163,20 +162,26 @@ parse_tool_use() {
             local tool_data
             tool_data=$(cat)
 
-            export TOOL_NAME=$(echo "$tool_data" | jq -r '.tool_name // .tool // "unknown"')
-            export TOOL_ARGS=$(echo "$tool_data" | jq -c '.tool_input // .arguments // {}')
+            TOOL_NAME=$(echo "$tool_data" | jq -r '.tool_name // .tool // "unknown"')
+            export TOOL_NAME
+            TOOL_ARGS=$(echo "$tool_data" | jq -c '.tool_input // .arguments // {}')
+            export TOOL_ARGS
 
             # Common parameters, extracted from tool_input (legacy: arguments).
-            export FILE_PATH=$(echo "$tool_data" | jq -r '.tool_input.file_path // .arguments.file_path // ""')
-            export COMMAND=$(echo "$tool_data" | jq -r '.tool_input.command // .arguments.command // ""')
+            FILE_PATH=$(echo "$tool_data" | jq -r '.tool_input.file_path // .arguments.file_path // ""')
+            export FILE_PATH
+            COMMAND=$(echo "$tool_data" | jq -r '.tool_input.command // .arguments.command // ""')
+            export COMMAND
 
             # Written text for content-target security scanning (Edit/Write).
             case "$TOOL_NAME" in
                 Write)
-                    export CONTENT=$(echo "$tool_data" | jq -r '.tool_input.content // .arguments.content // ""')
+                    CONTENT=$(echo "$tool_data" | jq -r '.tool_input.content // .arguments.content // ""')
+                    export CONTENT
                     ;;
                 Edit)
-                    export CONTENT=$(echo "$tool_data" | jq -r '.tool_input.new_string // .arguments.new_string // ""')
+                    CONTENT=$(echo "$tool_data" | jq -r '.tool_input.new_string // .arguments.new_string // ""')
+                    export CONTENT
                     ;;
             esac
         fi

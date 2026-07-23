@@ -19,7 +19,10 @@ version-controlled.
 
 ## The corrections schema (calibration)
 
-Each reflexion entry records an estimate against reality. Required fields:
+Each reflexion entry records a gate outcome. Required fields: `session_id`, `gate`,
+`date`, `project`, `root_cause`, `action_next`, `errors_open`, `errors_close`.
+Hours fields (`predicted_hours`, `actual_hours`, `delta_ratio`, `variance_percent`)
+are optional — omit them when hours weren't tracked for a gate.
 
 ```json
 {"session_id":"6a20b4e3","gate":"5.2","date":"2026-06-04T00:30:00Z",
@@ -58,17 +61,28 @@ entry before proceeding.
 
 ## Common gotcha — writing a reflexion
 
-Write the JSON with **all required fields**, then validate before committing:
+Use `scripts/write-reflexion.sh` — it validates before appending and handles the
+session id and date automatically:
+
+```bash
+bash scripts/write-reflexion.sh \
+  --gate 3.1 \
+  --predicted 10 --actual 4 \
+  --root-cause "Design was pre-specified" \
+  --action-next "Cut estimate by 4x for enumerated deliverables"
+```
+
+Hours (`--predicted` / `--actual`) are optional; omit both when not tracking time.
+If you hand-write JSON, include all required fields and validate first:
 
 ```bash
 cat >> .meridian/memory/corrections.jsonl <<'EOF'
-{"session_id":"...","gate":"...","date":"...","project":"...","predicted_hours":2,"actual_hours":1,"delta_ratio":2.0,"variance_percent":-50.0,"root_cause":"...","action_next":"...","errors_open":0,"errors_close":0}
+{"session_id":"...","gate":"...","date":"...","project":"...","root_cause":"...","action_next":"...","errors_open":0,"errors_close":0}
 EOF
 bash scripts/validate-memory.sh corrections .meridian/memory/corrections.jsonl
 ```
 
-Hand-writing JSON is the usual source of a bad entry (missing `session_id`,
-wrong field names). The heredoc-append pattern plus a validate step avoids it.
+The validator will reject missing required fields or wrong field names.
 
 ## Engineer-legible vs LLM-legible
 

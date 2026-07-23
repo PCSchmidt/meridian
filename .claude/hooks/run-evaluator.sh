@@ -126,9 +126,9 @@ check() {
 }
 
 main() {
-    local mode="--check" gate=""
+    local gate=""
     case "${1:-}" in
-        --prepare) mode="--prepare"; shift; gate="${1:-}"; shift || true; prepare "$gate" "$@" ;;
+        --prepare) shift; gate="${1:-}"; shift || true; prepare "$gate" "$@" ;;
         --check)   shift; gate="${1:-}"; check "$gate" ;;
         "" )       usage; block "a gate id is required" ;;
         *)         gate="$1"; check "$gate" ;;   # bare gate id -> check

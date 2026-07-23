@@ -12,7 +12,7 @@ event validated against `.meridian/telemetry-schema.json`. Event types:
 
 | `event_type` | Emitted when | Key fields |
 |--------------|--------------|------------|
-| `gate_passed` | a gate clears | `gate`, `predicted_hours`, `actual_hours` |
+| `gate_passed` | a gate clears | `gate` (hours fields optional — see write-reflexion.sh) |
 | `gate_blocked` | a gate/verify blocks | `gate`, `reason` |
 | `tool_used` | a tool runs through a hook/verifier | `tool`, `hook`, `outcome` |
 | `evaluator_verdict` | an evaluator scores a gate | `gate`, `score`, `verdict` |

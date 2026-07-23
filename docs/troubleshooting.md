@@ -71,15 +71,20 @@ block on a memory write.
 **Cause:** a hand-written JSONL entry missing required fields or using wrong field
 names (e.g. `ratio` instead of `delta_ratio`, or no `session_id`).
 
-**Fix:** write entries with the heredoc-append pattern and validate before
-committing:
+**Fix:** use `write-reflexion.sh` (validates before appending), or hand-write with
+the required fields and validate:
+```bash
+bash scripts/write-reflexion.sh --gate 3.1 --root-cause "..." --action-next "..."
+# hours optional; omit --predicted / --actual if not tracked
+```
+Or manually:
 ```bash
 cat >> .meridian/memory/corrections.jsonl <<'EOF'
-{"session_id":"...","gate":"...","date":"...","project":"...","predicted_hours":2,"actual_hours":1,"delta_ratio":2.0,"variance_percent":-50.0,"root_cause":"...","action_next":"...","errors_open":0,"errors_close":0}
+{"session_id":"...","gate":"...","date":"...","project":"...","root_cause":"...","action_next":"...","errors_open":0,"errors_close":0}
 EOF
 bash scripts/validate-memory.sh corrections .meridian/memory/corrections.jsonl
 ```
-See [memory.md](memory.md) for the full schema.
+See [memory.md](memory.md) for required vs optional fields.
 
 ---
 
