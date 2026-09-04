@@ -86,7 +86,7 @@ Meridian was dogfooded in two production projects:
 - **AeroIntel:** retrofit validation exposed the difference between happy-path completion and full lifecycle completion and caught feature staleness.
 - **Hard Power Intelligence:** a ground-up build passed a nine-gate DAG, used `meridian-verify` on every commit, and recorded five concrete findings. Its brief-verification gate forced citation evaluation to become infrastructure rather than a post-hoc task.
 
-At the current documented baseline, Meridian reports 238 tests across 18 suites, all three recipes verified end-to-end, `meridian-doctor` passing GOOD, and shellcheck clean on hooks. These are project evidence from a single-operator development history, not independent population-level validation.
+At the 2026-09-04 documented baseline, Meridian reports 240 passing assertions across 18 suites, all three recipes verified end-to-end, `meridian-doctor` passing GOOD, and shellcheck clean on hooks. The total is the sum of each suite's own reported assertion count. These are project evidence from a single-operator development history, not independent population-level validation.
 
 ## Memory, Telemetry, and Calibration
 

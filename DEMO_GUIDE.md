@@ -146,5 +146,5 @@ spec produce strong results — that part is still my job."
   a composable gate DAG, schema-validated JSONL memory, and the generator-evaluator
   separation.
 - **"Where's the proof it works?"** Dogfooded on two production projects (AeroIntel
-  and Hard Power Intelligence, live at hardpowerintel.com), 238 tests across 18
+  and Hard Power Intelligence, live at hardpowerintel.com), 240 passing assertions across 18
   suites, all three recipes verified end-to-end.

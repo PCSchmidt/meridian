@@ -1,6 +1,6 @@
 # Meridian - Architectural Decisions & Blueprint
 **Date:** 2026-05-26  
-**Status:** Phases 0–7 complete (foundation, hooks/skills, thesis, recipes, portable enforcement, docs, dogfooding/refinement). Phase 8 (Community Preparation) deferred. v0.1.0 implementation complete; 238 tests passing across 18 suites. Updated 2026-09-04.
+**Status:** Phases 0–7 complete (foundation, hooks/skills, thesis, recipes, portable enforcement, docs, dogfooding/refinement). Phase 8 (Community Preparation) deferred. v0.1.0 implementation complete; 240 passing assertions across 18 suites. Updated 2026-09-04.
 **Repository:** https://github.com/PCSchmidt/meridian
 
 ---

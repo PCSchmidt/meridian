@@ -3,7 +3,7 @@
 **Without a harness, agents score their own work 5.5/10. An independent evaluator scores the same work 2.5/10.** That 3.0-point gap is why features get marked done while tests still fail. Meridian closes it mechanically.
 
 ![Status](https://img.shields.io/badge/status-v0.1.0-blue)
-![Tests](https://img.shields.io/badge/tests-238%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-240%20passing-brightgreen)
 ![Phases 0-7](https://img.shields.io/badge/phases%200--7-complete-brightgreen)
 ![Dogfooded](https://img.shields.io/badge/dogfooded-2%20production%20projects-green)
 
@@ -194,7 +194,7 @@ bash scripts/meridian-doctor.sh   # expect: GOOD
 
 ## Status: v0.1.0 — Phases 0–7 Complete
 
-Dogfooded on two production projects (AeroIntel + Hard Power Intelligence — live at hardpowerintel.com). 238 tests passing across 18 suites. All three recipes verified end-to-end. `meridian-doctor` passes GOOD. shellcheck clean on all hooks.
+Dogfooded on two production projects (AeroIntel + Hard Power Intelligence — live at hardpowerintel.com). 240 passing assertions across 18 suites. All three recipes verified end-to-end. `meridian-doctor` passes GOOD. shellcheck clean on all hooks.
 
 **Experiment result:** Generator-Evaluator separation delta = **−3.0 points** (self: 5.5/10 vs independent: 2.5/10). This is the core finding the framework was built to enforce. See `experiment/GENERATOR_EVALUATOR_VALIDATION.md`.
 
@@ -409,7 +409,7 @@ meridian/
     platform-tiers.md         # Tier definitions + feature parity matrix
     tier1-verification.md     # Claude Code hook contract + verification protocol
 
-  tests/                      # 18 test suites (238 tests passing)
+  tests/                      # 18 test suites (240 assertions passing)
   experiment/                 # Generator-Evaluator validation experiment + results
   install.sh                  # One-command project installer
 
@@ -440,7 +440,7 @@ bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
 bash tests/test-integration-phase2.sh  # Phase 2 end-to-end (19 tests)
 ```
 
-All 18 suites — **238 tests** — pass on Windows / Git Bash.
+All 18 suites — **240 assertions** — pass on Windows / Git Bash.
 
 ---
 
