@@ -444,7 +444,9 @@ Each phase has:
 
 ---
 
-## Phase 5: Portable Enforcement & Multi-Tier Platform Support
+## Phase 5: Portable Enforcement & Multi-Tier Platform Support ✅
+
+**Status:** COMPLETE ✅ (G5.0–G5.5 complete)
 
 **Status:** Not Started (⏳ Next)  
 **Estimated:** 34 hours  
@@ -814,18 +816,18 @@ infrastructure, not a post-hoc add-on.
 | 6. Documentation | ✅ Complete | 25h | ~4.5h | ~5.6x | 2026-06-04 |
 | 7. Dogfooding & Refinement | ✅ Complete (G7.1–G7.5 all complete) | 40h | ~14h | ~2.9x | 2026-07-23 |
 | 8. Community Preparation | ⏳ Deferred | 15h | — | — | TBD |
-| **TOTAL** | | **294h** | **~134h** | | TBD |
+| **TOTAL** | | **294h** | **~148.5h** | | TBD |
 
 ### Hours Breakdown
 - **Total estimated:** ~294 hours (Phase 5 re-scoped 30h → 34h; subagents folded into Phase 3)
-- **Total actual so far:** ~134 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h, Phase 3: 12.5h, Phase 4: ~8.5h, Phase 5: ~13.5h, Phase 6: ~4.5h)
-- **Remaining:** ~55 hours estimated across Phases 7–8
+- **Total actual so far:** ~148.5 hours (Phase 0: 6h, Phase 1: 40h, Phase 2: 49h, Phase 3: 12.5h, Phase 4: ~8.5h, Phase 5: ~13.5h, Phase 6: ~4.5h, Phase 7: ~14h)
+- **Remaining:** ~15 hours estimated for deferred Phase 8 community preparation
 
 ### Working Pace Assumptions
-- **If full-time (40h/week):** 7.3 weeks remaining
-- **If part-time (20h/week):** 14.4 weeks remaining  
-- **If casual (10h/week):** 28.7 weeks remaining
-- **Current target (26h/week):** 11 weeks from 2026-05-28 = 2026-08-13
+- **If full-time (40h/week):** 0.4 weeks for the deferred Phase 8 scope
+- **If part-time (20h/week):** 0.8 weeks for the deferred Phase 8 scope
+- **If casual (10h/week):** 1.5 weeks for the deferred Phase 8 scope
+- **Original target (26h/week):** 2026-08-13; superseded by the current Phase 8 target below
 
 ---
 
@@ -907,6 +909,6 @@ from first principles, not from the 0.2–0.4x recipe-doc multipliers.
 
 ---
 
-**Status:** Phases 0–6 complete. Phase 7 in progress — G7.1 (AeroIntel) ✅ G7.2 (HPI, live) ✅ G7.3 (refinement) next.
-**Last updated:** 2026-07-21
-**Next milestone:** G1.1 (Gate DAG Engine) - Estimated 8h
+**Status:** Phases 0–7 complete. Phase 8 (Community Preparation) deferred; v0.1.0 implementation is complete.
+**Last updated:** 2026-09-04
+**Next milestone:** Phase 8 community preparation, target 2026-09-10

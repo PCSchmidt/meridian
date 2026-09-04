@@ -18,8 +18,8 @@ This repo is Meridian building itself (dogfooding).
 - `.meridian/` — runtime state (gitignored): `memory/`, `telemetry.jsonl`, `session.json`; plus tracked `security-rules.yaml`, `*-schema.{json,yaml}`
 - `recipes/` — pattern-based `gates.yaml` + foundation templates for fullstack-web, cli-tool, ml-research
 - `docs/` — framework documentation: `quickstart.md`, `gate-model.md`, `memory.md`, `observability.md`, `assumptions.md`, `windows-install.md`, `troubleshooting.md`, `api-reference.md`, `recipes.md`, `platform-tiers.md`, `tier1-verification.md` (+ root `CONTRIBUTING.md`)
-- `tests/` — bash test suites (226 passing across 18 suites; Phase 6 was docs-only)
-- `ROADMAP.md` — gate progress + calibration data (single source of truth for status)
+- `tests/` — bash test suites (238 passing across 18 suites at the 2026-09-04 implementation baseline)
+- `ROADMAP.md` — gate progress + calibration data (single source of truth for Meridian implementation status; current as of 2026-09-04)
 
 ## Development model
 

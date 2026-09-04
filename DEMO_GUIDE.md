@@ -23,6 +23,7 @@ If you only have two minutes, read these three files in the repo — they tell t
 whole story without installing anything:
 
 - [`README.md`](README.md) — the problem, the mechanism, and what shipped.
+- [`TECHNICAL_OVERVIEW.md`](TECHNICAL_OVERVIEW.md) — the architecture, tradeoffs, evidence, and family relationship.
 - [`experiment/GENERATOR_EVALUATOR_VALIDATION.md`](experiment/GENERATOR_EVALUATOR_VALIDATION.md) — the −3.0-point self-grading experiment that the framework was built to enforce.
 - [`MERIDIAN_ARCHITECTURE_DECISIONS.md`](MERIDIAN_ARCHITECTURE_DECISIONS.md) — the full design blueprint and every decision, with rationale.
 

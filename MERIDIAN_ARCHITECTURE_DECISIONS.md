@@ -1,6 +1,6 @@
 # Meridian - Architectural Decisions & Blueprint
 **Date:** 2026-05-26  
-**Status:** Phases 0–6 complete (foundation, hooks/skills, thesis, recipes, portable enforcement, docs). Phase 7 (Dogfooding & Refinement) next. 226 tests passing. Updated 2026-06-04.  
+**Status:** Phases 0–7 complete (foundation, hooks/skills, thesis, recipes, portable enforcement, docs, dogfooding/refinement). Phase 8 (Community Preparation) deferred. v0.1.0 implementation complete; 238 tests passing across 18 suites. Updated 2026-09-04.
 **Repository:** https://github.com/PCSchmidt/meridian
 
 ---
@@ -563,6 +563,6 @@ the roadmap with evidence before starting Phase 4.
 
 ---
 
-**Status:** Phases 0–6 complete. Phase 7 (Dogfooding & Refinement) next. 226 tests passing.
+**Historical status (2026-06-03):** Phases 0–6 complete. Phase 7 (Dogfooding & Refinement) next. 226 tests passing at that point. See the current status at the top of this document and in [ROADMAP.md](ROADMAP.md).
 
 **Last updated:** 2026-06-03

@@ -11,6 +11,8 @@
 
 ## The Problem With AI-Assisted Development at Scale
 
+For the full architecture, decision record, evidence, and recruiter-facing explanation, see [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md).
+
 Every developer who has used an AI coding agent on a complex project has hit the same wall. It starts well — features ship, momentum builds, confidence grows. Then, somewhere around 60–80% completion, things fall apart in predictable ways:
 
 **The agent declares "done" when it isn't.** Tests haven't run, but the agent says they're passing. A feature is marked complete, but three edge cases were silently skipped. The agent evaluated its own work generously — "looks good!" — on code with SQL injection vulnerabilities. This isn't carelessness; it's structural. A model that generates work and then evaluates the same work in the same session has no incentive toward harsh self-assessment.
@@ -346,7 +348,7 @@ Eight event types in `.meridian/telemetry.jsonl`:
 
 - [ ] G8.1 — Benchmark task definitions (`bench/tasks/`, 8-10 tasks, 5-dimension scoring rubric)
 - [ ] G8.2 — Community benchmark guide (`docs/benchmark.md`)
-- [ ] G8.3 — v0.1.0 GitHub release + release notes
+- [ ] G8.3 — v0.1.0 GitHub release packaging + release notes (implementation is complete; publication is deferred)
 - [ ] G8.4 — Post-release monitoring
 
 ### Phase 7: Dogfooding & Refinement ✅ Complete
