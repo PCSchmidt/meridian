@@ -30,6 +30,7 @@ Thumbs.db
 *.log
 
 # Meridian runtime files (will be created during usage)
+.meridian/session.json
 .meridian/telemetry.jsonl
 .meridian/memory/episodic.jsonl
 .meridian/memory/corrections.jsonl
