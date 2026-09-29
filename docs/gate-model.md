@@ -55,8 +55,26 @@ gates:
 | `check-circular` | rejects cycles in the DAG |
 | `current` | the next gate whose dependencies are all met |
 | `can-proceed <id>` | whether a gate's deps are satisfied |
-| `verify <id>` | run the gate's `hooks.pre`; **exit 2 blocks** on failure |
-| `mark-passed <id>` | record the gate as passed (after a clean verify) |
+| `verify <id>` | run the gate's `hooks.pre`; **exit 2 blocks** on failure, and a declared hook that isn't installed also blocks |
+| `mark-passed <id> [--approve <token>]` | pass the gate **only if** its `requires` have passed, its `requires_artifacts` exist, and `verify` passes; `human_approval` gates also need `--approve` matching `approval_token`, and the approver is recorded |
+
+### Who can pass a gate
+
+- **Automated gates:** anyone, including the agent, because `mark-passed`
+  re-runs the checks itself. Saying a gate passed doesn't make it pass.
+- **Human approval gates:** the operator, in their own terminal. On Claude
+  Code the PreToolUse hook blocks the agent from running `mark-passed ...
+  --approve` and from writing `.meridian/gate-state.json` directly. On every
+  platform, `meridian-verify` fails the commit if a human gate is marked passed
+  without an approval record.
+- **Missing checks:** a gate that names a pre-hook you haven't written blocks
+  until you write it or remove it. `validate` warns about these up front.
+  Recipes name project-specific checks as placeholders for you to implement.
+  `MERIDIAN_ALLOW_MISSING_HOOKS=1` restores the old skip-with-warning behaviour.
+
+Limits: the agent can still write a script that edits the state file, and a
+recorded approval can be forged by hand. Both show up in the committed diff
+of `gate-state.json`; the hooks raise the bar, they don't make it impossible.
 
 `current` and `check-circular` require `yq`. `meridian-doctor.sh` surfaces a
 missing `yq` as CRITICAL precisely because gate detection silently degrades

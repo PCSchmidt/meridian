@@ -10,7 +10,7 @@
 #   gate-engine.sh check-circular        # Detect circular dependencies
 #   gate-engine.sh current               # Get current active gate
 #   gate-engine.sh can-proceed <gate-id> # Check if gate can proceed
-#   gate-engine.sh mark-passed <gate-id> # Mark gate as passed
+#   gate-engine.sh mark-passed <gate-id> [--approve <token>]  # Pass a gate (deps, artifacts, pre-hooks, approval)
 
 set -euo pipefail
 
@@ -114,6 +114,13 @@ validate_gates_yaml() {
             if [ "$gate_type" != "human_approval" ] && [ "$gate_type" != "automated" ]; then
                 error "Gate '$gate_id' has invalid type '$gate_type' (must be 'human_approval' or 'automated')" $ERR_INVALID_YAML
             fi
+        done
+
+        # Declared checks that don't exist would block `verify` later; say so now.
+        local hook
+        for hook in $(yq eval '.gates[].hooks.pre[]?' "$GATES_FILE" 2>/dev/null | tr -d '\r' | sort -u); do
+            [ -n "$(resolve_hook "$hook")" ] || \
+                warn "pre-hook '$hook' is declared but not installed (write it under scripts/ or .claude/hooks/, or remove it)"
         done
 
         success "gates.yaml structure is valid"
@@ -301,34 +308,102 @@ can_proceed_gate() {
 
 #######################################
 # Mark a gate as passed
+#
+# Refuses (exit 2) unless the gate has actually been earned:
+#   1. every gate in `requires` has passed
+#   2. every path in `requires_artifacts` exists
+#   3. `verify` passes (all hooks.pre, missing hooks block)
+#   4. human_approval gates carry --approve <token>, matching approval_token
+#      when one is defined. The approver (git user.name) and time are recorded.
+# Emits a gate_passed telemetry event.
+#
 # Arguments:
 #   $1 - Gate ID to mark as passed
+#   $2.. - optional: --approve <token>
 #######################################
+refuse_gate() {
+    local gate_id="$1" reason="$2"
+    local log_event="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-event.sh"
+    [ -f "$log_event" ] && bash "$log_event" gate_blocked gate="$gate_id"         reason="mark-passed refused: $reason" >/dev/null 2>&1 || true
+    error "Gate '$gate_id' not marked passed: $reason" 2
+}
+
 mark_gate_passed() {
     local gate_id="$1"
+    shift
+    local approve=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --approve) approve="${2:-}"; shift 2 || shift ;;
+            *) error "Unknown option for mark-passed: $1" ;;
+        esac
+    done
+
+    check_gates_file
+    if ! command -v jq >/dev/null 2>&1 || ! command -v yq >/dev/null 2>&1; then
+        error "mark-passed needs jq and yq to check the gate before passing it" 2
+    fi
+
+    local gate
+    gate=$(yq eval -o=json ".gates[] | select(.id == \"$gate_id\")" "$GATES_FILE" 2>/dev/null || true)
+    [ -n "$gate" ] && [ "$gate" != "null" ] || error "Gate '$gate_id' not found in gates.yaml" $ERR_MISSING_GATE
 
     # Initialize state file if needed
     if [ ! -f "$STATE_FILE" ]; then
         echo '{"passed_gates": []}' > "$STATE_FILE"
     fi
 
-    if ! command -v jq >/dev/null 2>&1; then
-        warn "jq not found - cannot update gate state"
-        return 0
+    # 1. Dependencies
+    local dep
+    # tr -d '\r': Windows jq ends lines with CRLF, which would corrupt ids and paths
+    for dep in $(echo "$gate" | jq -r '.requires // [] | .[]' | tr -d '\r'); do
+        if ! jq -e --arg d "$dep" '.passed_gates // [] | index($d)' "$STATE_FILE" >/dev/null 2>&1; then
+            refuse_gate "$gate_id" "dependency '$dep' has not passed"
+        fi
+    done
+
+    # 2. Required artifacts
+    local artifact missing=""
+    while IFS= read -r artifact; do
+        [ -n "$artifact" ] || continue
+        [ -e "${MERIDIAN_PROJECT_DIR:-.}/$artifact" ] || missing="${missing:+$missing, }$artifact"
+    done < <(echo "$gate" | jq -r '.requires_artifacts // [] | .[]' | tr -d '\r')
+    [ -z "$missing" ] || refuse_gate "$gate_id" "required artifact(s) missing: $missing"
+
+    # 3. Pre-hooks (exits 2 on any failure or missing hook)
+    verify_gate "$gate_id" >&2
+
+    # 4. Human approval
+    local gate_type token approver=""
+    gate_type=$(echo "$gate" | jq -r '.type' | tr -d '\r')
+    token=$(echo "$gate" | jq -r '.approval_token // empty' | tr -d '\r')
+    if [ "$gate_type" = "human_approval" ]; then
+        if [ -z "$approve" ]; then
+            refuse_gate "$gate_id" "human approval gate: the operator must run mark-passed $gate_id --approve \"${token:-yes}\""
+        fi
+        if [ -n "$token" ] && [ "$approve" != "$token" ]; then
+            refuse_gate "$gate_id" "approval token does not match approval_token for this gate"
+        fi
+        approver=$(git -C "${MERIDIAN_PROJECT_DIR:-.}" config user.name 2>/dev/null || true)
+        approver="${approver:-${USER:-${USERNAME:-unknown}}}"
     fi
 
-    # Add gate to passed list if not already there
-    local new_state
-    new_state=$(jq ".passed_gates |= (. + [\"$gate_id\"] | unique)" "$STATE_FILE")
+    local now new_state
+    now=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S")
+    new_state=$(jq --arg g "$gate_id" --arg who "$approver" --arg at "$now" '
+        .passed_gates = ((.passed_gates // []) + [$g] | unique)
+        | if $who != "" then .approvals = ((.approvals // {}) + {($g): {by: $who, at: $at}}) else . end' "$STATE_FILE")
     echo "$new_state" > "$STATE_FILE"
 
-    success "Gate '$gate_id' marked as passed"
+    success "Gate '$gate_id' marked as passed${approver:+ (approved by $approver)}"
+
+    local log_event="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-event.sh"
+    [ -f "$log_event" ] && bash "$log_event" gate_passed gate="$gate_id" gate_type="$gate_type"         approved_by="${approver:-none}" >/dev/null 2>&1 || true
 
     # Episodic memory (best-effort)
     local log_episodic="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-episodic.sh"
     if [ -f "$log_episodic" ]; then
-        MERIDIAN_PROJECT_DIR="${MERIDIAN_PROJECT_DIR:-.}" bash "$log_episodic" gate_passed \
-            --gate "$gate_id" --outcome pass >/dev/null 2>&1 || true
+        MERIDIAN_PROJECT_DIR="${MERIDIAN_PROJECT_DIR:-.}" bash "$log_episodic" gate_passed             --gate "$gate_id" --outcome pass >/dev/null 2>&1 || true
     fi
 }
 
@@ -401,12 +476,20 @@ verify_gate() {
         [ -n "$hook" ] || continue
         path=$(resolve_hook "$hook")
         if [ -z "$path" ]; then
-            warn "Pre-hook '$hook' not found (skipping) - install it under .claude/hooks/ or scripts/"
-            continue
+            # A gate that names a check it cannot run must not pass as if the
+            # check ran. Recipes name project-specific checks you write yourself.
+            if [ "${MERIDIAN_ALLOW_MISSING_HOOKS:-0}" = "1" ]; then
+                warn "Pre-hook '$hook' not found (skipping: MERIDIAN_ALLOW_MISSING_HOOKS=1)"
+                continue
+            fi
+            [ -f "$log_event" ] && bash "$log_event" gate_blocked gate="$gate_id" \
+                reason="pre-hook $hook is declared but not installed" >/dev/null 2>&1 || true
+            error "Gate '$gate_id' verification FAILED: pre-hook '$hook' is declared in gates.yaml but not installed under .claude/hooks/ or scripts/. Write it, or remove it from the gate (MERIDIAN_ALLOW_MISSING_HOOKS=1 skips missing hooks)." 2
         fi
         echo -e "${YELLOW}→${NC} running pre-hook: $hook" >&2
         rc=0
-        bash "$path" >&2 || rc=$?
+        # Hooks run with no arguments; they learn which gate they serve from the env.
+        MERIDIAN_GATE_ID="$gate_id" bash "$path" >&2 || rc=$?
         if [ "$rc" -eq 2 ]; then
             [ -f "$log_event" ] && bash "$log_event" gate_blocked gate="$gate_id" \
                 reason="pre-hook $hook failed" >/dev/null 2>&1 || true
@@ -449,9 +532,10 @@ main() {
             ;;
         mark-passed)
             if [ $# -lt 2 ]; then
-                error "Usage: gate-engine.sh mark-passed <gate-id>"
+                error "Usage: gate-engine.sh mark-passed <gate-id> [--approve <token>]"
             fi
-            mark_gate_passed "$2"
+            shift
+            mark_gate_passed "$@"
             ;;
         verify)
             if [ $# -lt 2 ]; then
@@ -468,7 +552,7 @@ main() {
             echo "  gate-engine.sh current               Get current active gate"
             echo "  gate-engine.sh can-proceed <gate-id> Check if gate can proceed"
             echo "  gate-engine.sh verify <gate-id>      Run gate pre-hooks (block on failure)"
-            echo "  gate-engine.sh mark-passed <gate-id> Mark gate as passed"
+            echo "  gate-engine.sh mark-passed <gate-id> [--approve <token>]  Pass a gate after deps, artifacts, pre-hooks, approval"
             echo ""
             echo "Dependencies (optional but recommended):"
             echo "  - yq: YAML parsing and validation"

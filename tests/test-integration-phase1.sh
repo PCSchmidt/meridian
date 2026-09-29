@@ -62,9 +62,19 @@ test_gate_engine_mark_passed_creates_state() {
     setup_gate_test_dir
     cp "$PROJECT_DIR/recipes/cli-tool/gates.yaml" "$GATE_TEST_DIR/.meridian/gates.yaml"
 
-    # mark-passed only needs jq (not yq) — always testable
-    MERIDIAN_PROJECT_DIR="$GATE_TEST_DIR" bash "$PROJECT_DIR/scripts/gate-engine.sh" \
-        mark-passed confirmed >/dev/null 2>&1
+    # A human approval gate is refused until earned and approved...
+    if MERIDIAN_PROJECT_DIR="$GATE_TEST_DIR" bash "$PROJECT_DIR/scripts/gate-engine.sh" \
+        mark-passed confirmed >/dev/null 2>&1; then
+        fail "mark-passed accepted a human approval gate with no artifacts or approval"
+    else
+        pass "mark-passed refuses an unearned human approval gate"
+    fi
+
+    # ...then passes with its artifacts and the operator's token. The recipe's
+    # validator hooks live in Meridian, not in this bare test dir.
+    for f in CONTRACT.md SPEC.md DECISIONS.md; do echo "# $f" > "$GATE_TEST_DIR/$f"; done
+    MERIDIAN_ALLOW_MISSING_HOOKS=1 MERIDIAN_PROJECT_DIR="$GATE_TEST_DIR" bash "$PROJECT_DIR/scripts/gate-engine.sh" \
+        mark-passed confirmed --approve CONFIRMED >/dev/null 2>&1
 
     local state_file="$GATE_TEST_DIR/.meridian/gate-state.json"
 

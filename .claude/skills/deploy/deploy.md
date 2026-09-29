@@ -47,9 +47,12 @@ Run for the deploy gate (e.g. `ready_to_ship`):
    ```bash
    bash "$PROJECT_DIR/scripts/gate-engine.sh" verify <deploy-gate>
    ```
-5. **Mark the gate (only if 1–4 all pass)**
+5. **Operator approves the gate (only if 1–4 all pass)**. The deploy gate is
+   a human approval gate: the agent reports readiness and the **operator** runs
+   this in their own terminal (the PreToolUse hook blocks the agent from
+   approving). mark-passed re-checks dependencies, artifacts, and pre-hooks.
    ```bash
-   bash "$PROJECT_DIR/scripts/gate-engine.sh" mark-passed <deploy-gate>
+   bash scripts/gate-engine.sh mark-passed <deploy-gate> --approve <approval_token>
    ```
 
 Then run your project-specific deploy command (defined in `gates.yaml` hooks or

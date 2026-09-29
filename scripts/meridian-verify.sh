@@ -91,6 +91,29 @@ check_gates() {
     fi
 }
 
+# ─── 1b. Gate state integrity ────────────────────────────────────────────────
+# Every passed gate must exist, and every passed human_approval gate must carry
+# an approval record. mark-passed writes both; a hand-edited state file won't.
+check_gate_state() {
+    local gates_file="$MERIDIAN_DIR/gates.yaml" state="$MERIDIAN_DIR/gate-state.json"
+    [ -f "$gates_file" ] && [ -f "$state" ] || return 0
+    if ! command -v jq >/dev/null 2>&1 || ! command -v yq >/dev/null 2>&1; then
+        warnln "jq/yq not found — skipping gate state check"
+        return 0
+    fi
+    local gate type bad=0
+    for gate in $(jq -r '.passed_gates // [] | .[]' "$state" 2>/dev/null | tr -d '\r'); do
+        type=$(yq eval ".gates[] | select(.id == \"$gate\") | .type" "$gates_file" 2>/dev/null | tr -d '\r')
+        if [ -z "$type" ] || [ "$type" = "null" ]; then
+            failln "gate-state lists '$gate' as passed but gates.yaml has no such gate"; bad=1
+        elif [ "$type" = "human_approval" ] && ! jq -e --arg g "$gate" '.approvals[$g].by' "$state" >/dev/null 2>&1; then
+            failln "human approval gate '$gate' is marked passed without an approval record (operator: gate-engine.sh mark-passed $gate --approve <token>)"; bad=1
+        fi
+    done
+    [ "$bad" -eq 0 ] && okln "gate state consistent ($(jq '.passed_gates // [] | length' "$state") passed)"
+    return 0
+}
+
 # ─── 2. Memory schema validity ───────────────────────────────────────────────
 check_memory() {
     local validate="$SCRIPT_DIR/validate-memory.sh"
@@ -179,7 +202,7 @@ main() {
         exit 1
     fi
 
-    say "${BLUE}Gate DAG${NC}";        check_gates;     say ""
+    say "${BLUE}Gate DAG${NC}";        check_gates; check_gate_state; say ""
     say "${BLUE}Memory${NC}";          check_memory;    say ""
     say "${BLUE}Evaluator${NC}";       check_evaluator; say ""
     say "${BLUE}Drift${NC}";           check_drift;     say ""

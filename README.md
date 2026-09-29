@@ -428,6 +428,7 @@ meridian/
 bash tests/test-hooks.sh               # Hook system (7 tests)
 bash tests/test-telemetry.sh           # Telemetry pipeline (8 tests)
 bash tests/test-dogfood.sh             # Session ids, hook-block telemetry, dogfood log (22 tests)
+bash tests/test-gate-passing.sh        # Earned gates, operator approval, agent guards (26 tests)
 bash tests/test-security.sh            # Security blocklist (14 tests)
 bash tests/test-health.sh              # /health report (12 tests)
 bash tests/test-status.sh             # /status command (11 tests)
@@ -441,7 +442,7 @@ bash tests/test-integration-phase1.sh  # Phase 1 end-to-end (8 tests)
 bash tests/test-integration-phase2.sh  # Phase 2 end-to-end (19 tests)
 ```
 
-All 19 suites pass on Windows / Git Bash.
+All 20 suites pass on Windows / Git Bash.
 
 ---
 

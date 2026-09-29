@@ -130,7 +130,9 @@ main() {
     case "${1:-}" in
         --prepare) shift; gate="${1:-}"; shift || true; prepare "$gate" "$@" ;;
         --check)   shift; gate="${1:-}"; check "$gate" ;;
-        "" )       usage; block "a gate id is required" ;;
+        "" )       # As a gate pre-hook: gate-engine verify exports MERIDIAN_GATE_ID
+                   [ -n "${MERIDIAN_GATE_ID:-}" ] || { usage; block "a gate id is required"; }
+                   check "$MERIDIAN_GATE_ID" ;;
         *)         gate="$1"; check "$gate" ;;   # bare gate id -> check
     esac
 }

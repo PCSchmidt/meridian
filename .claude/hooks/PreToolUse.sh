@@ -48,9 +48,10 @@ main() {
     # Gate-specific enforcement
     case "$TOOL_NAME" in
         Edit|Write)
-            # Check if editing protected files
-            if [[ "$FILE_PATH" == *"/.meridian/gate-state.json" ]]; then
-                warn "Direct edit of gate-state.json - should use gate-engine.sh"
+            # Gate state is written only by gate-engine.sh mark-passed, which
+            # checks deps, artifacts, pre-hooks, and approvals first.
+            if [[ "$FILE_PATH" == *".meridian/gate-state.json" ]]; then
+                block "Direct edit of .meridian/gate-state.json - gates pass only via gate-engine.sh mark-passed"
             fi
 
             # Check if editing memory files directly
@@ -62,7 +63,18 @@ main() {
         Bash)
             # Destructive-operation detection is handled by block-dangerous.sh
             # (security-rules.yaml), invoked below for all tools.
-            :
+            #
+            # Human approval belongs to the operator. The operator runs
+            # `mark-passed <gate> --approve <token>` in their own terminal,
+            # which never passes through this hook; the agent may not.
+            if [[ "$COMMAND" == *"mark-passed"* && "$COMMAND" == *"--approve"* ]]; then
+                block "Human approval gates are approved by the operator in their own terminal, not by the agent. Ask the operator to run: bash scripts/gate-engine.sh mark-passed <gate> --approve <token>"
+            fi
+            # Writing gate state by hand bypasses mark-passed's checks.
+            if [[ "$COMMAND" == *"gate-state.json"* ]] && \
+               echo "$COMMAND" | grep -Eq '>[[:space:]]*[^[:space:]]*gate-state\.json|(tee|mv|cp|rm)[[:space:]].*gate-state\.json|sed[[:space:]]+-i|python|node|perl'; then
+                block "Commands that write .meridian/gate-state.json are blocked - gates pass only via gate-engine.sh mark-passed"
+            fi
             ;;
     esac
 
