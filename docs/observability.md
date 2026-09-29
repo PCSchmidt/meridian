@@ -14,6 +14,7 @@ event validated against `.meridian/telemetry-schema.json`. Event types:
 |--------------|--------------|------------|
 | `gate_passed` | a gate clears | `gate` (hours fields optional — see write-reflexion.sh) |
 | `gate_blocked` | a gate/verify blocks | `gate`, `reason` |
+| `hook_blocked` | any hook exits 2 (via `block()` in `hook-wrapper.sh`) | `hook`, `tool`, `reason` |
 | `tool_used` | a tool runs through a hook/verifier | `tool`, `hook`, `outcome` |
 | `evaluator_verdict` | an evaluator scores a gate | `gate`, `score`, `verdict` |
 | `memory_write` | a memory file is validated | `memory_type`, `validation` |
@@ -22,7 +23,10 @@ event validated against `.meridian/telemetry-schema.json`. Event types:
 | `error` | something recoverable fails | `message` |
 
 It's gitignored (per-developer runtime). Events are written best-effort by
-`scripts/log-event.sh`:
+`scripts/log-event.sh`. Events logged outside a Claude Code session (the
+pre-commit verifier, Cursor/Codex, manual runs) get a real session id: if
+`session.json` has none, one is created and persisted (`auto_started: true`)
+instead of stamping `00000000`.
 
 ```bash
 bash scripts/log-event.sh gate_passed gate=2.2 predicted_hours=6 actual_hours=5
@@ -45,6 +49,29 @@ jq -r 'select(.outcome=="blocked")' .meridian/telemetry.jsonl
 
 `scripts/telemetry-query.sh` wraps common queries if you prefer not to hand-write
 `jq`.
+
+## Dogfood measurement
+
+Telemetry shows *that* Meridian stopped you. It can't show whether the stop was
+worth it, what the gates missed, or what the harness cost. `scripts/dogfood.sh`
+records those three operator judgments in `.meridian/dogfood.jsonl`, which is
+meant to be **committed** as evidence:
+
+```bash
+bash scripts/dogfood.sh stops --unlabeled        # numbered list of blocks not yet judged
+bash scripts/dogfood.sh label 3 real "spec really lacked acceptance criteria"
+bash scripts/dogfood.sh label 4 false_alarm "flaky test, unrelated to the change"
+bash scripts/dogfood.sh escape "numeric check missed a table typo" --gate inventory_verified --severity high
+bash scripts/dogfood.sh overhead 1.5 "writing gate scripts"
+bash scripts/dogfood.sh report --md > docs/dogfood-report.md
+```
+
+A *stop* is a `hook_blocked` event or a `gate_blocked` event from
+`meridian-verify` (`gate=verify`); gate-engine's own `gate_blocked` repeats the
+failing pre-hook's `hook_blocked`, so it isn't counted twice. Each label copies
+the stop's details, so the committed file stands alone after telemetry is
+rotated. The report gives precision (real ÷ real + false alarm), escapes,
+evaluator verdicts, and overhead hours.
 
 ## The dashboards
 

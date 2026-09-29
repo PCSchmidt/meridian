@@ -69,6 +69,13 @@ log() {
 #######################################
 block() {
     log BLOCK "$*"
+    # Every block also becomes a telemetry event, so blocks can be counted and
+    # labelled later (scripts/dogfood.sh). Best-effort: never changes the exit.
+    local log_event="$PROJECT_DIR/scripts/log-event.sh"
+    if [ -f "$log_event" ]; then
+        MERIDIAN_PROJECT_DIR="$PROJECT_DIR" bash "$log_event" hook_blocked \
+            hook="$HOOK_NAME" tool="${TOOL_NAME:-none}" reason="$*" >/dev/null 2>&1 || true
+    fi
     exit 2
 }
 

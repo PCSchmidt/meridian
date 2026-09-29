@@ -28,14 +28,54 @@ NC='\033[0m'
 
 #######################################
 # Get or create session ID
+#
+# Events logged outside a Claude Code session (the pre-commit verifier,
+# Tier 2/3 editors, manual script runs) never see SessionStart, and the
+# installed session.json has no session_id. Rather than stamp every such
+# event "00000000", lazily create an id and persist it so later events
+# group into the same session until session.sh starts a new one.
 #######################################
 get_session_id() {
-    if [ -f "$SESSION_FILE" ] && command -v jq >/dev/null 2>&1; then
-        jq -r '.session_id // "00000000"' "$SESSION_FILE" 2>/dev/null || echo "00000000"
-    else
-        # Generate from current time
-        date +%s | tail -c 9 | head -c 8 || echo "00000000"
+    if ! command -v jq >/dev/null 2>&1; then
+        printf '%08x' "$(date +%s)"
+        return 0
     fi
+
+    local sid=""
+    if [ -f "$SESSION_FILE" ]; then
+        sid=$(jq -r '.session_id // empty' "$SESSION_FILE" 2>/dev/null || true)
+    fi
+    if [[ "$sid" =~ ^[a-f0-9]{8}$ ]] && [ "$sid" != "00000000" ]; then
+        echo "$sid"
+        return 0
+    fi
+
+    sid=$(printf '%08x' "$(date +%s)")
+    local started
+    started=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S")
+    mkdir -p "$(dirname "$SESSION_FILE")"
+    local base='{}'
+    if [ -f "$SESSION_FILE" ] && jq empty "$SESSION_FILE" >/dev/null 2>&1; then
+        base=$(cat "$SESSION_FILE")
+    fi
+    echo "$base" | jq --arg sid "$sid" --arg started "$started" --arg project "$(basename "$PROJECT_DIR")" \
+        '.session_id = $sid | .started = (.started // $started) | .project = (.project // $project) | .auto_started = true' \
+        > "$SESSION_FILE.tmp" 2>/dev/null && mv "$SESSION_FILE.tmp" "$SESSION_FILE" || rm -f "$SESSION_FILE.tmp"
+    echo "$sid"
+}
+
+#######################################
+# Escape a string for inclusion in a JSON string literal
+#######################################
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    # Drop any remaining control characters (invalid unescaped in JSON)
+    printf '%s' "$s" | tr -d '\000-\010\013\014\016-\037'
 }
 
 #######################################
@@ -73,12 +113,12 @@ parse_kvs() {
         elif [ "$value" = "true" ] || [ "$value" = "false" ]; then
             # Boolean
             json_fields="${json_fields}, \"$key\": $value"
-        elif [[ "$value" == "["* ]]; then
+        elif [[ "$value" == "["* ]] && echo "$value" | jq -e 'type == "array"' >/dev/null 2>&1; then
             # Already a JSON array - pass through
             json_fields="${json_fields}, \"$key\": $value"
         else
-            # Escape quotes in string value
-            local escaped="${value//\"/\\\"}"
+            local escaped
+            escaped=$(json_escape "$value")
             json_fields="${json_fields}, \"$key\": \"$escaped\""
         fi
     done
