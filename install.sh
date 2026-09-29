@@ -65,6 +65,8 @@ echo "[1/11] Copying .claude/hooks/ + settings.json"
 if [ -d "$MERIDIAN_DIR/.claude/hooks" ]; then
     mkdir -p "$TARGET/.claude/hooks"
     cp -r "$MERIDIAN_DIR/.claude/hooks/." "$TARGET/.claude/hooks/"
+    # Runtime logs left in the source tree by running hooks there are not part of the install
+    rm -rf "$TARGET/.claude/hooks/.meridian"
     ok "Hooks installed ($(ls "$TARGET/.claude/hooks/" | wc -l | tr -d ' ') files)"
 else
     err ".claude/hooks/ not found in Meridian source"
