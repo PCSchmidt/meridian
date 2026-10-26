@@ -1,525 +1,264 @@
-# Meridian - Master Explainer
+# Meridian
 
-Repo: <https://github.com/PCSchmidt/meridian> · Live demo: none (DEMO_GUIDE.md walkthrough) · License: MIT claimed in README; no LICENSE file in tree (§24 D3) · Last commit: 2026-09-29 (`7e70722`)
-Status: v0.1.0 implementation complete, Phases 0-7 done · active (Phase 8 deferred)
-Explainer generated: 2026-10-18 by an AI agent under Chris Schmidt's direction · Questionnaire v1.1 · Depth: LITE (LITE run)
+*A set of scripts and rules that sit around an AI coding agent and refuse to let it say "done" until the work has passed checks it cannot talk its way past.*
 
-> Tags: **[Verified]** code/config/commit · **[Measured]** run this session (none: LITE run, no execution) · **[Documented]** repo docs · **[Author]** confirmed AUTHOR_CONTEXT line · **[Inferred]** reasoned · **[Proposed]** not in repo · **[Unknown]** → §26. Claim levels L1–L3 in §11. Discrepancies §24, risks §25, records §20.
+Status: a working prototype (version 0.1.0), last changed in October 2026. Code: https://github.com/PCSchmidt/meridian (public; the README says MIT licence, but the repository has no LICENSE file yet). It has no users that I can show and no releases on GitHub.
 
-## TL;DR
+I built Meridian because of a habit I noticed in AI coding agents. Partway through a long project they start announcing that features are finished when the tests have not run, and each new work session forgets what was decided in the last one. Meridian puts a checkpoint system around the agent. A checkpoint cannot be passed by saying it was passed: a small program has to confirm it, and for some checkpoints a person has to approve it. AI coding agents wrote almost all of the code, while I directed the scope, plan, architecture and preferences. It is a tool for developers, not a product for end users. If you are short of time, the chapter for recruiters and interviewers is near the end, and the results chapter is the one that says how much to believe.
 
-**V.1 ★** Meridian wraps an AI coding agent in mechanical checkpoints — a YAML gate graph whose checks run as shell hooks that exit 2 to block, a separate evaluator agent that must pass the work before a gate advances, schema-validated memory files that survive context resets, and JSONL telemetry — so the agent cannot declare work done by saying it is done. [Verified] `scripts/gate-engine.sh`, `.claude/hooks/`, `scripts/meridian-verify.sh`
+Think of a building inspector. A builder who says "the wiring is fine" is not enough. The inspector checks, and the builder cannot move on to the plaster until the inspection is signed. Meridian tries to be that inspector for an AI agent. The comparison breaks down in one place that matters: the inspector in Meridian is partly another AI agent, and the rules that agent's findings feed into have gaps, which I describe in the testing chapter.
 
-**V.2 ★** For developers on multi-session agent-built projects where "done" claims are unreliable. Its interest is the evidence discipline: "prompts cannot ask for honesty, a process boundary can require evidence" [Documented] TECHNICAL_OVERVIEW; honest enforcement tiers (keystroke blocking only in Claude Code) [Verified] A005; and later commits disclosing that the first dogfood "passed 4 gates whose checks never ran" (`65eab77`). The headline 3.0-point self-grading gap rests on one pair of LLM evaluations on one synthetic file (W-EVAL-1) [Verified] `experiment/`.
+Here is what is fixed and what is learned. A calculator is deterministic: the same input always gives the same answer. A weather forecast is probabilistic: it is a best guess that can be wrong. Meridian is a mixture. The scripts are deterministic. They include the gate engine (the program that decides whether a checkpoint may be marked passed), the list of dangerous commands to block, the checks on the notes the tool keeps, the pass-mark arithmetic and the check that runs when work is saved. They are ordinary shell scripts, meaning small programs written in the plain command language of Linux and Git Bash, and they give the same output for the same input. The learned parts are the AI agents around them. The coding agent that does the work, and the separate judge agents that score it, are language models (software trained on huge amounts of text). What they do depends on that training, they can be wrong in ways nobody wrote down, and their scores are opinions, not measurements. Chance enters in two places: a language model's wording and scoring can differ from one run to the next, and the project's one headline experiment was run only once.
 
-## Repository fact sheet
+To keep the learned parts in check, the project does four things. A judge must write its result in a fixed file format, and a fixed pass mark of 7.0 out of 10 decides what happens next. Blocking decisions are made by scripts, not by a model's opinion. A person must approve certain checkpoints. And the same checks run again when work is saved to git (the version-control tool that records every change to a project), whichever AI tool wrote it.
 
-| Field | Value | Tag |
+![Which steps are learned models and which are fixed rules or formulas](images/meridian-learned-vs-rules.png)
+
+The single experiment behind the project is small. An agent that graded its own deliberately bad code gave it 5.5 out of 10, and a fresh agent that had not written it gave 2.5. That is one example, not a benchmark, and I treat it that way below.
+
+In short, Meridian is a rule-based checkpoint system for AI coding agents, with one small supporting experiment and several honest gaps.
+
+## What problem this solves
+
+Suppose you ask an AI coding agent to build a web app over several weeks. At first it goes well. Then, around the point where the work is two-thirds done, trouble starts. The agent says "all tests pass" without running them. It marks a feature complete although three odd cases were skipped. It scores its own code generously, even code with serious security holes. When you open a new session, the agent has forgotten that you chose one login method two sessions ago and may choose a different one. Its time estimates are guesses that are never compared with what actually happened. And when something goes wrong, there is no record of what the agent did.
+
+The README lists five such failures: false claims of completion, lost context, silent drift from the original scope (the written agreement about what is and is not being built), estimates that never improve, and no visibility. Most people cope by reading everything the agent produced and asking it to be honest. The README argues this is not a wording problem and answers with structure: scripts that check, logs that record, and a second reader who did not write the work.
+
+Similar tools exist. The project's notes name Syntaris, the open framework Meridian began from, and other harnesses. A harness is the surrounding machinery that runs an agent, gives it tools and limits what it may do. I did not survey these tools, so I do not claim Meridian is better. The README says what it adds: a checkpoint list you can reshape, notes kept in a strict format, an independent judge, and a written list of the assumptions each rule encodes. It also says where Meridian is the wrong tool: one-off scripts, single-session projects, and teams unwilling to write down scope first.
+
+The goal is that a model cannot declare a checkpoint passed falsely, that context survives a restart, and that a failure can be traced afterwards. Success is measured today by a test suite, one experiment comparing self-scoring with independent scoring, and two projects built with Meridian installed. Better time estimates over the long run are a hope, not a result.
+
+Meridian deliberately does not write code, replace a person's judgment on scope, security or release, or promise a reliable agent. Its limits say public and unclassified material only. A skeptic would ask, "Why not just write good instructions for the agent?" The fair answer is that instructions can be ignored, while a program's exit code cannot be argued with. An exit code is the number a program hands back when it ends: 0 means all is well and any other number means something failed. The weaker half of the answer is that Meridian only checks what someone wrote a check for.
+
+In short, the project tackles a real and recognisable problem in long AI-assisted builds, and it answers with structure rather than better wording.
+
+## Where the project came from
+
+Meridian began as a fork, a copy that is then changed on its own, of Syntaris, an agent framework by another person, brianonieal. The demo guide calls that author a fellow JHU (Johns Hopkins University) student. The README's acknowledgments say Meridian builds on Syntaris for its checkpoint enforcement, note types and recipe layout. It also credits Anthropic's engineering writing on harnesses, the Reflexion paper (a 2023 research paper on letting a model write notes on its own mistakes), and Martin Fowler's writing on harness engineering. The architecture record quotes my complaint about the original: "There is no feedback that I'm aware of." That sentence explains the project's main addition, which is a log engineers can search.
+
+The first commit, a saved set of changes in git, was on 26 May 2026 and holds architecture decisions. Two days later the experiment described below was run, before any scripts were built.
+
+The technical overview calls Meridian the source of a wider group of my repositories, and says plainly that the siblings do not all import its code. Two of those sibling projects come up later. VERA is my research-assistant project that takes a topic and produces a cited write-up, and it was the one full trial of Meridian. Hard Power Intelligence is my intelligence-analysis website, and AeroIntel is an existing production app of mine; the notes report Meridian being tried on both.
+
+In short, Meridian is a rebuilt and extended descendant of someone else's framework, and its documents say so.
+
+## What it does, step by step
+
+Meridian is installed into a project once. After that it works in six steps, which I will follow through one small example, the project's own recipe for command-line tools.
+
+First, I write two plain documents: a contract (what is being built, what is out of scope, how I will know it is done) and a spec (the list of features, in priority order). Second, I describe the checkpoints, which Meridian calls gates. A gate is a named checkpoint, such as "tests are passing", that must be cleared before work moves on. The gate list lives in a settings file written in YAML (YAML Ain't Markup Language, a plain-text format for structured settings), and it says which gates must come before which. The command-line recipe runs from "scope confirmed" to "commands approved" to "tests passing" to "package ready".
+
+Third, the agent works toward the current gate. Say it reaches "tests passing" and announces it is done. I ask the gate engine to mark the gate passed. Fourth, the engine checks, in order, that the earlier gates passed, that the required files exist, and that the gate's own checks, small scripts, run and succeed. If the test runner fails, the engine stops with exit code 2 and writes the reason into a log. The gate stays closed. Saying it passed changes nothing.
+
+![One gate's journey: each check must say yes before the gate is recorded as passed; only human-approval gates add a person](images/meridian-gate-journey.png)
+
+Fifth, for a quality gate, a separate judge agent reads the work without having produced it and writes a score. Sixth, when the work is saved to git, the same checks run again, and at the start of the next session the agent is handed the current gate and the saved notes.
+
+A gate that needs a human works differently. A person has to type an approval phrase, for example "DATA CONTRACT APPROVED", in their own terminal. On Claude Code, the AI tool whose hook system Meridian is built on, a hook (a small script that runs just before or after each action the agent takes) refuses to let the agent type that command. The engine then records who approved and when.
+
+After each gate a short note, called a reflexion entry, records the hours predicted, the hours taken, and why they differed; the next session reads it. Each feature is also tracked through five stages (works on the happy path, which means the normal case with nothing going wrong; works with other parts; handles odd cases; handles errors; is hardened), so "90 percent done" can be told apart from "done".
+
+The intended user is a developer who builds with an AI agent over many sessions and is willing to write scope documents first. The user types short commands such as "/start" and "/health" in the agent's chat and reads plain text reports. A human decides scope, approves human gates, and chooses whether to commit.
+
+Use in a government or defense setting would need more work: the record of who approved a gate is just the name configured in git, and the project's notes admit approvals can be forged by editing files by hand.
+
+In short, Meridian turns "the agent says it is done" into "the scripts say it is done, and here is the log".
+
+## The parts, the data and the rules
+
+Meridian is shell scripts and shell test scripts, with no program in any other language. The easiest way to meet its parts is to follow one agent action through the diagram below.
+
+![The main parts of Meridian and how an agent's action passes through them](images/meridian-parts.png)
+
+Say the agent decides to run a command. Before it does, the before-action hook fires. This script consults the blocklist, a list of text patterns: a command that matches a "block" pattern is stopped, and one that matches a "warn" pattern is allowed but logged. The hook also refuses attempts to write the file that records which gates have passed. If the command goes ahead, the after-action hook checks that any notes the agent wrote have the right format and adds a line to the event log. When the agent then asks to pass a gate, the gate engine does the checking described earlier. If the gate wants a judgment, the engine calls for one of three judge agents: one scores a gate, one looks for drift (work wandering away from the agreed scope), and one reviews the spec for gaps and contradictions. A small verdict checker reads the judge's written result and applies the pass mark. Finally, at commit time, a portable verifier runs the same engines through git or through the project's CI (continuous integration, an automatic test runner that fires when code is uploaded), so a change made in any editor meets the same checks.
+
+Around this core sit three recipes, which are ready-made gate lists for web apps, command-line tools and machine-learning projects, and fifteen skills, short instruction files the agent loads only when asked.
+
+Several rules are meant never to break. A gate cannot be marked passed unless its earlier gates passed, its required files exist, and its checks ran and succeeded. A gate that names a check which is not installed is blocked rather than skipped, unless a setting asks for skipping. A human-approval gate needs an approval phrase typed by a person. The agent may not write the gate state file directly. A note must match its format. A commit is refused if a human gate is marked passed without an approval record. I tried to break several of these; the testing chapter reports what happened.
+
+The data is small and entirely created by the tool itself. The gate list is a YAML file. Gate state is a JSON file (JavaScript Object Notation, a plain-text format for structured data) listing passed gates. The event log is a JSONL file (JSON Lines, one JSON record per line) with eight kinds of event, among them session start and end, gate passed, gate blocked, evaluator verdict and error. Memory is three files: patterns seen more than once, a log of session events, and the estimate notes. A toy example of one estimate note: predicted 10 hours, actual 4, so the ratio is 2.5, with a written cause such as "design was settled in advance". The runtime files are kept out of git, so a fresh copy of the repository starts with none of the author's history.
+
+Everything lives in files, not a database. Two helper programs, jq (a tool for reading JSON) and yq (the same for YAML), are needed. When they are missing, the installation check marks it critical, but some checks fail open, meaning they quietly allow the action instead of stopping it. The gate engine's "can this gate proceed" question is one of these. The weakest link is that an agent can still write files the rules trust, described under shortcomings.
+
+In short, Meridian is a pile of small scripts reading and writing plain files, and its trust rests on which files the agent is and is not allowed to touch.
+
+## The methods and the arithmetic
+
+There is little mathematics here. Nothing is trained, and no formula matters beyond arithmetic anyone can do by hand. These are the methods that matter.
+
+**Checking the gate list for loops.** The gate list is a DAG (Directed Acyclic Graph), meaning a set of steps with one-way dependencies and no loops. The engine looks for loops with a depth-first search: it follows each chain of "requires" as far as it goes, remembering the path it is on, and if it meets a gate already on its path it reports a cycle. Toy example: gate A requires B and B requires A. Starting at A, the search goes to B, then back to A, which is on the path, so it reports "Cycle: A to B". Without this check, neither gate could ever open. I confirmed the check catches that loop. It does not catch a gate that requires a name that does not exist, which I describe later.
+
+**The judge's score.** The gate judge rates work from 0 to 10 on four things: whether it is complete, its quality, whether it is consistent with the contract and spec, and whether it meets what this gate asks. The overall score is a weighted average, with completeness counting 0.30, quality 0.25, consistency 0.20 and gate fit 0.25. Take my own numbers: completeness 6, quality 5, consistency 8, gate fit 4. Then the overall score is 1.8 + 1.25 + 1.6 + 1.0 = 5.65, rounded to 5.7. The judge's prompt says 7.0 or more with no high-severity issue is a pass, 5.0 or more is a warning, and anything lower or any high-severity issue is a fail. So 5.7 is a warning. The checking script then applies its own bar: any score under 7.0 blocks the gate, so a warning at 5.7 still blocks. The weights are the author's choice, written in the prompt; no document says why these numbers.
+
+**Two completion numbers.** For each feature, the tracker holds five true-or-false stages. The report gives two percentages: the share of features that work on the happy path, and the share that pass all five stages. If 12 of 13 features work normally but none has had its odd cases and errors handled, the report says 92 percent and 0 percent. The gap between the numbers is the signal.
+
+**Estimate ratio.** Predicted hours divided by actual hours: predicted 10, actual 4 gives 2.5. The roadmap itself says its recorded figures are not evidence that estimates improve.
+
+**Blocklist matching.** Each rule is a regular expression, a compact way to describe matching text. Deterministic dangerous patterns, such as deleting everything under the root folder or an Amazon access key in a file, block. Looser patterns, such as SQL built by gluing strings together, only warn, because they would fire too often if they blocked. The cost is that a pattern only catches the forms it was written for.
+
+In short, the arithmetic is a loop check, a weighted average, two percentages and a ratio, each small enough to check by hand.
+
+## The models and what they do
+
+Meridian trains no model and contains no model weights (the learned numbers inside a model). It uses language models in two roles, and it names none of them in its own code.
+
+The first is the coding agent: the AI tool that edits files and runs commands. Meridian is built around Claude Code, Anthropic's command-line coding agent, because the project's notes say only Claude Code offers a before-action hook that can stop an action. 49 of the 60 commits carry a credit line naming Claude models (Opus and Sonnet versions, as spelled there); the repository does not say which model did which task. The rules also generate guidance files for the editors Cursor, Windsurf and Cline and a general file for tools such as Aider or Codex, all of which are other AI coding tools. Those cannot block an action, so for them the guidance is a request and the commit check is the real barrier.
+
+The second role is the three judge agents. Each is a prompt file that a coding agent loads as a separate helper with a fresh conversation. The gate judge takes in a gate name, a list of files and the contract and spec, and gives back a verdict in JSON: four scores, an overall score, issues marked high, medium or low, and pass, warn or fail. Its prompt says it did not produce the work and must not praise or soften findings. The drift judge reads the spec and feature tracker and returns an alignment score from 0 to 10; below 5 means "drifted", below 7 "warn". It is advisory, meaning it warns but does not block, unless a setting turns blocking on. The spec reviewer checks the spec for gaps and contradictions. No file says which language model should run them, so it depends on what the coding agent uses.
+
+Why these choices? The coding agent is Claude Code because of the hook system, and the judge is a separate agent because of the experiment. No document gives a reason for the prompt wording or the weights. Alternatives include rules in a single prompt (cheap, but ignorable), fixed tests only (blind to scope drift), and a human reviewer (best, but slow). The judge costs extra model use on each gate, and the project does not record how much.
+
+What does the judge get wrong? The repository has few real examples. In the calibration test it separated three hand-built projects cleanly. On the AeroIntel app, the drift judge flagged one stale tracking entry with no false alarms recorded. The roadmap says earlier installs on that app had non-working hooks because the installer never copied the scripts, so I cannot tell whether that run had the hooks active. Those are the project's reports; the projects are not here. The judge is a language model, so it can vary between runs and can be swayed by a long, confident-looking report.
+
+The safeguards around the judges are fixed. The verdict must be valid JSON with a score and verdict. A missing, malformed or low-scoring verdict blocks. The pass mark is applied by a script. For human-approval gates, a script refuses to pass the gate without an approval phrase, and on Claude Code the agent is blocked from typing it. For all other gates, a person is not required.
+
+One gap matters most. Nothing proves that the verdict file came from a separate judge. The script checks that the file exists and has the right numbers, not who wrote it. A coding agent that writes its own verdict file would pass. I tested this: a file claiming a score of 9 and a verdict of pass was accepted. The separation is therefore a working agreement enforced by the file format, not a cryptographic guarantee, meaning not something that is mathematically impossible to fake. The project's notes call the evaluator step a "contract" and say a shell script cannot start a helper agent itself, so I read this as a known boundary, but the documents do not mention the forgery case.
+
+A fixed test run already catches failing tests without any model. The judge adds value only for things no test covers, such as scope drift.
+
+In short, Meridian adds no model of its own: a coding agent does the work, a second agent scores it, and fixed scripts decide what the score means.
+
+## Testing, edge cases and attacks
+
+Meridian's tests are shell scripts in twenty files. Most are what the questionnaire calls integration tests: they build a small fake project in a temporary folder, run the real scripts against it, and check exit codes and output. A few are end-to-end tests that run the whole path, such as one that makes a real git commit and checks that a failing verification rejects it. There are no property tests, which try many random inputs, and no timing tests. Nothing here is evaluation in the sense of measuring quality on unseen examples, apart from the calibration cases I describe in the results.
+
+I ran all twenty files from a scratch copy with the home folder pointed at an empty folder. Fifteen files passed completely, for 224 passing checks. Five had failures: the health report test (8 of 12), the first integration test (8 of 9), the second integration test (16 of 19), and the doctor and status tests (counts not captured). For the health, status and first integration tests the messages were about missing gate and calibration data, which comes from a runtime file that git ignores and a fresh copy lacks. I did not establish the cause for the other two. The README says 240 checks across 18 files, and a commit message says all 20 suites pass. Those are the author's results with runtime files present, so a fresh copy simply does not reproduce them. I could not run the shell-lint tool the README says is clean, because it is not installed. The repository has no CI of its own; the CI workflow exists only as a template for other projects.
+
+I also attacked the rules myself, in a throwaway project, trying fifteen things. The rules held against the main ones. A human-approval gate could not be passed without an approval. A gate with its required files missing was refused. A gate whose check script was not installed was blocked. The agent could not type the approval command, and a normal edit of the gate state file was blocked. A verdict claiming a pass but scoring 3 was blocked by the pass mark, and a commit with a badly formatted notes file was rejected.
+
+Others got through. Writing the gate state file with a quote trick that splits the file name was not blocked. Deleting everything under the root folder was blocked with short flags but not with the long form of the same flags. An agent that wrote its own passing verdict file was accepted. A bad note appended through a shell command was not checked at that moment, and a bad note written through an editor only warned after the fact. The no-verify option on a commit skipped the memory check. And a commit message that merely mentioned the approval command was blocked by mistake.
+
+The gate model document discloses that the agent can still write a script that edits the state file, and that a forged approval would show in the committed difference. The other evasions I did not find disclosed. The undefined-dependency case is a plain defect: a gate that requires a name that does not exist passes the loop check, and the "current gate" answer then says all gates are complete while one remains unpassed. The hooks do nothing in a folder that is not a Meridian project, and several checks fail open when jq or yq is missing.
+
+The tests were written by AI agents. The biggest thing not tested is a live session in which a real agent tries to get around the rules; a manual protocol exists to re-check the hook format after any Claude Code update, and it is not automated.
+
+One piece of history speaks to testing. In the fifth phase the project found that the security hook had never fired in a real session: it read the wrong field names from Claude Code's messages, and the tests had used a shortcut that hid it. The fix and an end-to-end test followed.
+
+In short, the scripts mostly do what they say on the cases they were built for, but a clean copy does not reproduce the author's test counts, and several simple evasions get through.
+
+## Does it work? The results
+
+The project has three pieces of evidence, and each needs its limits stated.
+
+**The self-scoring experiment.** The author wrote a small Python file with eight planted problems, including code that builds database queries by gluing strings together and a hard-coded password. An agent scored it in the same session that made it, and a fresh session scored it again with the instruction "you did not produce this code, do not praise". The first gave 5.5 out of 10 and no blocking advice. The second gave 2.5 and a "do not merge" verdict. There is no accuracy baseline here; the comparison is only between two prompts. The difference of 3.0 points is real for this one file, but the two runs differed in more than separation: the second prompt told the model to be harsh. So the experiment cannot tell how much of the gap comes from independence and how much from the tone of the instruction. It was run once, on one file, with no repeats and no range. The README presents the result as its main finding, and the technical overview more carefully says it motivates separation and is not a universal benchmark. I agree with the second wording.
+
+![Scores for the same planted-flaw code file when graded by the same session and by a fresh session](images/meridian-experiment.png)
+
+**The calibration cases.** To test the judges before trusting them, the project built three small fake project states, called fixtures, and had both judge agents score each one. The gate judge gave 8.5 to the aligned project, 3.6 to the one with out-of-scope work, and 5.95 to the one where every feature was only done on the happy path. The drift judge gave 8, 3 and 7. The project concluded the thresholds need no tuning. The cases were made by the author's side, scored in a single session, and number only three, so this shows the judges can tell an obvious case from an obvious problem, not that they would do so on messy real work.
+
+**Real-project use.** The notes report two projects built with Meridian installed. On AeroIntel, the feature tracker showed 100 percent on the happy path and 0 percent through the full lifecycle, and the drift judge found one out-of-date tracking entry. On Hard Power Intelligence, nine gates were reportedly passed in order, and the "brief verified" gate is said to have forced citation checking to be built as real code. These are the project's own reports; those repositories are not here.
+
+A later commit message weakens the nine-gate claim. Setting Meridian up for VERA showed that gates were "largely honour-system", meaning they relied on everyone behaving rather than on enforcement: marking a gate passed ran none of its checks, and twenty recipe check scripts did not exist, so four Hard Power Intelligence gates passed with checks that never ran. The fix landed on 29 September. So the nine gates were recorded as passed, but not all had their checks run.
+
+What did not work: the claimed compliance percentages for other editors were removed because nobody measured them, the first security hook never fired in a real session, and the first installer forgot to copy the scripts. The project reports these itself, which is to its credit.
+
+The planted bugs are the most obvious kind, so the test is easy. I checked thirteen claims from the documents and list them in the companion Evidence Notes: the numbers match their source files, a few claims run ahead of the evidence, and the project's own later commit weakened the one that matters most, that nine gates were enforced.
+
+In short, the evidence shows a clear effect on one test file and a sensible design, but no measurement shows that using Meridian improves a real project.
+
+## Could it be put into real use?
+
+Meridian has never been operated for real users that I can show. It runs on my laptop. The GitHub repository is public, has no stars, no copies, no releases, and two page views in two weeks. The v0.1.0 label exists as a git tag, and the roadmap says publishing a release was deferred. The README says the work is "dogfooded on two production projects", meaning I used my own tool on my own projects, and one of those, Hard Power Intelligence, is described as live at a public address. That project is a separate product, not Meridian, and I did not check it.
+
+On a four-rung readiness ladder (experiment, works locally, deployable, operated), Meridian sits on the second rung: it runs and passes most of its own tests on one machine. It is a toolkit others copy into their projects, so hosting is not the right idea for it.
+
+Against the usual production habits the picture is mixed. The install script worked in my scratch run, but a clean copy fails some of its own tests. Automatic checks block a bad change in projects that install Meridian, but not in Meridian's own repository. Output quality is measured only by the one experiment and three cases. Failure handling is partial: blocks are logged and a missing check script blocks, but several tools fail open when helper programs are missing. People can approve the AI's steps for human-approval gates only. Prompts and settings are versioned in git. Logs are a real strength, with eight event types and a command that lets the operator label each stop as real or false alarm. 
+
+Across the three recipes, 20 of the 25 named check scripts do not ship, and the machine-learning recipe ships none of its eleven, so its gates block until someone writes them. That is safer than silent skipping, but it makes the recipes templates, not working gates.
+
+To deploy it for others it would need a licence file, a tagged release, its own CI, a way to prove who wrote a verdict, and a measured study. Three small steps would help most: add a licence and a release; run the tests in CI on a clean checkout and fix the five failing files; and write a short postmortem (a write-up of what went wrong and why) of the honour-system finding.
+
+As a showcase, I judge Meridian a possible candidate. It matches the applied agentic-workflow family well, since it is about checks, human approval and evaluation of AI output. But it is a tool for developers, has no end users, and hosting it adds nothing a repository does not.
+
+In short, Meridian works on one laptop as a copyable toolkit and should be taken as that.
+
+## Strengths, shortcomings and the work still to do
+
+The strongest points: enforcement rests on exit codes and files, and most of the main blocks held when I attacked them. The project is open about its gaps: it removed unmeasured percentages, recorded two serious bugs, and admits in a commit that its gates were largely honour-system. It logs every block, lets the operator label them, and records why each rule exists and when to retire it.
+
+The shortcomings fall into three kinds. The defects are the undefined-dependency bug, the false block on a commit message that mentions the approval command, the long-flag and quote-trick evasions, and the five test files that fail in a clean copy. The gaps are things left out: no check on who wrote a verdict, no note check on shell appends, no CI of its own, no licence file despite the README's claim, and no measured benefit. The deliberate limits are stated: only Claude Code can block, so the other editors are advised and the commit check does the enforcing; unclassified material only; and no benchmark until others take part.
+
+Three shortcomings matter most. First, the judge's independence is not enforced, yet the headline claim depends on it. Options are a signed verdict, a verdict written only by a script that starts the helper agent, or documenting the limit. I would document it first, then add a cheap check that the verdict file was not written by the coding agent's own editing tool. Second, the headline number is one experiment confounded by prompt tone, meaning two things changed at once and cannot be separated. A fairer test would give several judges the same prompt, same-session and fresh-session, many times, and report a range: small effort, high payoff for credibility. Third, documents run ahead of reality: the "no other framework" claims, the MIT licence line, the nine enforced gates, and the test counts. Correcting wording is a small job.
+
+Promised versus built is mostly good. Gates, memory, the event log, three recipes, the commit check, the drift sensor and docs are built and tested, though the clean-copy failures show some are less solid than the counts suggest. Cost capture is a stub, a placeholder: the schema has token and cost fields, but nothing fills them. A community benchmark and formal release were deferred.
+
+Is it worth finishing? I would tidy and freeze, then run the small honest test: a licence, a tagged release, passing tests on a clean copy, the verdict-author check, and a repeated experiment. Expand only if someone besides me uses it. A careful reviewer would fix the forgeable verdict and approval record first, then the quiet allowing when a helper tool is missing.
+
+In short, the project is honest and mostly sound, its main flaw is that the central claim rests on one soft experiment, and the next step is repair and a better test.
+
+## How it was built, and who did what
+
+AI coding agents wrote almost all of the code, and I directed the scope, plan, architecture and preferences. I did not write the scripts by hand, and I do not claim to have. The repository names the tool: 49 of its 60 commits carry credit lines naming Claude models, its development guide is a Claude Code instruction file, and its architecture notes describe using Claude Code to run the first experiment. Eleven commits carry no credit line (the first eight and three from September), and I do not know whether another tool was involved in them.
+
+The decisions recorded in the architecture notes are: bash only, with Windows instructions; three recipes named for patterns rather than technology stacks; memory in a checked JSON format; testing the judge idea before building it; and reordering the plan so the riskiest parts, the judge and the completion tracker, were tried on a real project first.
+
+How was the AI's work checked? Each gate ended with tests and a written note, but the tests were also written by agents. The history shows the build correcting itself: the hook-format bug, the installer's missing scripts and the honour-system finding were each found and fixed. The commit messages do not say who spotted each problem.
+
+Most of the work landed in two bursts, late May to early June and late July, with small updates since.
+
+In short, I steered and judged and the agents typed, and the history shows a build that found and fixed its own earlier mistakes.
+
+## For recruiters and interviewers
+
+**In thirty seconds.** I directed AI coding agents to build Meridian, a set of scripts that stops an AI coding agent from declaring work finished until checks pass, with a separate judge agent, human approval points and a log. One bad test file scored 5.5 by the agent that wrote it and 2.5 by a fresh judge. **In two minutes**, add that it began as a fork of another person's framework, runs through hooks in Claude Code and through git commits elsewhere, has three recipes, and has about 240 claimed test checks (224 reproduced in my clean-copy run across fifteen files). It has never run for real users.
+
+**What it demonstrates.** Design of AI workflows, with the line drawn between learned and fixed parts. Safety thinking: blocking, approval records and logging. Honest documentation of its own limits. And directing AI tools with written plans. It does not demonstrate operation for real users, teamwork, scale or on-call duty, and it does not show the judge works beyond a small test.
+
+Against typical job requirements the fit is partial in most places, and I would say so plainly.
+
+| Requirement area | Strength | How to say it honestly |
 | --- | --- | --- |
-| Name · URL · licence | Meridian · github.com/PCSchmidt/meridian · MIT claimed, LICENSE missing (§24 D3) | [Verified] `git remote`, README |
-| One-line description (from code) | Bash agent harness: gate-DAG engine + blocking hooks + evaluator-verdict contract + schema-validated JSONL memory/telemetry + git/CI verifier + recipes | [Verified] tree |
-| Category / flags | dev tool / agent harness · `[AGENT]` `[AI]` `[RESEARCH]` `[DATA]` light · no `[UI]` `[API]` `[DEPLOY]` `[FORK]` | [Inferred] |
-| Size | 147 tracked files; Bash 11,341 lines (56 files), Markdown 7,447 (53), JSON 962, YAML 638, templates 744, Python 36 (one deliberate vulnerable sample) | [Measured] read-only counts |
-| History | 59 commits `main`, 2026-05-26 → 2026-09-29; tag `v0.1.0`; one branch; 48/59 carry Claude trailers (Sonnet 4.6 ×22, Opus 4.8 ×17, Sonnet 4.5 ×5, Opus 5.5 ×4) | [Verified] `git log` |
-| Entry points | `install.sh <target> [--recipe …]`; 25 `scripts/*.sh` CLIs (gate-engine, meridian-verify, meridian-doctor, session, telemetry-query, health-report, …); Claude Code hooks via `.claude/settings.json`; 15 skills; 3 subagent specs | [Verified] |
-| Clean clone / tests | Not run (brief). Repo reports "240 assertions / 18 suites" vs 20 suite files and "All 20 suites pass" (§24 D2) | [Documented] / [Unknown] |
-| CI | **None in this repo** (no `.github/`); a CI template (`templates/meridian-ci.yml`) ships for installed projects | [Verified] |
-| Lint | `shellcheck -x *.sh` exits 0 at v0.1.0 | [Documented] CHANGELOG, ROADMAP G7.5 |
-| Live demo / video | none; DEMO_GUIDE.md scripted walkthrough | [Verified] |
-| External services / paid APIs | none at runtime; LLM cost is the host editor's | [Verified] |
-| AI tools evidenced | Claude Code (trailers: Sonnet 4.5/4.6, Opus 4.8/5.5); `.claude/` surfaces | [Verified] |
-| Related repos | TECHNICAL_OVERVIEW "Family Relationship": portfolio-kit, gate-enforced-rag, dsh-plugin-honesty-gate, meridian-jspace, bake-off, living-docs-architect, redteam-blue-gate — shared contracts, no shared runtime [Documented]; family grouping is ⚠ in AUTHOR_CONTEXT → [Inferred] | |
-| Headline claims | 12 audited in §11 (CL-01…CL-12) | [Verified] |
-| Scripts that write files (not run) | `install.sh`, `mark-passed` (gate-state.json), log-event/log-episodic, run-tests (test-baseline.txt), features-init | [Verified] |
-| Tests needing external resources | none seen (mktemp fixtures; no network/GPU/Docker markers) | [Verified] |
+| Agent prompts and instructions | Demonstrated | "Written and used; not formally tested." |
+| Agentic workflows, evaluation, testing, security | Partly | "Control layer and small tests, not a customer workflow." |
+| Deploying and monitoring | Simulated | "Not operated." |
 
----
+The closest role family is the applied language-model and agentic-workflow engineer, and even that fit is partial because I have not run workflows for customers. Of my current target titles, AI Engineer and Forward Deployed AI Engineer, it fits the first better. The weakest fit is the machine-learning engineer with MLOps (the practice of running models in production), since nothing is trained or monitored in production.
 
-## 1. For everyone: what it does and why it matters (A)
+**Likely questions.** *Hardest problem?* Making enforcement hold in a real session: the first hook read the wrong message fields until a test used the real format. *A decision that turned out wrong?* Treating recorded gates as enforced; a later trial showed their checks often never ran, and the engine was changed. *How do you know it works?* Test scripts and attacks; the central experiment is a single run. *What would you change?* Verify who wrote a verdict, repeat the experiment, add CI and a licence. *How would you explain it to an executive?* An inspector for AI-built software: no sign-off without evidence.
 
-**A.1 ★** Rules and checks between a developer and an AI coding assistant, so it cannot say "finished" until tests, artifacts and an independent reviewer confirm it. [Verified] `verify_gate`/`mark_gate_passed`
+**Tough questions.** *Isn't this a wrapper around Claude?* Partly: the agent and judge are language models; the rules around them are the project's own. *If the AI wrote the code, what did you do?* Directed scope, plan and architecture, and accepted or rejected results. *Why believe the numbers?* One run on one file; treat it as motivation. *Have you run it for real users?* No. *What if the input is malicious?* The blocklist catches common destructive forms, I found evasions, and a determined agent could forge a verdict.
 
-**A.2 ★** The problem: the assistant reports untested work as done, forgets decisions, grades itself generously; people cope with checklists and manual re-verification. Meridian is a factory quality gate: the part cannot reach the next station until someone other than the builder stamps its card. [Documented] README; analogy [Inferred].
+**What not to exaggerate.** It is a prototype with one small experiment. The independence of the judge is by agreement, not proof. The second project's gates were not all enforced at first. I did not write the code by hand.
 
-**A.5 ★** Factory line: the gate DAG is the layout; hooks are fixtures that stop the belt (exit 2); the evaluator is the independent inspector; memory the logbook; telemetry the cameras.
+In short, the project shows system design and candid reporting around AI agents, and it does not show production operation.
 
-**A.10 ★** It cannot make an agent smarter, decide what to build, or prove its own effectiveness — evidence is one experiment and single-operator dogfooding ("cannot establish general effectiveness" [Documented]). Blocking exists only at Claude Code keystrokes and git/CI [Verified] A005; string-match guardrails can be routed around (W-ARCH-2, W-PROC-1). Projects without upfront "done" criteria are out of scope [Documented].
+## Glossary
 
-Briefly: A.3 a solo developer with Claude Code re-checking the agent's claims by hand. A.7 local project state, fixed at write time. A.8 wrongness shows as non-zero exits; trust bounded by W-ARCH-1/2. A.9 the AI is the governed agent plus an LLM-judge scoring 0–10; it sets no thresholds. A.11 $0 infrastructure plus evaluator tokens. A.12 nothing leaves the machine. A.13 built 2026-05-26 → 2026-09-29 by Paul "Chris" Schmidt, most code by Claude Code (48/59 trailer-verified) [Verified]+[Author]. A.15 needs Phase 8, cross-editor enforcement, independent validation. A.16 no known external users [Unknown] → §26.
+- **Gate:** a named checkpoint that must be cleared before work moves on.
+- **Gate list (DAG, Directed Acyclic Graph):** the set of gates with one-way "must come before" links and no loops.
+- **Exit code:** the number a program returns when it ends; 0 means fine, 2 means stop.
+- **Hook:** a small script the agent's tool runs just before or after each action.
+- **Harness:** the machinery that runs an agent, gives it tools and limits it.
+- **Judge (evaluator):** a separate agent that scores work it did not produce.
+- **Verdict:** the judge's written result: scores, issues, and pass, warn or fail.
+- **Scope:** the agreed list of what is and is not being built.
+- **Drift:** work wandering away from the agreed scope.
+- **Happy path:** the normal case where nothing goes wrong.
+- **Fixture:** a small, made-up test case set up in advance.
+- **Fail open:** when a check cannot run, it allows the action instead of stopping it.
+- **Honour-system:** relying on everyone to behave, with nothing enforcing it.
+- **Recipe:** a ready-made gate list for a kind of project.
+- **Reflexion entry:** a short note comparing predicted and actual hours, with a cause.
+- **JSON / JSONL (JavaScript Object Notation / JSON Lines):** plain-text formats for structured records.
+- **YAML (YAML Ain't Markup Language):** a plain-text format for settings.
+- **CI (Continuous Integration):** an automatic test runner that fires when code is uploaded.
+- **Dogfooding:** using your own tool on your own projects.
 
-Improvement records: W-SCOPE areas (Low rows in §20).
+## Where to look in the code
 
----
+This list is for engineers; other readers can stop here.
 
-## 2. Purpose, problem, users and use cases (B)
-
-**B.1 ★** Problem: completion claims on multi-session agent-built projects are unreliable — self-grading, context loss, scope drift, uncalibrated estimates. It hits any developer using coding agents across days. Motivating numbers ("5.5/10 vs 2.5/10") come from the repo's single experiment (CL-01) [Verified] `experiment/`.
-
-**B.11 ★** Primary: a developer directing agents over weeks, able to run bash/git and write CONTRACT.md/SPEC.md. Secondary: a lead wanting a verification record. Edge cases: non-Claude editors (enforcement drops to git/CI), Windows (Git Bash + jq + yq [Documented]), projects without acceptance criteria (wrong tool).
-
-**B.12 ★** (1) "gate blocks until tests pass" — **working** (`run-tests.sh`, `verify_gate`). (2) "independent evaluator scores artifacts first" — **working** (`run-evaluator.sh --check`). (3) "decisions/estimates survive context resets" — **working** (memory schemas). (4) "same enforcement in Cursor/Windsurf" — **partial** (commit/CI only). (5) "recipe gates that fit my stack" — **partial** (~30 named hooks missing — W-CODE-1). Inventory: §3.
-
-**B.18 ★** Deliberately out of scope: one-off scripts, single-session projects, projects without written acceptance criteria; making agents infallible; replacing human scope/security/release judgment; public/unclassified data only [Documented] README, TECHNICAL_OVERVIEW. It refuses mechanically: dangerous ops (`security-rules.yaml`), agent-run approvals, gate-state edits [Verified] `PreToolUse.sh:54,71`.
-
-**B.19 ★** Named: calibration (multiplier → 1.0x), gate pass rates, evaluator-vs-self gap, dogfood findings. Recorded: hours and phase multipliers (ROADMAP — 0.75x → 0.93x → 0.90x, then artifacts the doc disowns) plus experiment/calibration scores [Documented]/[Verified]. No work-quality metric (W-EVAL-3).
-
-Briefly: B.4 assumptions well governed (`ASSUMPTIONS.md` A001–A005, each with failure mode, source, review trigger). B.6 essential: gate DAG, memory, telemetry; desirable: recipes; optional: editor rules. B.8 constraints: Bash-only, single operator, context efficiency. B.13 journey: install → CONTRACT/SPEC → `/build-rules` → per gate `verify` → `/evaluate` → operator `mark-passed --approve` → commit → `/start` resumes. B.22 siblings apply the pattern without importing code [Documented]+[Author]. B.23 regulated use needs threat model, SBOM, hardened approvals [Inferred]; the author works in the defense sector [Author], so this fit is a live interest.
-
-Improvement records: W-CODE-1, W-SCOPE-1 (Low).
-
----
-
-## 3. Capabilities inventory (B.12, J.1)
-
-**Implemented:** gate DAG engine + earned `mark-passed` (`65eab77`); blocking hooks with 11-rule security blocklist; evaluator-verdict contract; 3 subagent prompts; 3 schema-validated memory types; telemetry (8 event types) + dogfood labeling; 15 skills; `meridian-verify.sh` + pre-commit/CI templates; `meridian-doctor.sh`; `install.sh` with 3 recipes + platform detection + rule generation.
-**Partial:** cross-editor enforcement (git/CI only); recipe end-to-end use (W-CODE-1); drift sensor (advisory [Documented]); calibration data (own phases only).
-**Planned/deferred:** Phase 8 benchmark tasks, benchmark guide, GitHub release [Documented] ROADMAP.
-**Unverified here:** all test/shellcheck/doctor claims (no execution); HPI counts ("700+ backend, 82+ frontend" — [Documented] G7.2; artifacts in siblings).
-
----
-
-## 4. Domain perspective (C)
-
-**C.1 ★** Domain: AI-assisted software-development process engineering. Concepts: gates (checkpoints with pre-conditions), gate DAGs, human vs automated gate types, evaluator verdicts (0–10, pass/warn/fail), feature lifecycle states (`features-schema.json`), effort calibration. Definitions are internally consistent; the evaluator rubric (weights 0.30/0.25/0.20/0.25, `gate-evaluator.md:48`) is original and externally unvalidated [Verified]/[Inferred]. Standards followed: exit codes, JSON Schema, git hooks, GitHub Actions; cited patterns: Anthropic harness posts, Reflexion (Shinn et al., NeurIPS 2023), Fowler [Documented] README.
-
-**C.15 ★** A professional would trust the mechanism (exit codes block) but not the verdict layer without independent runs, judge-vs-human calibration, and a second operator — the repo's "cannot establish general effectiveness" caveat is the honest answer [Documented]. First needs: W-ARCH-1/2 fixes and a public dogfood log.
-
-Also: C.3 simplification — "quality" as one 0–10 LLM judgment (W-EVAL-1); C.10 an expert accepts the gating, demands calibration for the judging; C.13 validated: deterministic checks + 3 fixtures (`tests/fixtures/calibration/`) [Verified]; heuristic: judge scores.
-
-Improvement records: W-EVAL-1; W-MATH-1 (Low).
-
----
-
-## 5. Codebase guide (D)
-
-**D.1 ★** Tree: `scripts/` **core** (25 bash CLIs — engine, verifier, doctor, telemetry, memory, session, features, drift, dogfood, rules); `.claude/` **core** (hooks, 15 skills, 3 agent specs, settings.json); `.meridian/` **core** (schemas, security rules, seeded memory; runtime state gitignored); `recipes/`, `templates/`, `docs/` (11 guides), `tests/` (20 suites), `experiment/` **supporting**; root docs (README, TECHNICAL_OVERVIEW, MERIDIAN_ARCHITECTURE_DECISIONS, PHILOSOPHY, ASSUMPTIONS, CALIBRATION, G3.5-FINDINGS, ROADMAP, CHANGELOG, DEMO_GUIDE, CONTRIBUTING). `scratch-notes.txt` (89 KB raw LLM transcripts) is **deletable** (W-UX-1).
-
-**D.2 ★** Entry points: `install.sh <target> [--recipe …]`; `gate-engine.sh {validate|check-circular|current|can-proceed|verify|mark-passed}`; `meridian-verify.sh [dir]` (commit/CI boundary); `meridian-doctor.sh`; hooks `PreToolUse.sh`/`PostToolUse.sh`/`SessionStart.sh` (stdin JSON contract, `docs/tier1-verification.md`); slash commands in `.claude/skills/`.
-
-**D.3 ★** Prerequisites: bash ≥ 4, jq, yq (mikefarah), git [Documented] README. Per project: `CONTRACT.md`, `SPEC.md`, `.meridian/gates.yaml`. Clean-state try **not run** (brief) [Unknown] → §26; no env vars or keys needed [Verified] scan.
-
-**D.7 ★** Key code: `gate-engine.sh` (`mark_gate_passed`, `verify_gate`); `hook-wrapper.sh` (`parse_tool_use`, `block`); `PreToolUse.sh` (`main`); `block-dangerous.sh`; `run-evaluator.sh` (`check`, `prepare`); `meridian-verify.sh` (`check_gate_state`, `check_memory`, `check_evaluator`); `run-tests.sh`; `install.sh`; `gate-evaluator.md` (judge rubric); `memory-schema.json` + `validate-memory.sh`.
-
-**D.8 ★** `mark_gate_passed` (`gate-engine.sh:331`) captures the purpose: it refuses (exit 2) unless every `requires` gate passed, every `requires_artifacts` exists, `verify_gate` ran clean (missing hook blocks, `:487`), and human gates carry `--approve <token>` matching `approval_token`; it records approver (`git config user.name`, `:387`) + time and emits `gate_passed` telemetry. "Gates are earned" lives here [Verified] `65eab77`.
-
-**D.17 ★** README accuracy: 8 discrepancies (§24); most important D5 — "Nothing else to configure" vs ~30 nonexistent recipe pre-hooks that hard-block [Verified].
-
-Also: D.9 subtlest code: `run-tests.sh` baseline logic (TDD red vs regression). D.13 errors surface as exit codes 0/1/2 + `hooks.log`/telemetry. D.15 readable, consistent, defensively bash-quirk-aware.
-
-Improvement records: W-CODE-1, W-DOC-1, W-UX-1 (Low).
-
----
-
-## 6. Tech stack and rationale (E)
-
-| Layer | Technology | Why (tag) | Trade-off accepted |
-| --- | --- | --- | --- |
-| Language/runtime | Bash (Git Bash on Windows) | portability + inspectability; Decision 8 [Documented] | weak typing/testing; CRLF + quoting hazards |
-| State | JSON/JSONL + JSON Schema | machine-checkable (Decision 5) | no locking |
-| Parsing | yq + awk fallbacks | full and degraded parsing | two parsers to sync |
-| Agent integration | Claude Code hooks + subagents | only editor with exit-2 hooks (A005) [Documented] | boundary is platform-specific |
-| Enforcement | git pre-commit + GH Actions template | every platform commits | `--no-verify` bypass (documented) |
-| Testing | hand-rolled bash suites | zero dependencies | reinvented harness |
-| AI coding tools | Claude Code | trailers [Verified] | — |
-
-**E.1 ★** Bash because the hook boundary is shell-shaped and the target is a Windows laptop with Git Bash (Decision 8) [Documented]. Python/Go/Rust would ease testing and structure but add a runtime to every install; the choice buys zero-dependency installs and pays in parser edge cases the code visibly fights (`tr -d '\r'`, awk fallbacks) [Verified].
-
-**E.3 ★** Load-bearing: `jq`, `yq` (`mark-passed` refuses without it), `git` (identity, commit boundary), Claude Code. Nothing else — no manifest or lockfile exists.
-
-**E.5b ★** Nothing to resolve (zero packages); results record no tool versions. Unpinned: `yq "latest"` in `templates/meridian-ci.yml` [Verified] (W-STACK-1).
-
----
-
-## 7. Architecture: diagrams, execution walkthrough, ADR table (F)
-
-**F.1 ★** Style: local pipeline of shell tools with two enforcement boundaries — event-driven hooks (Pre/PostToolUse) and a batch verifier (git/CI) — around file state. It fits because the governed runtime is an editor agent, not a server; the JSONL/two-parser awkwardness is the cost of bash-only [Inferred].
-
-**F.2 ★** Components: installer `install.sh`; keystroke boundary `PreToolUse.sh`/`PostToolUse.sh`; gate engine `gate-engine.sh`; evaluator contract `run-evaluator.sh` + `gate-evaluator.md`; test gate `run-tests.sh`; memory tools (`validate-memory.sh`, `write-reflexion.sh`, `log-episodic.sh`); observability (`log-event.sh`, `telemetry-query.sh`, `health-report.sh`, `dogfood.sh`); portable boundary `meridian-verify.sh` + templates; state `.meridian/`; recipes/templates.
-
-```mermaid
-flowchart LR
-    OP[Operator terminal] -->|mark-passed with token| GE[gate-engine.sh]
-    DEV[Developer request] --> AG[AI coding agent]
-    AG --> PT[PreToolUse.sh]
-    PT --> BD[block-dangerous.sh]
-    PT --> GE
-    GE -->|verify_gate runs pre-hooks| RT[run-tests.sh and project checks]
-    GE -->|run-evaluator.sh check| EV[gate-evaluator.md subagent]
-    EV -->|writes verdict JSON| VD[evaluator verdict files]
-    AG --> PO[PostToolUse.sh]
-    PO --> MEM[validate-memory.sh]
-    PO --> TEL[log-event.sh telemetry]
-    AG --> GIT[git commit]
-    GIT --> MV[meridian-verify.sh]
-    MV --> ST[gate-state and memory]
+```
+meridian/
+  scripts/        gate engine, commit verifier, memory, telemetry, reports
+  .claude/hooks/  before and after action hooks, blocklist, evaluator check
+  .claude/agents/ three judge prompts
+  .claude/skills/ fifteen slash-command guides
+  recipes/        three gate maps with templates
+  tests/          20 shell test files and fixtures
+  templates/      pre-commit hook and CI workflow copied into other projects
+  experiment/     the self-scoring experiment
+  docs/           guides and reference
 ```
 
-**F.3 ★** One gate cycle: `gate-engine.sh current` reads `gate-state.json`; agent runs `verify <gate>` → `verify_gate` (`gate-engine.sh:461`) runs each `hooks.pre` with `MERIDIAN_GATE_ID` — missing hook blocks (`:487`), hook exit 2 blocks; `run-tests.sh main` blocks on regressions vs `test-baseline.txt`; `/evaluate` makes the fresh-context `gate-evaluator.md` subagent write `<gate>-verdict.json`; `run-evaluator.sh check` blocks unless score ≥ 7.0 (awk compare); then the **operator** runs `mark-passed <gate> --approve <token>` → `mark_gate_passed` (`:331`) re-checks deps/artifacts/pre-hooks, records approval, writes state. Meanwhile every tool call passes `PreToolUse.sh main` (guards `:54,:71` → `block-dangerous.sh`), and commits hit `meridian-verify.sh` (`check_gate_state` `:97`, memory, evaluator, drift advisory). [Verified]
-
-```mermaid
-sequenceDiagram
-    participant OP as Operator terminal
-    participant AG as AI coding agent
-    participant PRE as PreToolUse.sh
-    participant GE as gate-engine.sh
-    participant EV as gate-evaluator subagent
-    participant MV as meridian-verify.sh
-    AG->>PRE: tool call
-    PRE->>PRE: block-dangerous.sh scan
-    PRE-->>AG: exit 0 allow or exit 2 block
-    AG->>GE: verify gate-id
-    GE->>GE: verify_gate runs hooks.pre
-    GE-->>AG: pass or exit 2
-    AG->>EV: evaluate gate-id with artifacts
-    EV-->>GE: gate-verdict.json with score and verdict
-    GE-->>AG: run-evaluator check pass or block
-    OP->>GE: mark-passed gate-id approve token
-    GE->>GE: mark_gate_passed records approval
-    AG->>MV: git commit
-    MV->>MV: check_gate_state and check_memory and check_evaluator
-    MV-->>AG: exit 0 allow or exit 1 reject
-```
-
-**F.8 ★** Contracts: `gate-schema.yaml` (id, type, requires, requires_artifacts, hooks.pre, approval_token); `memory-schema.json`; `telemetry-schema.json` (8 event types); `features-schema.json` (5 lifecycle states); the verdict shape `{gate, score, verdict, evaluator, notes}` (`run-evaluator.sh` header); the Claude Code stdin contract (`docs/tier1-verification.md`). The verdict contract is central and least authenticated (W-ARCH-1).
-
-**F.11 ★** Invariants: (I1) passed gates' `requires` are passed; (I2) passed human gates carry `approvals` records (both in `mark_gate_passed` + `check_gate_state`); (I3) memory validates before append; (I4) agents cannot self-approve or edit gate state (`PreToolUse.sh:54,71`); (I5) missing pre-hooks block. Probing **not run** (brief); [Proposed] probes: duplicate ids in `passed_gates`, `"score":"8.0"` as string, hand-written verdict, `mark-passed` via wrapper script. Suites claim coverage (26 assertions) [Documented].
-
-**F.19 ★** At 10×–1000×: `verify_gate`'s per-check spawns (O(gates × hooks)) strain first; at 1000× the unlocked `gate-state.json` read-modify-write loses updates across concurrent sessions [Verified]; scaling [Inferred].
-
-**F.22 ★** Single point of failure: `.meridian/` and the operator's git identity; corruption is caught only by checks that fail open without jq/yq (W-ARCH-2).
-
-**F.24 ★** Consequential decisions (MERIDIAN_ARCHITECTURE_DECISIONS Decisions 1–11 + TECHNICAL_OVERVIEW choice table):
-
-| # | Decision | Gained | Sacrificed | Deliberate? | Still right? |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Bash-only harness (Decision 8) | zero-dep install, inspectable | testing/types; parser hazards | deliberate | yes for v0.1.0 |
-| 2 | Exit-code enforcement, not prompts | model can't argue past it | Claude-Code-specific | deliberate | yes |
-| 3 | YAML gate DAG | per-project workflows | DAG validation complexity | deliberate | yes |
-| 4 | Generator-evaluator separation | adversarial check | token cost; judge reliability | deliberate | jury out (W-EVAL-1) |
-| 5 | Schema-validated JSONL state | queryable, checkable | no locking | deliberate | mostly |
-| 6 | Enforcement relocated to git/CI off-Claude (A005) | honest cross-platform story | enforcement happens later | deliberate | yes |
-| 7 | Recipes as patterns, not stacks | transferable | users must write check hooks | deliberate (docs thin) | yes with W-CODE-1 |
-| 8 | Fully-upfront phased build (Decision 3) | visible progress/calibration | speculative early work | deliberate | mixed (multipliers drifted) |
-| 9 | Use-first/risk-first re-sequencing (2026-06-02) | thesis proved before breadth | roadmap churn | deliberate | yes |
-| 10 | ASSUMPTIONS.md governance | prunable assumptions | overhead | deliberate | yes |
-
-**F.25** Leverage: decision 2. Burden: bash-only. Would reverse: fail-open → fail-closed (W-ARCH-2).
-
-Improvement records: W-ARCH-1, W-ARCH-2.
-
----
-
-## 8. Data architecture (G)
-
-**G.1 ★** In: hook stdin JSON, operator commands. Stored: `gate-state.json` (passed gates + approvals), `gates.yaml`, `memory/semantic.json`, `memory/episodic.jsonl`, `memory/corrections.jsonl`, `telemetry.jsonl`, `hooks.log`, evaluator request/verdict JSON, `FEATURES.json`, `test-baseline.txt`. Transient: mktemp fixtures. Out: reports (`health-report.sh`, `telemetry-query.sh`, `cost-report.sh`, `dogfood.sh`). Example event: `gate_passed … approved_by=…` [Verified] `mark_gate_passed`. Single-project scale (workspace telemetry ≈ 8 KB) [Verified].
-
-**G.3 ★** Model: **Gate** {id, type, approval_token, requires[], requires_artifacts[], hooks.pre[], on_fail}; **GateState** {passed_gates[], approvals{gate:{by,at}}}; memory records **Semantic/Episodic/Corrections** (corrections: gate, predicted, actual, delta_ratio, root_cause, action_next); **TelemetryEvent** (8 types); **Verdict** {gate, score, verdict, evaluator, notes}; **Feature** (5 lifecycle booleans). Schema-on-write validation (`validate-memory.sh`); gates.yaml fields checked in `validate_gates_yaml` [Verified]. Risk: unlocked gate-state writes (F.19); retention: `context-trim.sh` + `global-memory-sync.sh`; no personal data by design.
-
----
-
-## 9. Algorithms and mathematics (H)
-
-The mathematics here is thin on purpose — Meridian is a systems project — but what exists sits at the centre of the thesis: it turns an opinion ("this gate looks complete") into a stamped decision. Think of an exam marked with a rubric. The marker fills four boxes, the boxes are combined into one mark with different weights, a pass line is drawn, and a separate rule says that any serious misconduct fails the exam whatever the total. Meridian's evaluator works exactly that way. The rest of the math is housekeeping around it: checking the gate plan for circular "after you" waits, and keeping score of how good the developer's own time estimates were. The life of one gate therefore reads as a connected story: first the plan is checked for deadlocks, then the artifacts get a score and a verdict, then the hours spent become a calibration record. Everything is hand-implemented in bash and awk — no numerical libraries — and the only model call is the judge itself, produced by the host editor's Task tool [Verified] `scripts/`, `.claude/` (see §10).
-
-**Method 1 — the judge's combined score and pass line.** When a gate is ready, a separate evaluator agent reads the artifacts and fills four boxes on a 0-to-10 scale: how complete the work is, how good its quality is, whether it contradicts anything else, and whether it meets this gate's specific requirements. The four marks are combined into one number but not with equal say: the completeness mark has the most weight, the quality and requirements marks share second place, and the consistency mark has the least. Then two rules turn the number into a decision — a score of 7 or more is a pass, 5 to 7 a warning, below 5 a failure; and separately, any single serious flaw (a missing or broken artifact, a direct contradiction of the spec) fails the review whatever the total, exactly like the misconduct rule [Verified] `.claude/agents/gate-evaluator.md:58-60`.
-
-Formally, \(S = 0.30c + 0.25q + 0.20k + 0.25a\), where \(c\) = completeness, \(q\) = quality, \(k\) = consistency, \(a\) = spec_adherence — each a 0–10 number given by the judge — and \(S\) is the overall score, rounded to one decimal [Verified] `gate-evaluator.md:48,50`. The verdict is **pass** if \(S \geq 7.0\) and no high-severity issue exists, **warn** if \(5.0 \leq S < 7.0\) and none exists, **fail** if \(S < 5.0\) or any high-severity issue exists [Verified] `gate-evaluator.md:58-60`. Independently, the gate contract requires \(S \geq \theta\), where \(\theta\) = `EVALUATOR_THRESHOLD`, default 7.0 [Verified] `run-evaluator.sh:35`; the comparison is a float-safe awk test because `bc` is unavailable on Git Bash [Verified] `run-evaluator.sh:119`, CLAUDE.md Bash rules. One consequence is worth spelling out: at the default \(\theta\), a **warn** verdict (5.0–6.9) still blocks the gate — `run-evaluator.sh` logs the warning and then rejects on the threshold [Verified] `run-evaluator.sh:105-121`.
-
-Worked example with round numbers: suppose the judge returns \(c = 8\), \(q = 4\), \(k = 8\), \(a = 6\). Then \(S = 2.4 + 1.0 + 1.6 + 1.5 = 6.5\): labelled "warn" by the rubric, but blocked by the gate contract because 6.5 < 7.0. If quality were also 8, \(S = 2.4 + 2.0 + 1.6 + 1.5 = 7.5\) and the gate advances — unless one high-severity issue exists, which fails 7.5 all the same. Assumptions and limits: the weights are underived (no stated derivation) [Verified] `gate-evaluator.md:48` / [Unknown]; the four marks are ordinal LLM judgments treated as cardinal, so 7.0 need not mean the same thing across gates or judges (H.17, W-EVAL-1) [Inferred]; the arithmetic is O(1) — the real cost is one LLM evaluation round [Inferred]; a non-numeric score coerces to 0 in the awk test and blocks, which is the fail-safe direction [Inferred] on `run-evaluator.sh:119`.
-
-**Method 2 — deadlock detection in the gate plan.** Before any judging, the engine checks the plan itself. Gates declare what they wait for ("I cannot start until those gates passed"), and if the waits form a loop — A waits for B, B waits for C, C waits for A — nobody can ever move. It is the paperwork version of three colleagues each refusing to act until one of the others goes first; the checker exists to spot that deadlock before work starts. Formally, the plan is a directed graph \(G = (V, E)\) whose vertices \(V\) are gate ids, with an edge \(u \to v\) when gate \(u\) lists \(v\) in `requires`. A depth-first search keeps two marks per vertex — visited (ever seen) and on-stack (on the current search path); an edge to a visited vertex that is still on-stack is a back edge, and any back edge means a cycle [Verified] `scripts/gate-engine.sh:190` `detect_cycle` (visited/rec_stack). On detection the engine prints "Cycle: \(u \to v\)" and exits with code 3 (`ERR_CIRCULAR_DEP`) [Verified] `gate-engine.sh:31`. Worked example: with \(a\) requires \(b\), \(b\) requires \(c\), \(c\) requires \(a\), the search walks \(a \to b \to c\), sees that \(c\)'s dependency \(a\) is still on the stack, and reports "Cycle: \(c \to a\)"; if \(c\) required nothing, the walk unwinds cleanly and no cycle is reported. Assumptions and limits: `requires` names are assumed to exist as gate ids — a typo'd id is neither cycle nor error here and surfaces later as a dependency that never passes (H.17) [Inferred]; complexity is the standard DFS O(|V| + |E|) time and O(|V|) stack space [Inferred], negligible at the tens-of-gates scale this targets.
-
-**Method 3 — the estimate-versus-actual ratio.** After a gate, the developer records the hours the work was expected to take and the hours it actually took. Over time these pairs become a personal track record — like a golfer keeping a handicap — so the next estimate can be scaled by how wrong the recent ones were; the target is a multiplier of 1.0, estimates matching reality [Documented] ROADMAP Calibration Tracking. Formally, from predicted hours \(p\) and actual hours \(a\), `write-reflexion.sh` computes a ratio \(\delta = p / a\) and a percentage variance \(v = (a - p) / p \times 100\) [Verified] `scripts/write-reflexion.sh:82-83`, aiming at \(\delta \to 1.0\). Worked example: predicted 8 hours, actual 4 gives \(\delta = 2.0\) (the estimate was twice reality) and \(v = -50\%\) (the work finished at half the predicted time). Assumptions and limits: the hours are self-reported (H.17) [Inferred], and the dataset is Meridian's own phase history only [Documented] ROADMAP. One caution for readers: ROADMAP's formula note and its worked entries use opposite labels — the note says "Variance = Actual/Estimated", but its Phase 0 entry (8h → 6h) shows "Variance 1.33x", which equals \(p/a\), and "operator multiplier 0.75x", which equals \(a/p\). The code's \(\delta = p/a\) is unambiguous [Verified] `write-reflexion.sh:82`; the label confusion is flagged for §24 follow-up outside this LITE edit.
-
-**H.1 ★ inventory, everything else.** The three methods above are the centre; the breadth list follows, one plain clause each. Kinds are marked standard / adapted as in the old inventory.
-
-| # | Method (file:function) | What it does in plain words | Kind |
-| --- | --- | --- | --- |
-| 1 | DFS cycle check (`gate-engine.sh:190`) | spots circular waits in the gate plan | standard |
-| 2 | Weighted judge score (`gate-evaluator.md:48`) | four marks into one number, with a pass line | adapted |
-| 3 | Threshold compare (`run-evaluator.sh:119`) | awk float comparison standing in for `bc` | standard |
-| 4 | Drift score thresholds (A004) | alignment score <5 says "drifted", <7 says "warn" | adapted (calibrated, `CALIBRATION.md`) |
-| 5 | Calibration ratio (`write-reflexion.sh:82`) | estimate-versus-actual bookkeeping, `Estimated/Actual` per ROADMAP's label | standard |
-| 6 | Semantic-memory dedup (`memory-schema.json`) | identical patterns collapse by content hash | standard |
-| 7 | Regression classification (`run-tests.sh:67`) | a failing suite is a regression if named in `test-baseline.txt`, else a TDD red | standard |
-
-**H.17 ★ assumptions across all three.** Gate `requires` names are taken to resolve to real gate ids (typos surface late, Method 2) [Inferred]; the judge's marks are ordinal but treated as cardinal, so a 7.0 need not mean the same across gates or judges (Method 1) [Inferred]; the hours in Method 3 are self-reported [Inferred]. When these assumptions fail, gates pass on weak evidence or block spuriously, and the only backstop is operator attention [Inferred]. The weights and thresholds themselves are operator defaults, not calibrated constants (W-MATH-1).
-
-Improvement records: W-EVAL-1 (score semantics), W-MATH-1 (Low).
-
----
-
-## 10. AI/ML and agent architecture (I)
-
-**I.1 ★** Hybrid: deterministic shell harness around probabilistic judgments. The line is crisp — exit codes, schemas, thresholds are deterministic; the scores come from an LLM judge (and the governed coding agent). No trained models, embeddings or RAG in this repo [Verified] scan.
-
-**I.2 ★** Model calls: the coding session itself, and `/evaluate` (`/review`, `/drift-check`) subagent invocations via the host's Task tool. Prompts are defined in-repo (`run-evaluator.sh`, `gate-evaluator.md`); no call site carries model id, tokens, latency or cost — [Unknown] → §26; `cost-report.sh` aggregates cost telemetry if the host emits it.
-
-**I.8 ★** Prompt demands "only valid JSON"; `check` rejects malformed JSON, missing fields, unknown verdicts, sub-threshold scores (exit 2). No schema validation of verdicts, no authentication of author [Verified] — the structural gap (W-ARCH-1).
-
-**I.9 ★** Deterministic gates on probabilistic output: pre-hooks, memory schema validation, security blocklist, verdict threshold, gate-state consistency at commit (exit 2 keystroke / 1 commit-CI). Threshold-reuse check: 7.0 gates judge scores; drift uses <5/<7 — no mixed-scale reuse seen [Verified].
-
-**I.18 ★** Essential AI feature: the adversarial evaluator — the only check on "did the generator fool itself?". The harness around it is deterministic; human spot-checks could cover part of the value. The n=1 experiment is the only evidence the framing changes verdicts (W-EVAL-1).
-
-Improvement records: W-ARCH-1, W-EVAL-1.
-
----
-
-## 11. Evaluation, results and claims audit (J)
-
-**J.1 ★** Claims audit (this run = L1 doc-vs-artifact only; no re-runs):
-
-| ID | Claim (where) | Evidence | Verdict |
-| --- | --- | --- | --- |
-| CL-01 | Self 5.5/10 vs independent 2.5/10, −3.0 (README, CHANGELOG) | `experiment/` — one synthetic file, one run per condition | Partially supported (n=1) |
-| CL-02 | "validated by experiment" (README) | held once | Partially supported |
-| CL-03 | README states 5.5/2.5 gap as general fact | generalizes CL-01 | Unsupported as stated |
-| CL-04 | "240 assertions across 18 suites" (badge, CLAUDE.md) | 20 suite files; README also says "All 20 pass" | Contradicted in part (§24 D2) |
-| CL-05 | "All 20 suites pass on Windows / Git Bash" | not run here | Unverified |
-| CL-06 | shellcheck clean on hooks | CHANGELOG lists exact SC fixes | Supported (L1) |
-| CL-07 | meridian-doctor passes GOOD | ROADMAP G7.5 | Unverified |
-| CL-08 | "All three recipes verified end-to-end" | G7.5 defines it as install+validate+doctor; hooks missing | Partially supported (overstated) |
-| CL-09 | Dogfooded on two production projects; HPI live at hardpowerintel.com | G3.5-FINDINGS (AeroIntel); HPI evidence in siblings | Partially supported; live [Unknown] |
-| CL-10 | HPI "Passed all 9 gates" (G7.2) | `65eab77`: "HPI passed 4 gates whose checks never ran" | Partially supported (disclosed) |
-| CL-11 | AeroIntel 100% happy-path / 0% full-lifecycle (G3.5-FINDINGS) | numbers in-repo | Supported (L1 own report) |
-| CL-12 | Thresholds "validated, no tuning needed" (CALIBRATION, A004) | 3 fixtures, one verdict each | Partially supported (n=1 each) |
-
-**J.2 ★** Harnesses: (a) the experiment (one bad Python file, two modes, manual scoring); (b) G3.4 calibration (3 fixtures × 2 evaluators, `tests/test-calibration.sh`). No held-out sets, repetitions, CIs or judge agreement [Verified].
-
-**J.3 ★** Numbers: −3.0 points (54% reduction, n=1/arm); drift 8/3/7; gate-evaluator 8.5/3.6/5.95; phase multipliers in ROADMAP. No variance anywhere; no runner [Verified].
-
-**J.4 ★** Baseline: self vs independent judging on identical input — fair as a mechanism test; missing is a trivial baseline (e.g. always-BLOCK judge) to bound prompt effect vs fresh-context noise [Inferred].
-
-**J.12 ★** Pre-registration: not claimed, not practiced; the experiment is one-shot and its raw texts are only partially quoted — not re-runnable, not auditable beyond the doc [Verified].
-
-Improvement records: W-EVAL-1, W-DOC-1.
-
----
-## 12. Testing and code quality (K)
-
-**K.1 ★** 20 bash suites (hooks, telemetry, dogfood, gate-enforcement, gate-passing, security, health, status, memory-hooks, skills, lifecycle, drift, calibration, gen-rules, detect, doctor, hook-contract, verify, 2 integration) with mktemp fixtures, plus calibration and hook-stdin fixtures. Coverage via assertion counts (repo: 240). No property-based/load/coverage tooling [Verified] `tests/`.
-
-**K.2 ★** Not run (no execution). Repo claims "All 20 suites pass on Windows / Git Bash" [Documented]; current status [Unknown] → §26.
-
-**K.4 ★** CI: **none here** — no `.github/`. Shipped `templates/meridian-ci.yml` runs only `meridian-verify.sh` (not tests) for *installed* projects [Verified]. No doc claims self-CI, but the badge implies automation (W-TEST-1).
-
-**K.6 ★** Tests were agent-written (trailers) [Verified]. Spot-check: `test-gate-passing.sh` asserts observable refusals (missing artifact → rc=2 and gate absent; wrong token refused; approval record by/at); `test-security.sh` asserts blocklist exit codes and builds dangerous strings from fragments to avoid outer scanners; `test-doctor.sh` asserts doctor checks and caching. All assert behavior, not internals — right shape [Verified].
-
-**K.10 ★** Missing edges: concurrent `mark-passed`; numeric-string verdict scores; guard evasion via indirection; duplicate gate ids; jq/yq-missing fail-open paths. F.11 probes not executed (brief); [Proposed] test: real stdin JSON with an indirect `mark-passed` variant to pin guard semantics.
-
-Improvement records: W-TEST-1.
-
----
-
-## 13. Security, privacy and compliance (L)
-
-**L.1 ★** Assets: agent-reachable code/state, approval integrity, the operator's machine. Threat model implicit — "protect the operator from the agent's tool calls" (blocklist: destructive commands, secrets, SQLi) [Verified] `security-rules.yaml`. Not modelled: adversarial agents, multi-user repos, supply chain.
-
-**L.2 ★** Surfaces: Bash COMMAND and Edit/Write content (scanned); hook stdin JSON; the regex rules themselves; verdict files (unsourced — W-ARCH-1); `git commit --no-verify`; approval token in tracked `gates.yaml` (W-PROC-1).
-
-**L.5 ★** Secrets: none needed or found; only deliberate synthetic key fixtures (`tests/test-security.sh`, `tests/fixtures/hook-stdin/pretooluse-write-secret.json`, `docs/tier1-verification.md`) — files reported, values synthetic; history same [Verified] scan.
-
-**L.13 ★** First targets: (1) unauthenticated verdict path, (2) approval model (token + substring guard + git identity), (3) fail-open jq/yq degradation, (4) blocklist evadability. All fixable without architectural change (§20).
-
-Improvement records: W-ARCH-1, W-PROC-1, W-SEC-1; W-STACK-1, W-ARCH-3 (Low).
-
----
-
-## 14. Performance, reliability, deployment, operations, cost (M)
-
-**M.1 ★** Dominant costs: serial spawns per hook/check in `verify_gate`, jq/yq passes per file in `meridian-verify.sh`, `/evaluate` LLM latency per gate. No measurements published; `timer_end` records per-hook duration unaggregated [Verified]; quantities [Unknown].
-
-**M.16 ★** Money: $0 infrastructure; marginal cost is evaluator tokens per gate ("Evaluation costs extra tokens and latency" [Documented] TECHNICAL_OVERVIEW). Maintainer and user cost coincide (bring-your-own subscription); linear in gates; arithmetic impossible without per-verdict telemetry [Unknown]. The dominant real cost is human: CONTRACT/SPEC and check hooks.
-
----
-
-## 15. Alternatives and trade-offs (N)
-
-**N.1 ★** (a) prompt-only discipline — cheap, ignorable; (b) hosted orchestration (LangGraph/CrewAI-style gate steps) — better state, no keystroke blocking, added runtime; (c) Python library + pre-commit — testable, loses in-editor blocking. For mechanical evidence boundaries around a laptop-bound editor agent, the current shape is defensible [Documented] PHILOSOPHY; assessment [Inferred].
-
-**N.2 ★** The 80% minimum: gate-engine + security PreToolUse + run-tests + meridian-verify; the rest is most of the code for a minority of the enforcement value — justified by portfolio breadth, not enforcement alone [Inferred].
-
-**N.12 ★** Biggest mistake: fail-open seams at the trust points the framework protects — forgeable verdicts (W-ARCH-1), jq/yq absence downgrading to "allow" (`run-evaluator.sh:81`), substring-match approval guard (`PreToolUse.sh:71`) — together re-creating the honor system Meridian removes. Mitigating: its own dogfood found this class (`65eab77`).
-
-Improvement records: W-ARCH-1, W-ARCH-2, W-PROC-1.
-
----
-
-## 16. Development history and timeline (O)
-
-**O.1 ★** Timeline: **2026-05-26** architecture decisions; **05-28** experiment + foundation; **05-28→06-01** Phase 1 (engine, memory, hooks, telemetry, ~30 commits); **06-01→02** Phases 2–3 (hooks, skills, gate-evaluator, drift, calibration, installer) in two days; **06-02** Decision 9 re-sequencing; **06-02→04** Phases 4–6 (recipes, portable enforcement, docs); **07-21→23** Phase 7 dogfood refinements, `v0.1.0` tag; **09-04** docs reconciliation; **09-29** four self-audit commits (dogfood logging, earned gates) — the last word is self-criticism [Verified] `git log --stat`.
-
-Also: granularity coarse in AI-built phases (gate-sized drops, Claude trailers), fine/corrective in September; one branch, no rewrites [Verified]. O.8 orchestration evolves: CLAUDE.md/`.claude/` early, then settings.json, dogfood tooling and hardening after real use — the harness improved by its own telemetry (edb4ff5: "Findings came from HPI's telemetry").
-
----
-
-## 17. How it was built: human + AI collaboration (P)
-
-**P.1 ★** Claude Code throughout; trailers name Sonnet 4.5/4.6, Opus 4.8, 5.5 (48/59 commits) across all phases [Verified]. Overall tool mix [Author] (2026-10-18): mostly Claude Code, also GitHub Copilot, Codex, Prime-Agent, usually one main tool per project — the other tools have no evidence in this repo (flagged, not reconciled). Which model did what beyond trailers: [Unknown] → §26.
-
-**P.2 ★** Share: ≥81% of commits agent co-authored [Verified]; "most of the code, under direction" [Author], now settled by the 2026-10-18 answers [Author]: very little code hand-written by the author — questions, scope, plan, approach, goals, purpose and architectural preferences were his, all development work done by LLMs/agents. Architecture preferences [Author]; detailed architecture share [Unknown].
-
-**P.3 ★** The author's decisions, by artifact: scope/phase plan (ROADMAP gates), the five principles (PHILOSOPHY), assumptions governance (ASSUMPTIONS.md), what counts as evidence (CALIBRATION method), approvals in his own terminal [Author], making gates earned (`65eab77`) — confirmed and extended by the 2026-10-18 answers [Author] (scope, plan, approach, goals, purpose, architectural preferences were the author's).
-
-**P.7 ★** Instruction files: CLAUDE.md (<60 lines), `.claude/settings.json`, 15 skill docs, 3 subagent specs; `templates/` + `gen-rules.sh` emit editor rules for Cursor/Windsurf/Cline [Verified]. Reuse is pattern-level — siblings apply the pattern without importing code [Documented]+[Author].
-
-**P.12 ★** Per CLAUDE.md: run the relevant `tests/test-*.sh`, update ROADMAP, write a reflexion, commit with trailer; plus dogfooding (its gates gate itself) and the September self-audit [Verified] `f3c8cf9`, `65eab77`, CHANGELOG.
-
-**P.13 ★** Evidenced agent mistakes (introduced and fixed in trailer-carrying commits or named in logs): (1) `parse_tool_use()` read `.tool`/`.arguments.*` — keys absent from the Claude Code contract — "Security boundary silently never fired in live sessions before this fix" (CHANGELOG, G5.1); (2) `install.sh` never copied `scripts/` (CHANGELOG, G5.2); (3) pre-2026-09-29 `mark-passed` recorded gates without checks and agents could self-approve — `65eab77`, whose consequence was "HPI passed 4 gates whose checks never ran". The framework's own failure class, caught by its own telemetry — its strongest honest story.
-
-**P.19 ★** What the author can explain unaided: [Unknown] → §26; his own sections suggest deep command of the enforcement design [Inferred].
-
-**P.26 ★** Approver identity: `git config user.name` (fallback `$USER`/`$USERNAME`) + timestamp recorded by `mark_gate_passed` (`gate-engine.sh:387`); approval is a bearer token typed via `--approve`. Could an agent or other person approve as the author? Mechanically yes (token in-repo, identity local git config); inside Claude Code the agent is blocked from `mark-passed --approve` (COMMAND substring match, `PreToolUse.sh:71`) and gate-state edits (`:54`), and `check_gate_state` (`meridian-verify.sh:97`) fails commits where a human gate lacks an approval record [Verified]. Whether records match reality: `gate-state.json` gitignored, absent from the workspace — [Unknown] → §26.
-
-**P.27 ★** Yes, disclosed: `65eab77` — mark-passed previously recorded gates without checks; "HPI passed 4 gates whose checks never ran"; CHANGELOG — security hook never fired live before G5.1. Disclosed in commit/CHANGELOG; README status still reads unqualified [Verified].
-
-Improvement records: W-PROC-1, W-DOC-1.
-
----
-
-## 18. Product and research potential (Q)
-
-Value [Inferred]: saved re-verification and avoided drift; the HPI anecdote (citation evaluation forced to become infrastructure) is the qualitative case [Documented] README. Competitors: orchestration frameworks and CI discipline; differentiation is the honest tier story plus schema-validated memory/calibration [Inferred]. Q.6: engineering artifact plus one small study; the potentially original piece is the combination (earned gates + independent LLM judge + calibration loop) — novelty evidence is only the in-repo experiment. A talk or case study fits now; a paper needs §20's evaluation work first.
-
----
-
-## 19. Limitations, technical debt and roadmap (R)
-
-**R.1 ★** Limits: keystroke enforcement Claude-Code-bound, advisory elsewhere [Documented] A005; single-operator dogfooding "cannot establish general effectiveness" [Documented]; evaluation adds tokens/latency; bash has fewer testing conveniences; public/unclassified-only mandatory. Boundaries: bash ≥ 4 + jq + yq (else fail-open — W-ARCH-2); acceptance criteria must exist upfront.
-
-**R.2 ★** Incomplete: Phase 8 deferred [Documented] ROADMAP. Known defects: none open after `65eab77`/`7e70722`, but W-ARCH-1/2 are gaps this review found that the suite does not cover.
-
-**R.9 ★** Next phases [Proposed]: (1) *Trust hardening* — authenticated verdicts, fail-closed jq/yq, operator-only approval; exit: red-team script cannot force an unearned gate. (2) *Evidence refresh* — replicate the experiment (n≥10, ≥3 judges, human anchor, kappa), CI for the 20 suites, §24 fixed; exit: README numbers reproducible. (3) *Phase 8* — benchmark tasks + release; exit: an external operator completes a recipe unaided. Extra budget: a second operator's dogfood.
-
-Improvement records: W-DOC-1, W-TEST-1.
-
----
-
-## 20. Shortcomings and Improvement Register (W, 0.7)
-
-**Per-area probe pass** (weakest · cheapest fix):
-
-| Area | Weakest point | Cheapest fix |
-| --- | --- | --- |
-| W-SCOPE | no metric for quality over time (B.19) | track gate first-try pass rate |
-| W-DOM | rubric original, unvalidated (C.1) | publish with Phase 8 benchmark |
-| W-CODE | ~30 declared recipe pre-hooks missing | stub hooks that exit 2 "write me" |
-| W-STACK | jq/yq absence degrades checks silently | fail closed |
-| W-ARCH | verdicts have no provenance | guard evaluator paths |
-| W-DATA | unlocked gate-state write | atomic write + lockfile |
-| W-MATH | weights/threshold underived | label operator defaults |
-| W-AI | ordinal judge scores treated cardinal | human-anchor calibration, kappa |
-| W-EVAL | headline delta n=1 per arm | replicate with committed runner |
-| W-TEST | no CI here; stale counts | workflow running the suites |
-| W-SEC | blocklist evadable; parse bug once silent | parse failure = block; evasion tests |
-| W-PERF | no measurements (M.1) | publish telemetry aggregates |
-| W-OPS | state gitignored; no approval audit survives | signed approval export |
-| W-UX | scratch-notes.txt tracked; README stale | untrack; reconcile table |
-| W-PROC | approval = token + substring guard | operator-only wrapper |
-
-**Full records (Medium+):**
-
-**W-ARCH-1 · Verdict provenance (High).** Any writer — including the governed agent — can create `.meridian/evaluator/<gate>-verdict.json` with a passing score and clear the gate; `check` validates shape and threshold, not origin; `PreToolUse.sh` guards only gate-state (`:54`) and `--approve` (`:71`) [Verified]. This voids A003. Options: (a) block evaluator-path writes + verifier attestation — M, reversible; (b) accept as single-operator trust — free; (c) nonce-stamping evaluator script — M. Disclosure: undisclosed. Recommend (a); M/High (3/3). Verify: hand-written verdict blocked at tool and commit.
-
-**W-ARCH-2 · Fail-open degradation (Medium).** Without jq/yq: `can_proceed_gate` permissive, `run-evaluator.sh:81` "allowing (permissive without jq)", `check_gate_state` skips — enforcement silently becomes honor system [Verified]. Options: (a) fail closed with install hint; (b) fail open + CRITICAL telemetry; (c) document. Disclosure: partial (comments). Recommend (a)+telemetry; S/High (1/3). Verify: PATH-stripped runs exit non-zero.
-
-**W-CODE-1 · Recipe gates name hooks that do not exist (Medium).** `recipes/*/gates.yaml` reference ~30 unshipped pre-hooks; since `65eab77` a missing pre-hook blocks, so a fresh recipe cannot pass its own gates while README says "Nothing else to configure" [Verified]; `65eab77` records "20 recipe hooks don't exist; HPI passed 4 gates whose checks never ran". Options: (a) stub hooks + fix README — S; (b) generate skeletons in install.sh — M; (c) docs only. Disclosure: partial (engine error text says recipes name checks "you write yourself"). Recommend (a) now, (b) later; (a) S/Medium (1/2), (b) M/High (3/3). Verify: fresh install gives actionable messages.
-
-**W-EVAL-1 · Headline evidence is n=1 (Medium).** The −3.0 delta: one synthetic file, one run per condition, unnamed model — no repeats, seeds, human anchor or trivial baseline; A003's "consistently 3+ points higher" cannot follow [Verified] `experiment/`; TECHNICAL_OVERVIEW caveats it [Documented]. Options: (a) replicate (n≥10, ≥3 judges, both arms, human anchor, kappa, runner) — M–L; (b) reframe as "one motivating observation" — S; (c) both. Disclosure: partial. Recommend (c); (a) M/High (3/3), (b) S/Medium (1/2). Verify: runner reproduces delta in CI.
-
-**W-TEST-1 · No CI on Meridian itself (Medium).** Ships a CI template for installs but has no `.github/`; 20 suites run only locally; counts stale (§24 D2) [Verified]. Options: (a) workflow on ubuntu + windows-latest — S; (b) manual + logs; (c) pre-commit suites. Disclosure: none. Recommend (a); S/High (1/3). Verify: broken test fails CI.
-
-**W-PROC-1 · Approval model spoofable (Medium).** `--approve` is a bearer token in tracked `gates.yaml`; the agent guard is a COMMAND substring match (evadable via indirection or a wrapper); the recorded approver is local `git config user.name` (`gate-engine.sh:387`, `PreToolUse.sh:71`) [Verified]. Options: (a) operator-only wrapper + signed approvals — M; (b) token out of tracked files + stricter guard — S; (c) accept as convention. Disclosure: partial (PreToolUse comment). Recommend (b) now, (a) for teams; (b) S/Medium (1/2), (a) M/High (3/3). Verify: scripted agent attempt fails and logs.
-
-**W-SEC-1 · Scanning can fail silently or be evaded (Medium).** block-dangerous depends on `parse_tool_use` exports — a parsing regression disables the boundary with only tool "unknown" as signal (G5.1 bug class, once live); regex rules are defeated by base64 or shell indirection [Verified] CHANGELOG. Options: (a) parse failure → CRITICAL telemetry + evasion fixtures — S; (b) default-deny on parse failure; (c) written threat model. Disclosure: G5.1 disclosed; evadability not. Recommend (a); S/Medium (1/2). Verify: evasion cases in test-security.sh.
-
-**W-DOC-1 · Status claims drifted across docs (Medium).** Four clusters (§24 D1–D4): script table (22 listed incl. nonexistent `drift-report.sh`, vs 25 real), test counts ("240/18" vs 20 suites), `dogfood.jsonl` called "committed" but never tracked, LICENSE promised but absent [Verified]. For a project whose thesis is verified claims, drift costs out-of-proportion credibility. Options: (a) reconcile pass — S; (b) doc-vs-tree test — M; (c) accept. Disclosure: the 2026-09-04 reconcile commit shows intent; drift recurred. Recommend (a)+(b); (a) S/Medium (1/2), (b) M/Medium (3/2). Verify: check script green.
-
-**Low findings:**
-
-| ID | Shortcoming | Evidence | Fix | Effort |
-| --- | --- | --- | --- | --- |
-| W-UX-1 | scratch-notes.txt (89 KB LLM transcripts) tracked | `git ls-files` | move/untrack | S |
-| W-STACK-1 | CI template downloads yq "latest" | `templates/meridian-ci.yml` | pin + checksum | S |
-| W-ARCH-3 | MERIDIAN_ALLOW_MISSING_HOOKS=1 silently restores skipping | `gate-engine.sh:487` | CRITICAL telemetry | S |
-| W-MATH-1 | weights/threshold underived | `gate-evaluator.md:48` | label defaults | S |
-| W-EVAL-2 | "no tuning needed" = 3 fixtures × 1 verdict | `CALIBRATION.md` | soften; expand | S |
-| W-EVAL-3 | no quality-over-time metric | B.19 | pass-rate metric | S |
-| W-CODE-2 | experiment not re-executable | `experiment/` | commit runner + raw texts | M |
-| W-SCOPE-1 | README "Nothing else to configure" | README | fixed by W-CODE-1 | S |
-
-**W.16 ★ Prioritization.** By value ÷ effort: **1) W-ARCH-2** (S/High — an afternoon removes an honor-system seam); **2) W-TEST-1 + W-DOC-1** (S — CI and a doc reconcile make claims checkable); **3) W-ARCH-1** (M/High — verdict provenance completes the thesis). Acceptable limits as-is: single-operator validation, judge subjectivity (mitigate, don't pretend away), bash-only, best-effort blocklist. Conflicts: stricter gates vs more first-run rejections — resolve with stub-hook messages, not silent skips. Most hiring leverage: **W-EVAL-1 replication with n, judges and a human anchor** — thesis from anecdote to measurement.
-
----
-
-## 21. Interview prep: pitches, challenges (S, T, V)
-
-**S.1 ★** 30 seconds: "Meridian is a harness I built around AI coding agents: gates that block until checks pass, an independent evaluator that refuses to grade its own work, and memory and telemetry that survive context resets. The bet: you can't prompt your way to honesty, but you can build a boundary that requires evidence." Two minutes: add the self-grading gap, the honest tiers, the dogfood story (HPI telemetry exposed the framework's own honor-system bug; I made gates earned), and the limits.
-
-**S.2 ★** AI engineer, forward-deployed engineer, platform/infrastructure engineer, research engineer (agent reliability). Legitimate keywords: agent harness design, LLM-as-judge, evaluation discipline, CI enforcement, telemetry. Not demonstrated: model training, distributed systems, on-call. The author's stated target titles — AI Engineer, Forward Deployed AI Engineer [Author] — map to the first two, confirming the ⚠ career-goal line this explainer had tagged [Inferred].
-
-**S.6 ★** Systems design (tiered enforcement); verification discipline (earned gates, `65eab77`); operations thinking (telemetry, dogfood tooling); writing (11 guides + decision record); process leadership (ASSUMPTIONS governance).
-
-**S.8 ★** The September self-audit: telemetry showed "HPI passed 4 gates whose checks never ran"; the response was a design fix (earned gates, agent guards, approval records), not a prompt tweak [Verified] `65eab77`, `edb4ff5`.
-
-**S.21 ★** Proves: a reliability thesis turned into running enforcement machinery, then critiqued with its own data. **S.22 ★** Not proven: scale, live coding, judge reliability — still test those.
-
-**T-3:** (1) *"Isn't the evaluator just another foolable LLM?"* — Yes; the harness guarantees a verdict exists and clears a bar, not that it is right (W-EVAL-1). (2) *"What stops the agent writing its own verdict?"* — Convention plus guards; verdict-path enforcement tops my list (W-ARCH-1). (3) *"Why don't README numbers match the tree?"* — Stale baseline; fix is CI + doc-vs-tree check (W-TEST-1/W-DOC-1).
-
----
-
-## 22. Glossary
-
-**Gate** — checkpoint with pre-conditions. **Gate DAG** — gates.yaml dependency graph, cycle-checked. **Earned gate** — passed only after checks run. **Exit 2** — the block convention. **Generator-evaluator separation (A003)** — scoring by a fresh context that did not produce the work. **Verdict** — evaluator JSON {gate, score, verdict, notes}. **Drift sensor** — advisory SPEC-vs-FEATURES scorer. **Lifecycle states** — happy_path … demo_stable. **Reflexion/corrections** — predicted-vs-actual effort entries. **Operator multiplier** — estimated/actual hours. **Tier 1/2/3** — enforced / guided / advisory. **Dogfood** — real projects built with Meridian (AeroIntel, HPI).
-
-## 23. Evidence index (principal)
-
-Code: `gate-engine.sh` (:331, :461, :487, :387); `PreToolUse.sh` (:54, :71); `hook-wrapper.sh` (:146); `run-evaluator.sh` (:81); `run-tests.sh` (:67); `meridian-verify.sh` (:97); `gate-evaluator.md` (:48); `.meridian/` schemas + `security-rules.yaml`. Docs: README, TECHNICAL_OVERVIEW, MERIDIAN_ARCHITECTURE_DECISIONS, PHILOSOPHY, ASSUMPTIONS, CALIBRATION, G3.5-FINDINGS, ROADMAP, CHANGELOG, DEMO_GUIDE, docs/tier1-verification.md, docs/recipes.md. Commits: `8d059f6`, `f3c8cf9`, `e03b906`, `b4943f3`, `76c589b`, `edb4ff5`, `65eab77`, `7e70722`. Read-only operations only; **no tests/install/builds/formatters run; repo untouched (`git status --porcelain` empty)**.
-
-## 24. Discrepancies: docs vs code
-
-- **D1** README script table: 22 entries incl. nonexistent `drift-report.sh`; `scripts/` holds 25 .sh files (real name `drift-check.sh`) [Verified].
-- **D2** "240 assertions / 18 suites" (badge, CLAUDE.md) vs 20 suite files and README's own "All 20 suites pass" (its list shows 15) [Verified].
-- **D3** "License: MIT — see LICENSE (coming in Phase 8 release)"; no LICENSE file [Verified].
-- **D4** `edb4ff5`: dogfood labels "live in `.meridian/dogfood.jsonl` (committed)"; never tracked, absent from the workspace copy [Verified].
-- **D5** README "Nothing else to configure" vs ~30 nonexistent recipe pre-hooks that hard-block [Verified].
-- **D6** "All three recipes verified end-to-end" vs ROADMAP G7.5's definition (install + validate + doctor) [Verified].
-- **D7** A003 "consistently 3+ points higher" vs one-pair experiment [Verified].
-- **D8** ROADMAP G7.2 "Passed all 9 gates ✓" vs `65eab77` "HPI passed 4 gates whose checks never ran" (disclosed, pre-fix) [Verified].
-
-## 25. Risks found
-
-| Risk | Severity |
-| --- | --- |
-| Evaluator verdicts forgeable by the governed agent (W-ARCH-1) | High |
-| Fail-open checks without jq/yq (W-ARCH-2) | Medium |
-| Approval spoofing: in-repo token, substring guard, git identity (W-PROC-1) | Medium |
-| Security scanning silently disabled / evadable (W-SEC-1) | Medium |
-| No CI on the harness's own tests (W-TEST-1) | Medium |
-| Unearned gates via MERIDIAN_ALLOW_MISSING_HOOKS=1 (W-ARCH-3) | Low |
-| Unpinned yq "latest" in CI template (W-STACK-1) | Low |
-
-## 26. Author Interview: open [Unknown] items
-
-### Author answers received 2026-10-18
-
-From AUTHOR_CONTEXT.md's seven "Questions for Chris", all [Author]: he is a Machine Learning engineer with 5.5 years of experience; target titles are AI Engineer, then Forward Deployed AI Engineer; very little code was hand-written — he supplied the initial questions, scope, plan, approach, goals, purpose and architectural preferences, while "all development work done by LLMs and agents", mostly Claude Code but also GitHub Copilot, Codex and Prime-Agent with various LLMs; tool usage varies but is usually one main tool per project; his understanding "is growing and maturing with each project… course… tutorial"; the intelligence/analysis apps (including Hard Power Intelligence) started from his defense-sector work and personal relevance/interest; and there is no never-publish list beyond avoiding anything malicious, dangerous or in bad taste. These settle the code-share and career-goal items this explainer had tagged [Inferred] from AUTHOR_CONTEXT's ⚠ lines — confirmation, not deletion of that nuance. Conflict flagged, not reconciled: GitHub Copilot, Codex and Prime-Agent have no evidence in this repo (trailers show only Claude models on 48/59 commits; 11 commits carry no trailer) — consistent with "one main tool per project", unverified here.
-
-- **A/Q:** Who uses Meridian/HPI besides you? Is hardpowerintel.com live? Is AeroIntel "production" current? — **open** (answer 6 gives motivation, not users).
-- **B/J:** What should "recipes verified end-to-end" mean beyond install+validate+doctor? Soften CL-03? — **open**.
-- **E/M:** Per-verdict token cost/latency of `/evaluate` — telemetry numbers? — **open**.
-- **J/K:** Was the experiment re-run? Which models? Commit a runner + raw outputs? Do all 20 suites pass on a clean clone today? — **open**.
-- **O/P:** Which of Decisions 1–11 were yours vs an agent's? — **open**. Share per tool/phase? — **closed overall** (see answers; per-phase detail still open). Agent mistakes beyond my three? — **open**.
-- **P (gates):** Show `gate-state.json` approvals for HPI/AeroIntel — do they match who approved? Was the agent ever blocked from `mark-passed --approve`? Where is `.meridian/dogfood.jsonl` of `edb4ff5`? — **open**.
-- **U:** What sparked Meridian? What surprised you? What would you do differently? — **open** (answer 6 covers the intelligence apps only). Which parts need re-study? — **open** (answer 5 is generic).
-
-## 27. Skipped questions and why
-
-- **A.4, F.15–F.18** — no `[UI]`. **F.12–F.14** — no `[API]`. **M.9–M.15** — no `[DEPLOY]` (HPI deployment is a sibling repo).
-- **C.6–C.9; G.4–G.13 detail** — no external data sources (§8).
-- **H.2–H.16 detail, H.18–H.26** — math incidental (§9).
-- **I.3–I.7, I.12–I.17, I.19–I.21** — model calls live in the host editor.
-- **J.5–J.11, J.13** — no ablations/seeds/held-out runs to audit (the absence is W-EVAL-1).
-- **K.3, K.5, K.7–K.9; L.3–L.4, L.6–L.12 detail** — scaled to exposure.
-- **N.3–N.13; O.2–O.8 detail; P.4–P.6, P.8–P.11, P.14–P.18, P.20–P.25; Q.1–Q.5; R.3–R.8, R.10; S.3–S.5, S.7, S.9–S.20, S.23–S.24; T-1, T-2** — non-core for LITE (T-3 and key S items in §21).
-- **U** — author answers; prompts in §26. **All [Measured]** — run performs no execution.
+Entry points: `install.sh` to install, `scripts/gate-engine.sh` for gates, `scripts/meridian-verify.sh` for the commit check, `.claude/hooks/PreToolUse.sh` for blocking. Needs bash 4, jq, yq and git. The install worked in my scratch run; a clean copy of the tests passes 15 of 20 files. Five files to read first: `scripts/gate-engine.sh`, `.claude/hooks/PreToolUse.sh`, `.claude/hooks/run-evaluator.sh`, `.claude/agents/gate-evaluator.md`, and `experiment/GENERATOR_EVALUATOR_VALIDATION.md`.
