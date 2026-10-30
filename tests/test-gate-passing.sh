@@ -182,7 +182,8 @@ EOF
     rc=0; engine "$p" verify reviewed >/dev/null 2>&1 || rc=$?
     [ "$rc" -eq 2 ] && pass "blocks on a failing verdict" || fail "failing verdict did not block (rc=$rc)"
     echo '{"gate":"reviewed","score":8.0,"verdict":"pass","notes":""}' > "$p/.meridian/evaluator/reviewed-verdict.json"
-    rc=0; engine "$p" verify reviewed >/dev/null 2>&1 || rc=$?
+    # legacy unsealed fixture; sealing is covered by test-verdict-integrity.sh
+    rc=0; MERIDIAN_ALLOW_UNHASHED_VERDICTS=1 engine "$p" verify reviewed >/dev/null 2>&1 || rc=$?
     [ "$rc" -eq 0 ] && pass "passes on a passing verdict for this gate" || fail "passing verdict blocked (rc=$rc)"
     rm -rf "$p"
 }

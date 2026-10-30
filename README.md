@@ -482,7 +482,7 @@ Contributions welcome after the v0.1.0 GitHub release (Phase 8). See [CONTRIBUTI
 
 ## License
 
-MIT — see `LICENSE` (coming in Phase 8 release).
+MIT — see [`LICENSE`](LICENSE).
 
 ---
 

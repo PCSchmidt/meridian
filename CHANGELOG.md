@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Verdict integrity.** `scripts/write-verdict.sh` seals an evaluator verdict: it records the
+  evaluator model id and a SHA-256 digest of every artifact named in the request, plus an
+  `artifact_hash` and a `verdict_hash` over the decisive fields.
+- `run-evaluator.sh --check` now rejects verdicts that are unsealed, whose score/verdict/model
+  were edited after writing, or whose artifacts changed since evaluation (stale).
+  `MERIDIAN_ALLOW_UNHASHED_VERDICTS=1` keeps legacy unsealed verdicts working with a warning.
+- `PreToolUse` blocks direct Write/Edit and shell writes to `.meridian/evaluator/*-verdict.json`;
+  the sanctioned writer is the only path under Meridian's hooks.
+- `tests/test-verdict-integrity.sh` (27 checks).
+- `LICENSE` (MIT, as the README stated).
+
+### Known limits
+- This detects edits and staleness. It does not prove *who* ran `write-verdict.sh`; an agent that
+  can run the script can seal a fabricated verdict. Independence still requires an evaluator
+  invoked by a process the generator does not control (planned `--invoke` path).
+- `meridian-verify.sh` still treats a missing verdict as non-failing at commit time (deferred).
+
+---
+
 ## [0.1.0] — 2026-07-23
 
 First stable release. Dogfooded on two production projects (AeroIntel and Hard Power

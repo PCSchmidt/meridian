@@ -39,7 +39,7 @@ Evaluate all artifacts for the named gate using the request file prepared by
 3. Invoke the `gate-evaluator` subagent in a **fresh Task/Agent call** with the
    adversarial system prompt — the evaluator must not have context from the
    generation session
-4. Write the JSON verdict to `.meridian/evaluator/<gate>-verdict.json`
+4. Seal the JSON verdict: `bash scripts/write-verdict.sh <gate> --model <evaluator-model-id>` (stdin). This writes `.meridian/evaluator/<gate>-verdict.json` with artifact digests; direct writes are blocked, and edited or stale verdicts are rejected by `run-evaluator.sh --check`
 5. Report the verdict and score; if FAIL, describe the top blocking issue
 
 ### `/evaluate --prepare <gate> [artifact ...]`

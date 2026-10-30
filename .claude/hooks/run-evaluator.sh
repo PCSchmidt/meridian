@@ -15,8 +15,11 @@
 #   --check   <gate>   (default)     Read .meridian/evaluator/<gate>-verdict.json
 #                                    and block unless it clears the bar.
 #
-# The verdict file (written by the separate evaluator) must look like:
-#   {"gate":"2.2","score":8.0,"verdict":"pass","evaluator":"gate-evaluator","notes":"..."}
+# The verdict file must be sealed by scripts/write-verdict.sh, which adds evaluator_model,
+# artifact digests and integrity hashes to the evaluator's JSON:
+#   {"gate":"2.2","score":8.0,"verdict":"pass","evaluator":"gate-evaluator","notes":"...",
+#    "evaluator_model":"...","artifact_digests":{...},"artifact_hash":"...","verdict_hash":"..."}
+# Unsealed, edited or stale verdicts are rejected (MERIDIAN_ALLOW_UNHASHED_VERDICTS=1 = legacy).
 #
 # Config (env):
 #   EVALUATOR_THRESHOLD   minimum passing score, 0-10 (default 7.0)
@@ -63,9 +66,65 @@ prepare() {
     fi
 
     info "Evaluator request written: $req"
-    info "A separate evaluator subagent must write $EVAL_DIR/${gate}-verdict.json"
+    info "The evaluator must seal its verdict: bash scripts/write-verdict.sh $gate --model <id>  (writes $EVAL_DIR/${gate}-verdict.json)"
     timer_end
     exit 0
+}
+
+sha256_file() {
+    if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1
+    else shasum -a 256 "$1" | cut -d' ' -f1; fi
+}
+sha256_text() {
+    if command -v sha256sum >/dev/null 2>&1; then printf '%s' "$1" | sha256sum | cut -d' ' -f1
+    else printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1; fi
+}
+
+# Verdict integrity (sealed by scripts/write-verdict.sh):
+#   * evaluator_model, artifact_digests, artifact_hash and verdict_hash must be present
+#   * verdict_hash must match the decisive fields (detects hand-edited scores/verdicts)
+#   * every recorded artifact must still hash to its recorded digest (detects stale verdicts)
+# MERIDIAN_ALLOW_UNHASHED_VERDICTS=1 accepts legacy unsealed verdicts with a warning.
+# Boundary: this detects edits and staleness; it cannot prove who ran write-verdict.sh.
+verify_integrity() {
+    local gate="$1" vf="$2"
+    local model ah vh dg
+    ah=$(jq -r '.artifact_hash // empty' "$vf" | tr -d '\r')
+    if [ -z "$ah" ] && [ "${MERIDIAN_ALLOW_UNHASHED_VERDICTS:-0}" = "1" ]; then
+        warn "Gate '$gate' verdict is unsealed (MERIDIAN_ALLOW_UNHASHED_VERDICTS=1) - legacy mode"
+        return 0
+    fi
+    model=$(jq -r '.evaluator_model // empty' "$vf" | tr -d '\r')
+    vh=$(jq -r '.verdict_hash // empty' "$vf" | tr -d '\r')
+    dg=$(jq -c '.artifact_digests // empty' "$vf" | tr -d '\r')
+    if [ -z "$model" ] || [ -z "$ah" ] || [ -z "$vh" ] || [ -z "$dg" ] || [ "$dg" = "{}" ]; then
+        block "Gate '$gate' verdict is unsealed (needs evaluator_model, artifact_digests, artifact_hash, verdict_hash). Write verdicts with: bash scripts/write-verdict.sh $gate --model <id>"
+    fi
+
+    local score verdict expect
+    score=$(jq -r '.score' "$vf" | tr -d '\r')
+    verdict=$(jq -r '.verdict' "$vf" | tr -d '\r')
+    expect=$(sha256_text "${gate}|${score}|${verdict}|${ah}|${model}")
+    if [ "$expect" != "$vh" ]; then
+        block "Gate '$gate' verdict fields were modified after it was written (verdict_hash mismatch)"
+    fi
+
+    local lines="" art want have
+    while IFS=$'\t' read -r art want; do
+        art=${art%$'\r'}; want=${want%$'\r'}
+        [ -n "$art" ] || continue
+        if [ ! -f "$PROJECT_DIR/$art" ]; then
+            block "Gate '$gate' verdict is stale: artifact '$art' no longer exists"
+        fi
+        have=$(sha256_file "$PROJECT_DIR/$art")
+        if [ "$have" != "$want" ]; then
+            block "Gate '$gate' verdict is stale: artifact '$art' changed since it was evaluated - re-run the evaluator"
+        fi
+        lines+="${art}:${have}"$'\n'
+    done < <(echo "$dg" | jq -r 'to_entries | sort_by(.key)[] | [.key, .value] | @tsv')
+    if [ "$(sha256_text "$lines")" != "$ah" ]; then
+        block "Gate '$gate' verdict artifact_hash does not match its recorded digests"
+    fi
 }
 
 check() {
@@ -86,6 +145,8 @@ check() {
     if ! jq empty "$verdict_file" >/dev/null 2>&1; then
         block "Evaluator verdict for gate '$gate' is not valid JSON: $verdict_file"
     fi
+
+    verify_integrity "$gate" "$verdict_file"
 
     local score verdict notes
     score=$(jq -r '.score // empty' "$verdict_file")
