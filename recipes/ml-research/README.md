@@ -19,6 +19,7 @@ This installs:
 - `.claude/skills/` — 15 slash-command skills
 - `.claude/agents/` — gate-evaluator, drift-evaluator, spec-reviewer
 - `.meridian/gates.yaml` — this recipe's gate DAG
+- `.claude/hooks/` — this recipe's pre-hooks from `recipes/ml-research/hooks/`: stubs marked `MERIDIAN-STUB` that block their gate until you write the check (`validate-data-contract.sh` is a working check)
 - `.meridian/` — schema files, security-rules.yaml, runtime skeleton
 - `CLAUDE.md` — session-start context for agents
 

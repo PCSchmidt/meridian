@@ -76,6 +76,11 @@ main() {
             if [[ "$COMMAND" == *"mark-passed"* && "$COMMAND" == *"--approve"* ]]; then
                 block "Human approval gates are approved by the operator in their own terminal, not by the agent. Ask the operator to run: bash scripts/gate-engine.sh mark-passed <gate> --approve <token>"
             fi
+            # Reopening withdraws recorded approvals, so it is the operator's
+            # call too. A --dry-run only prints the plan and is allowed.
+            if [[ "$COMMAND" == *"gate-engine.sh"*" reopen"* && "$COMMAND" != *"--dry-run"* ]]; then
+                block "Reopening passed gates withdraws approvals and is the operator's decision. Show the plan with --dry-run and ask the operator to run: bash scripts/gate-engine.sh reopen <gate>... --reason \"<why>\""
+            fi
             # Writing gate state by hand bypasses mark-passed's checks.
             if [[ "$COMMAND" == *"gate-state.json"* ]] && \
                echo "$COMMAND" | grep -Eq '>[[:space:]]*[^[:space:]]*gate-state\.json|(tee|mv|cp|rm)[[:space:]].*gate-state\.json|sed[[:space:]]+-i|python|node|perl'; then

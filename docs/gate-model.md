@@ -33,9 +33,8 @@ gates:
     hooks:
       pre:                       # run by `gate-engine.sh verify`; exit 2 = block
         - run-tests.sh
-      post:                      # run after the gate clears
+      post:                      # checklist only: the engine does not run these
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: TESTS_GATE.json       # artifact written when the gate passes
     on_fail: block_all_writes
 ```
@@ -57,6 +56,10 @@ gates:
 | `can-proceed <id>` | whether a gate's deps are satisfied |
 | `verify <id>` | run the gate's `hooks.pre`; **exit 2 blocks** on failure, and a declared hook that isn't installed also blocks |
 | `mark-passed <id> [--approve <token>]` | pass the gate **only if** its `requires` have passed, its `requires_artifacts` exist, and `verify` passes; `human_approval` gates also need `--approve` matching `approval_token`, and the approver is recorded |
+| `reopen <id>... --reason "<why>" [--cascade] [--dry-run]` | take passed gates out of `passed_gates` with an audit trail (see below); operator only |
+
+`hooks.post` is a checklist of follow-up steps for the operator. The engine does
+not run post hooks; `mark-passed` emits the `gate_passed` telemetry event itself.
 
 ### Who can pass a gate
 
@@ -69,8 +72,43 @@ gates:
   without an approval record.
 - **Missing checks:** a gate that names a pre-hook you haven't written blocks
   until you write it or remove it. `validate` warns about these up front.
-  Recipes name project-specific checks as placeholders for you to implement.
   `MERIDIAN_ALLOW_MISSING_HOOKS=1` restores the old skip-with-warning behaviour.
+- **Recipe checks:** every pre-hook a recipe declares ships with it, in
+  `recipes/<recipe>/hooks/`, and `install.sh` copies them into
+  `.claude/hooks/` (never over a hook you already wrote). Where a check can be
+  generic it is a working check (ml-research's `validate-data-contract.sh`).
+  Where it is project-specific it is a stub marked `MERIDIAN-STUB` that exits 2
+  and says what it should verify, so the gate blocks until you write the real
+  check. `validate` lists the stubs still in place.
+
+### Reopening a gate
+
+Sometimes a passed gate has to be passed again: the data contract is amended,
+or a check that passed is found to be wrong. `reopen` handles that and keeps the
+record:
+
+```bash
+bash scripts/gate-engine.sh reopen data_contract pipeline_validated \
+    --reason "contract v2: restrict to Class A transceivers"
+```
+
+- Exactly the named gates leave `passed_gates`.
+- Each reopened gate's approval moves from `approvals` to `approval_history`
+  (with the reason and the time it was superseded). Nothing is deleted.
+- `reopened[]` gets `{gates, reason, by, at}`, and a `gate_reopened` telemetry
+  event is written. A backup goes to `gate-state.json.bak`.
+- If a passed gate depends on one you are reopening, `reopen` refuses, because
+  that gate would stand on an unpassed dependency. Name it too, or add
+  `--cascade` to reopen every passed dependent.
+- `--reason` is required. `--dry-run` prints the plan and writes nothing.
+
+Reopening withdraws approvals, so it is the operator's call: on Claude Code the
+PreToolUse hook blocks the agent from running it (a `--dry-run` is allowed).
+Afterwards, fix what needed fixing, then pass the gates again the usual way.
+
+`rollback-gate.sh` is the blunter tool: it drops the lexically highest gates
+and records nothing. Use it to undo a mistaken pass, and `reopen` when the
+history matters.
 
 Limits: the agent can still write a script that edits the state file, and a
 recorded approval can be forged by hand. Both show up in the committed diff

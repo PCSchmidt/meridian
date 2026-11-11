@@ -201,6 +201,27 @@ if [ -n "$RECIPE" ]; then
             cp "$RECIPE_FILE" "$TARGET/.meridian/gates.yaml"
             ok "gates.yaml installed from recipe '$RECIPE' → .meridian/gates.yaml"
         fi
+        # The recipe's own pre-hooks: working checks where one can be generic,
+        # fail-closed stubs (exit 2, marked MERIDIAN-STUB) where the check is
+        # project-specific. Never overwrite a hook the project already wrote.
+        RECIPE_HOOKS="$MERIDIAN_DIR/recipes/$RECIPE/hooks"
+        if [ -d "$RECIPE_HOOKS" ]; then
+            mkdir -p "$TARGET/.claude/hooks"
+            HOOKS_NEW=0; HOOKS_KEPT=0; HOOKS_STUB=0
+            for h in "$RECIPE_HOOKS"/*.sh; do
+                [ -f "$h" ] || continue
+                dest="$TARGET/.claude/hooks/$(basename "$h")"
+                if [ -f "$dest" ]; then
+                    HOOKS_KEPT=$((HOOKS_KEPT+1))
+                else
+                    cp "$h" "$dest"; chmod +x "$dest"
+                    HOOKS_NEW=$((HOOKS_NEW+1))
+                    grep -q "MERIDIAN-STUB" "$dest" && HOOKS_STUB=$((HOOKS_STUB+1))
+                fi
+            done
+            ok "recipe pre-hooks: $HOOKS_NEW installed to .claude/hooks/ ($HOOKS_STUB are stubs to implement), $HOOKS_KEPT existing kept"
+            [ "$HOOKS_STUB" -gt 0 ] && echo "     Stubs block their gate (exit 2) until you write the check. List them: grep -l MERIDIAN-STUB .claude/hooks/*.sh"
+        fi
     else
         err "Recipe '$RECIPE' not found (looked for $RECIPE_FILE)"
         echo "     Available recipes: $(ls "$MERIDIAN_DIR/recipes/" | tr '\n' ' ')"

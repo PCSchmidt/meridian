@@ -69,6 +69,14 @@ work that cannot be cleanly fixed forward, or lost tests. For ordinary code
 changes, use git directly; for aborting in-progress work before a gate closes,
 just discard the branch.
 
+Rollback keeps no record of why, and it removes gates by lexical order. When a
+passed gate must be passed again for a reason worth keeping (an amended
+contract, a check found to be wrong), the operator should use
+`gate-engine.sh reopen <gate>... --reason "<why>"` instead. It removes exactly
+the named gates, keeps their approvals in `approval_history`, and logs the
+reason. The agent can preview it with `--dry-run` but cannot run it; see
+`docs/gate-model.md`.
+
 ---
 
 **Status:** Complete (Gate 2.4) — wraps `scripts/rollback-gate.sh`

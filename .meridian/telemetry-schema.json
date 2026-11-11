@@ -85,6 +85,16 @@
     {
       "allOf": [{ "$ref": "#/definitions/base_event" }],
       "properties": {
+        "event_type": { "const": "gate_reopened" },
+        "gates": { "type": "string", "description": "Comma-separated gate ids removed from passed_gates" },
+        "reason": { "type": "string", "description": "Why the passed gates were reopened" },
+        "by": { "type": "string", "description": "Operator who reopened them" }
+      },
+      "required": ["gates", "reason"]
+    },
+    {
+      "allOf": [{ "$ref": "#/definitions/base_event" }],
+      "properties": {
         "event_type": { "const": "tool_used" },
         "tool": { "type": "string", "description": "Claude Code tool name" },
         "hook": { "type": "string", "enum": ["PreToolUse", "PostToolUse"] },
