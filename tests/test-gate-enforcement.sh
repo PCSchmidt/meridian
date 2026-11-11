@@ -151,7 +151,7 @@ test_eval_pass() {
     echo ""; echo "Test: run-evaluator allows a passing verdict above threshold"
     local dir="$WORK/ev3"; mkdir -p "$dir"
     echo '{"gate":"2.2","score":8.5,"verdict":"pass","notes":"good"}' > "$dir/2.2-verdict.json"
-    local rc; rc=$(EVALUATOR_DIR="$dir" rc_of bash "$HOOKS/run-evaluator.sh" --check 2.2)
+    local rc; rc=$(MERIDIAN_ALLOW_UNHASHED_VERDICTS=1 EVALUATOR_DIR="$dir" rc_of bash "$HOOKS/run-evaluator.sh" --check 2.2)  # legacy unsealed fixture; sealing is covered by test-verdict-integrity.sh
     [ "$rc" -eq 0 ] && pass "Passing verdict allowed (exit 0)" || fail "Expected 0, got $rc"
 }
 

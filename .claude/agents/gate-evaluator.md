@@ -115,8 +115,10 @@ State findings as facts: "X is missing", "Y contradicts Z in CONTRACT.md",
 ## Invocation (for the harness operator)
 
 This agent is invoked by the `/evaluate` skill. It reads the request file at
-`.meridian/evaluator/<gate>-request.json` and writes the verdict to
-`.meridian/evaluator/<gate>-verdict.json`.
+`.meridian/evaluator/<gate>-request.json` and seals its verdict with
+`bash scripts/write-verdict.sh <gate> --model <your-model-id>` (JSON on stdin), which
+writes `.meridian/evaluator/<gate>-verdict.json` with artifact digests and integrity
+hashes. Direct writes to verdict files are blocked by the PreToolUse hook.
 
 The verdict file is then consumed by `run-evaluator.sh --check <gate>`, which
 either allows the gate to proceed or blocks it based on the verdict and score.

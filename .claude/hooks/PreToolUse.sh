@@ -54,6 +54,12 @@ main() {
                 block "Direct edit of .meridian/gate-state.json - gates pass only via gate-engine.sh mark-passed"
             fi
 
+            # Evaluator verdicts are sealed by scripts/write-verdict.sh (artifact digests,
+            # model id, integrity hash). Hand-writing one would forge or bypass that.
+            if [[ "$FILE_PATH" == *".meridian/evaluator/"*"-verdict.json" ]]; then
+                block "Direct write to an evaluator verdict - use: bash scripts/write-verdict.sh <gate> --model <id>"
+            fi
+
             # Check if editing memory files directly
             if [[ "$FILE_PATH" == *"/.meridian/memory/"* ]]; then
                 info "Memory file modification detected - will validate in PostToolUse"
@@ -74,6 +80,11 @@ main() {
             if [[ "$COMMAND" == *"gate-state.json"* ]] && \
                echo "$COMMAND" | grep -Eq '>[[:space:]]*[^[:space:]]*gate-state\.json|(tee|mv|cp|rm)[[:space:]].*gate-state\.json|sed[[:space:]]+-i|python|node|perl'; then
                 block "Commands that write .meridian/gate-state.json are blocked - gates pass only via gate-engine.sh mark-passed"
+            fi
+            # Same for verdict files via the shell (except through the sanctioned writer).
+            if [[ "$COMMAND" == *".meridian/evaluator/"* && "$COMMAND" != *"write-verdict.sh"* ]] && \
+               echo "$COMMAND" | grep -Eq '>[[:space:]]*[^[:space:]]*evaluator/|(tee|mv|cp|rm|dd|install|truncate|ln)[[:space:]].*evaluator/|sed[[:space:]]+-i|python|node|perl'; then
+                block "Commands that write .meridian/evaluator/ are blocked - use: bash scripts/write-verdict.sh <gate> --model <id>"
             fi
             ;;
     esac

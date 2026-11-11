@@ -136,7 +136,7 @@ test_run_evaluator_passes_with_good_verdict() {
     printf '{"gate":"test-gate","score":8.5,"verdict":"pass","notes":"ok"}\n' \
         > "$WORK/test-gate-verdict.json"
     local rc=0
-    EVALUATOR_DIR="$WORK" bash "$PROJECT_DIR/.claude/hooks/run-evaluator.sh" \
+    MERIDIAN_ALLOW_UNHASHED_VERDICTS=1 EVALUATOR_DIR="$WORK" bash "$PROJECT_DIR/.claude/hooks/run-evaluator.sh" \
         --check test-gate >/dev/null 2>&1 || rc=$?
     rm -rf "$WORK"; WORK=$(mktemp -d)
     [ "$rc" -eq 0 ] \

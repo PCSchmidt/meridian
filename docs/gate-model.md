@@ -105,6 +105,19 @@ a *separate* evaluator subagent writes a verdict file that clears
 never grades its own work (Assumption A003). `meridian-verify.sh` also blocks on
 any *standing* FAIL verdict.
 
+## Verdict integrity
+
+Evaluator verdicts are sealed by `scripts/write-verdict.sh <gate> --model <id>` (verdict JSON on
+stdin). The sealed file adds `evaluator_model`, `artifact_digests`, `artifact_hash` and
+`verdict_hash`. At gate time `run-evaluator.sh --check` rejects a verdict that is unsealed, edited
+after writing, or stale (any evaluated artifact changed or vanished). `PreToolUse` blocks direct
+writes to verdict files.
+
+What this does and does not give you: it makes hand-forged and out-of-date verdicts mechanically
+detectable, and records which model produced each verdict. It cannot show *who* ran the writer, so
+a generator that can run the script can still seal a fabricated verdict. True independence needs the
+verdict produced by a process the generator does not control (a planned `--invoke` path).
+
 ## Editing the DAG
 
 Add, remove, or re-wire gates by editing `gates.yaml`, then:
