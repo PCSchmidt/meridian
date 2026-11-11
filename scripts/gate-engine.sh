@@ -11,6 +11,7 @@
 #   gate-engine.sh current               # Get current active gate
 #   gate-engine.sh can-proceed <gate-id> # Check if gate can proceed
 #   gate-engine.sh mark-passed <gate-id> [--approve <token>]  # Pass a gate (deps, artifacts, pre-hooks, approval)
+#   gate-engine.sh reopen <gate-id>... --reason "<why>" [--cascade] [--dry-run]  # Reopen with audit trail
 
 set -euo pipefail
 
@@ -117,10 +118,14 @@ validate_gates_yaml() {
         done
 
         # Declared checks that don't exist would block `verify` later; say so now.
-        local hook
+        local hook hook_path
         for hook in $(yq eval '.gates[].hooks.pre[]?' "$GATES_FILE" 2>/dev/null | tr -d '\r' | sort -u); do
-            [ -n "$(resolve_hook "$hook")" ] || \
+            hook_path=$(resolve_hook "$hook")
+            if [ -z "$hook_path" ]; then
                 warn "pre-hook '$hook' is declared but not installed (write it under scripts/ or .claude/hooks/, or remove it)"
+            elif grep -q "MERIDIAN-STUB" "$hook_path" 2>/dev/null; then
+                warn "pre-hook '$hook' is still the recipe stub and will block its gate (implement it in $hook_path, or remove it)"
+            fi
         done
 
         success "gates.yaml structure is valid"
@@ -408,6 +413,96 @@ mark_gate_passed() {
 }
 
 #######################################
+# Reopen passed gates (e.g. after an approved contract amendment).
+#
+# Unlike rollback-gate.sh, which removes gates by lexical order and keeps no
+# record, reopen removes exactly the named gates and leaves an audit trail:
+#   - each reopened gate's approval moves to .approval_history
+#   - .reopened gets {gates, reason, by, at}
+#   - a gate_reopened telemetry event is emitted
+# Passed gates that depend (transitively) on a reopened gate would be left
+# standing on an unpassed dependency, so reopen refuses unless they are named
+# too or --cascade is given.
+#
+# Arguments: <gate-id>... --reason "<why>" [--cascade] [--dry-run]
+#######################################
+reopen_gates() {
+    local reason="" cascade=0 dry=0
+    local -a named=()
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --reason)  reason="${2:-}"; shift 2 || shift ;;
+            --cascade) cascade=1; shift ;;
+            --dry-run) dry=1; shift ;;
+            -*)        error "Unknown option for reopen: $1" ;;
+            *)         named+=("$1"); shift ;;
+        esac
+    done
+
+    check_gates_file
+    if ! command -v jq >/dev/null 2>&1 || ! command -v yq >/dev/null 2>&1; then
+        error "reopen needs jq and yq" 2
+    fi
+    [ "${#named[@]}" -gt 0 ] || error "Usage: gate-engine.sh reopen <gate-id>... --reason \"<why>\" [--cascade] [--dry-run]"
+    [ -n "${reason// }" ] || error "reopen requires --reason: the audit trail must say why a passed gate was reopened"
+    [ -f "$STATE_FILE" ] || error "No gate state at $STATE_FILE - nothing to reopen"
+
+    local g
+    for g in "${named[@]}"; do
+        jq -e --arg g "$g" '.passed_gates // [] | index($g)' "$STATE_FILE" >/dev/null 2>&1 \
+            || error "Gate '$g' has not passed - nothing to reopen" $ERR_MISSING_GATE
+    done
+
+    local named_json gates_json dependents
+    named_json=$(printf '%s\n' "${named[@]}" | jq -R . | jq -sc .)
+    gates_json=$(yq eval -o=json '.gates' "$GATES_FILE" 2>/dev/null | jq -c '.')
+    # Passed gates that transitively require a named gate, but were not named.
+    dependents=$(jq -nc --argjson gates "$gates_json" --argjson ids "$named_json" \
+        --slurpfile st "$STATE_FILE" '
+        def closure($s):
+            ([$gates[] | select(any((.requires // [])[]; . as $r | $s | index($r))) | .id] - $s) as $new
+            | if ($new | length) == 0 then $s else closure($s + $new) end;
+        (closure($ids) - $ids) as $all
+        | [$all[] | select(. as $d | ($st[0].passed_gates // []) | index($d))]')
+
+    if [ "$dependents" != "[]" ]; then
+        if [ "$cascade" -eq 1 ]; then
+            named_json=$(jq -nc --argjson a "$named_json" --argjson b "$dependents" '$a + $b')
+        else
+            error "Passed gates depend on what you are reopening: $(echo "$dependents" | jq -r 'join(", ")'). Name them too, or add --cascade." 2
+        fi
+    fi
+
+    local who now new_state
+    who=$(git -C "${MERIDIAN_PROJECT_DIR:-.}" config user.name 2>/dev/null || true)
+    who="${who:-${USER:-${USERNAME:-unknown}}}"
+    now=$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%S")
+    new_state=$(jq --argjson gs "$named_json" --arg why "$reason" --arg by "$who" --arg at "$now" '
+        .passed_gates = ((.passed_gates // []) - $gs)
+        | .approval_history = ((.approval_history // []) + [
+            $gs[] as $g | select((.approvals // {})[$g] != null)
+            | {gate: $g, approval: .approvals[$g], superseded_at: $at, reason: $why}])
+        | .approvals = ((.approvals // {}) | with_entries(select(.key as $k | $gs | index($k) | not)))
+        | .reopened = ((.reopened // []) + [{gates: $gs, reason: $why, by: $by, at: $at}])' "$STATE_FILE")
+
+    echo "Reopening: $(echo "$named_json" | jq -r 'join(", ")')"
+    echo "Reason:    $reason"
+    echo "Remaining passed gates: $(echo "$new_state" | jq -r '.passed_gates | join(", ")')"
+    if [ "$dry" -eq 1 ]; then
+        echo "[dry-run] no changes written"
+        return 0
+    fi
+
+    cp "$STATE_FILE" "${STATE_FILE}.bak"
+    echo "$new_state" > "$STATE_FILE"
+    success "Reopened $(echo "$named_json" | jq -r 'join(", ")') (backup: ${STATE_FILE}.bak). Re-run the gate checks and re-approve."
+
+    local log_event="${MERIDIAN_PROJECT_DIR:-.}/scripts/log-event.sh"
+    [ -f "$log_event" ] && bash "$log_event" gate_reopened \
+        gates="$(echo "$named_json" | jq -r 'join(",")')" reason="$reason" by="$who" >/dev/null 2>&1 || true
+}
+
+#######################################
 # Extract a gate's pre-hooks (hooks.pre) from gates.yaml.
 # Arguments: $1 - gate id
 # Emits: one hook script name per line (yq when available, awk fallback).
@@ -543,6 +638,10 @@ main() {
             fi
             verify_gate "$2"
             ;;
+        reopen)
+            shift
+            reopen_gates "$@"
+            ;;
         *)
             echo "Meridian Gate Engine"
             echo ""
@@ -553,6 +652,7 @@ main() {
             echo "  gate-engine.sh can-proceed <gate-id> Check if gate can proceed"
             echo "  gate-engine.sh verify <gate-id>      Run gate pre-hooks (block on failure)"
             echo "  gate-engine.sh mark-passed <gate-id> [--approve <token>]  Pass a gate after deps, artifacts, pre-hooks, approval"
+            echo "  gate-engine.sh reopen <gate-id>... --reason \"<why>\" [--cascade] [--dry-run]  Reopen passed gates with an audit trail (operator only)"
             echo ""
             echo "Dependencies (optional but recommended):"
             echo "  - yq: YAML parsing and validation"

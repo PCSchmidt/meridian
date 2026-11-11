@@ -110,4 +110,24 @@ Five assumptions documented in `ASSUMPTIONS.md`, all ACTIVE:
 
 ## [Unreleased]
 
-Nothing yet. See [ROADMAP.md](ROADMAP.md) for Phase 8 (Community Preparation) plans.
+Two fixes found while dogfooding Meridian on Latent Wake (an ml-research project, G7.6).
+
+### Added
+- `gate-engine.sh reopen <gate>... --reason "<why>" [--cascade] [--dry-run]`: reopens
+  passed gates with an audit trail. Approvals move to `approval_history`, the reason goes
+  to `reopened[]`, and a `gate_reopened` telemetry event is written. Refuses to leave a
+  passed dependent standing on an unpassed gate unless `--cascade`. Operator only: the
+  PreToolUse hook blocks the agent from running it (`--dry-run` is allowed).
+- `recipes/<recipe>/hooks/`: every pre-hook a recipe declares now ships. Project-specific
+  checks are fail-closed stubs (exit 2, marked `MERIDIAN-STUB`, with what to verify);
+  ml-research's `validate-data-contract.sh` is a working check. `install.sh` copies them
+  into `.claude/hooks/` without overwriting existing hooks.
+- `gate-engine.sh validate` warns about recipe stubs still in place.
+- `tests/test-recipes.sh`: declared pre-hooks ship, stubs fail closed, install copies them.
+
+### Changed
+- Recipes no longer list `emit-telemetry.sh` (never shipped; `mark-passed` already emits
+  `gate_passed`). `hooks.post` is documented as a checklist: the engine does not run it.
+
+### Fixed
+- `docs/recipes.md` hook template exited 1 on failure, which only warns. It now exits 2.

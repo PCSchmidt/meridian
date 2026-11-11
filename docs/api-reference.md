@@ -22,7 +22,7 @@ work as git pre-commit hooks and CI steps.
 |--------|---------|----------------|
 | `meridian-doctor.sh` | installation health check | `meridian-doctor.sh [dir]` → 0 GOOD/WARNING, 1 CRITICAL |
 | `meridian-verify.sh` | portable verifier (commit/CI boundary) | `meridian-verify.sh [dir] [--no-drift]` → 0 pass, 1 fail |
-| `gate-engine.sh` | gate DAG engine | `validate` · `check-circular` · `current` · `can-proceed <id>` · `verify <id>` · `mark-passed <id>` |
+| `gate-engine.sh` | gate DAG engine | `validate` · `check-circular` · `current` · `can-proceed <id>` · `verify <id>` · `mark-passed <id>` · `reopen <id>... --reason` |
 | `validate-memory.sh` | validate a memory file vs schema | `validate-memory.sh <semantic\|episodic\|corrections> <file>` |
 | `memory-doctor.sh` | validate all memory + calibration report | `memory-doctor.sh [dir]` |
 | `log-event.sh` | append a telemetry event | `log-event.sh <event_type> [k=v ...]` |
@@ -36,7 +36,7 @@ work as git pre-commit hooks and CI steps.
 | `write-reflexion.sh` | append a corrections entry | `write-reflexion.sh ...` |
 | `gen-rules.sh` | generate Tier-2/3 rule surfaces from source | `gen-rules.sh [dir] --platform <cursor\|windsurf\|cline\|advisory\|all>` |
 | `detect-runtime.sh` | best-effort platform detection | `detect-runtime.sh [dir]` → `claude-code\|cursor\|windsurf\|cline\|generic` |
-| `rollback-gate.sh` | revert a gate transition | `rollback-gate.sh <id>` (skill `/rollback`) |
+| `rollback-gate.sh` | revert gate state to an earlier gate, no record kept | `rollback-gate.sh [--to <id>]` (skill `/rollback`); for an audited reopen use `gate-engine.sh reopen` |
 | `security-audit.sh` | OWASP-style audit pass | `security-audit.sh` (skill `/security`) |
 | `global-memory-sync.sh` | sync patterns to `~/.meridian/global/` | `global-memory-sync.sh` |
 | `session.sh` | session lifecycle (start/end/id/status); auto-writes episodic events | — |

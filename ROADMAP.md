@@ -642,7 +642,7 @@ was none. (Same lesson as Phase 4 recipes — front-loaded work makes the docs c
 
 ## Phase 7: Dogfooding & Refinement (Weeks 11-12)
 
-**Status:** COMPLETE ✅ (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4 ✅, G7.5 ✅)
+**Status:** COMPLETE ✅ (G7.1 ✅, G7.2 ✅, G7.3 ✅, G7.4 ✅, G7.5 ✅, G7.6 ✅)
 **Estimated:** 40 hours  
 **Target completion:** TBD
 
@@ -755,6 +755,36 @@ infrastructure, not a post-hoc add-on.
 - ✅ **CHANGELOG.md:** created; documents all phases, key fixes, experiment results, active assumptions
 - ✅ **Bonus — install.sh creates `.claude/settings.json`:** new projects now get hook registration automatically, resolving the doctor WARNING on fresh installs
 - ✅ **Bonus — test regression fix:** `test_runtests_fail` in test-gate-enforcement.sh updated to seed a baseline (G7.3 F5 had changed behavior; test was outdated)
+
+#### G7.6: Fixes from the Latent Wake dogfood ✅
+
+**Status:** COMPLETE
+**Estimated:** 3 hours | **Actual:** ~1.5 hours (agent-built; both fixes had a working prototype or a clear spec)
+**Completed:** 2026-11-11
+**Project:** [Latent Wake](https://github.com/PCSchmidt/latent-wake), ml-research recipe, six gates passed
+
+**Findings and fixes:**
+
+- ✅ **F1 — no audited way to reopen a gate.** A contract amendment meant re-passing
+  `data_contract` and `pipeline_validated`. `rollback-gate.sh` removes gates in lexical order
+  and keeps no record, so the project wrote its own `reopen-gate.sh`. Upstreamed as
+  `gate-engine.sh reopen` with `--reason`, `approval_history`, `reopened[]`, a
+  `gate_reopened` event, a dependent check (`--cascade`), and an operator-only PreToolUse rule.
+- ✅ **F2 — recipes declared hooks they did not ship.** All three recipes named pre-hooks
+  that did not exist (11 in ml-research). Since G2.2 a missing hook blocks, so a fresh
+  install could not pass any gate that named one, and the error did not say what to write.
+  Every declared pre-hook now ships under `recipes/<recipe>/hooks/` (19 fail-closed stubs
+  plus one working `validate-data-contract.sh`), `install.sh` copies them, and `validate`
+  lists stubs. `emit-telemetry.sh` dropped; `hooks.post` documented as not executed.
+- ✅ **Doc fix:** the custom-hook template in `docs/recipes.md` exited 1, which only warns.
+- ✅ **Tests:** `test-gate-passing.sh` 26 → 39 assertions (reopen + PreToolUse rule);
+  new `test-recipes.sh` (22 assertions).
+
+**Not fixed here (noted):** seven suites (`test-health`, `test-hooks`, `test-hook-contract`,
+`test-integration-phase2`, `test-security`, `test-doctor`, `test-status`) fail in the Claude
+Code cloud container both before and after this change; they need a local Git Bash run to
+confirm they pass there. The engine also needs mikefarah `yq` v4; with the Python `yq`
+wrapper, `mark-passed` fails with exit 4.
 
 ---
 

@@ -25,9 +25,8 @@ gates:
     hooks:
       pre:
         - validate-data-contract.sh
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: DATA_CONTRACT_GATE.json
     on_fail: block_all_writes
 
@@ -62,12 +61,11 @@ gates:
     hooks:
       pre:
         - run-benchmark.sh          # Automated benchmark vs baseline
-        - validate-metrics.sh       # Check meets contract thresholds
+        - validate-metrics.sh       # Results report every contract metric
         - generate-model-card.sh    # Auto-generate model card
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - save-best-model.sh
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: MODEL_EVAL_GATE.json
     on_fail: block_all_writes
 
@@ -82,7 +80,7 @@ gates:
     requires_artifacts:
       - ABLATION_RESULTS.md   # Systematic component removal results
     hooks:
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - write-reflexion.sh
     on_fail: warn
 
@@ -116,10 +114,9 @@ gates:
       pre:
         - validate-serving-config.sh
         - test-inference-latency.sh
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - export-model.sh           # ONNX, TorchScript, etc.
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: DEPLOY_APPROVED
     on_fail: block_all_writes
 

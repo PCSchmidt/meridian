@@ -224,7 +224,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 
 | Script | Purpose |
 | ------ | ------- |
-| `scripts/gate-engine.sh` | Reads `gates.yaml`, validates DAG, enforces dependencies |
+| `scripts/gate-engine.sh` | Reads `gates.yaml`, validates DAG, enforces dependencies; `reopen` reopens passed gates with an audit trail |
 | `scripts/validate-memory.sh` | Schema validates all three memory types |
 | `scripts/memory-doctor.sh` | Memory health check and repair wrapper |
 | `scripts/log-event.sh` | Appends structured events to `telemetry.jsonl` |
@@ -237,7 +237,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed gate tracking and calibration data.
 | `scripts/write-reflexion.sh` | Append calibration entry to `corrections.jsonl` (write-ahead validated) |
 | `scripts/global-memory-sync.sh` | Cross-project memory sync to `~/.meridian/global/` (push/pull/status) |
 | `scripts/context-trim.sh` | Trim `episodic.jsonl` to last N sessions, archive the rest |
-| `scripts/rollback-gate.sh` | Revert gate state to an earlier gate (+ git guidance) |
+| `scripts/rollback-gate.sh` | Revert gate state to an earlier gate (+ git guidance); no record kept, see `gate-engine.sh reopen` |
 | `scripts/security-audit.sh` | Active rules + security telemetry summary |
 | `scripts/cost-report.sh` | Aggregate token/cost telemetry |
 | `scripts/skill-manifest.sh` | Emit the always-loaded skill metadata layer |

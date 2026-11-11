@@ -27,9 +27,15 @@ bash install.sh /path/to/your/project --recipe fullstack-web
 # or: --recipe ml-research
 ```
 
-This copies `gates.yaml`, foundation templates, and the Meridian hooks into
-your project. After installation, edit `.meridian/gates.yaml` to match your
-stack before running any gates.
+This copies `gates.yaml`, the Meridian hooks, and the recipe's own pre-hooks
+into your project (`recipes/<recipe>/hooks/` → `.claude/hooks/`, never over a
+hook you already wrote). Foundation templates stay in `recipes/<recipe>/foundation/`
+for you to copy. Most recipe pre-hooks are project-specific, so they ship as
+stubs marked `MERIDIAN-STUB` that exit 2 and say what they should check: the
+gate blocks until you write the real check or remove it from `gates.yaml`.
+`bash scripts/gate-engine.sh validate` lists the stubs still in place. After
+installation, edit `.meridian/gates.yaml` to match your stack before running
+any gates.
 
 ---
 
@@ -103,7 +109,6 @@ when you have a staging environment that humans must sign off:
   hooks:
     post:
       - write-reflexion.sh
-      - emit-telemetry.sh
   on_fail: block_all_writes
 ```
 
@@ -244,8 +249,8 @@ For production ML systems with periodic retraining, add a post-deploy gate:
 | `approval_token` | human_approval only | String the human must type to pass |
 | `requires` | no | List of gate ids that must be passed first |
 | `requires_artifacts` | no | Files that must exist before gate is evaluated |
-| `hooks.pre` | no | Scripts to run before gate evaluation |
-| `hooks.post` | no | Scripts to run after gate passes |
+| `hooks.pre` | no | Scripts `verify` and `mark-passed` run; exit 2 blocks the gate |
+| `hooks.post` | no | Checklist of follow-up steps; the engine does not run these |
 | `pass_condition` | automated only | `"exit_code == 0"` is the standard |
 | `on_fail` | no | `block_all_writes`, `block_write`, or `warn` |
 | `emits` | no | Artifact file written on gate pass |
@@ -287,8 +292,9 @@ single words like "yes" or "ok").
 
 ## Writing Custom Hook Scripts
 
-Hooks are shell scripts in `.claude/hooks/`. A `pre` hook runs before gate
-evaluation; a `post` hook runs after the gate passes.
+Hooks are shell scripts in `.claude/hooks/` (or `scripts/`). A `pre` hook runs
+when the gate is verified or marked passed. `post` entries are a checklist for
+the operator; the engine does not run them.
 
 Minimal hook template:
 
@@ -302,10 +308,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/hook-wrapper.sh"
 HOOK_NAME="my-custom-check"
 
 # Your validation logic here.
-# Exit 0 = pass. Exit non-zero = gate blocked (if required: true).
+# Exit 0 = pass. Exit 2 = gate blocked. Any other non-zero exit only warns.
 if ! some_check; then
   echo "Check failed: <reason>" >&2
-  exit 1
+  exit 2
 fi
 ```
 
@@ -313,7 +319,7 @@ Key rules:
 - `source hook-wrapper.sh` — never execute it directly
 - Always `set -euo pipefail`
 - Write failure reasons to stderr, not stdout
-- Exit 0 for pass, 1 for fail
+- Exit 0 for pass, 2 to block. Exit 1 is a warning and does **not** block the gate
 
 ---
 

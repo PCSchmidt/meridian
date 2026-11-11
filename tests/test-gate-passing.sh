@@ -187,6 +187,64 @@ EOF
     rm -rf "$p"
 }
 
+test_reopen_keeps_an_audit_trail() {
+    echo ""
+    echo "Test: reopen removes named gates and records why"
+    local p rc st
+    p=$(new_project)
+    st="$p/.meridian/gate-state.json"
+    echo "scope" > "$p/CONTRACT.md"; touch "$p/BUILD_OK"
+    engine "$p" mark-passed confirmed --approve OK >/dev/null 2>&1
+    engine "$p" mark-passed build >/dev/null 2>&1
+
+    rc=0; engine "$p" reopen confirmed >/dev/null 2>&1 || rc=$?
+    [ "$rc" -ne 0 ] && passed "$p" confirmed && pass "refused without --reason" || fail "reopened without a reason (rc=$rc)"
+
+    rc=0; engine "$p" reopen ship --reason "x" >/dev/null 2>&1 || rc=$?
+    [ "$rc" -ne 0 ] && pass "refused for a gate that has not passed" || fail "reopened an unpassed gate"
+
+    rc=0; engine "$p" reopen confirmed --reason "contract v2" >/dev/null 2>&1 || rc=$?
+    [ "$rc" -eq 2 ] && passed "$p" confirmed && passed "$p" build \
+        && pass "refused while passed dependent 'build' is not named" || fail "left a dependent on an unpassed gate (rc=$rc)"
+
+    rc=0; engine "$p" reopen confirmed --reason "contract v2" --cascade --dry-run >/dev/null 2>&1 || rc=$?
+    [ "$rc" -eq 0 ] && passed "$p" confirmed && pass "--dry-run writes nothing" || fail "dry-run changed state (rc=$rc)"
+
+    rc=0; engine "$p" reopen confirmed --reason "contract v2" --cascade >/dev/null 2>&1 || rc=$?
+    [ "$rc" -eq 0 ] && ! passed "$p" confirmed && ! passed "$p" build \
+        && pass "--cascade reopens the gate and its passed dependents" || fail "cascade reopen failed (rc=$rc)"
+    jq -e '(.approvals.confirmed == null) and (.approval_history[0].gate == "confirmed")
+           and (.approval_history[0].approval.by != null) and (.approval_history[0].reason == "contract v2")' "$st" >/dev/null 2>&1 \
+        && pass "the approval moved to approval_history, not deleted" || fail "approval not preserved in history"
+    jq -e '.reopened[0].reason == "contract v2" and (.reopened[0].gates | index("build")) and .reopened[0].by and .reopened[0].at' "$st" >/dev/null 2>&1 \
+        && pass "reopened[] records gates, reason, by and at" || fail "no reopen record"
+    jq -e 'select(.event_type=="gate_reopened" and .reason=="contract v2")' "$p/.meridian/telemetry.jsonl" >/dev/null 2>&1 \
+        && pass "gate_reopened telemetry emitted" || fail "no gate_reopened event"
+
+    engine "$p" mark-passed confirmed --approve OK >/dev/null 2>&1
+    engine "$p" mark-passed build >/dev/null 2>&1
+    passed "$p" confirmed && passed "$p" build && jq -e '.approvals.confirmed and (.approval_history | length) == 1 and (.reopened | length) == 1' "$st" >/dev/null 2>&1 \
+        && pass "re-approval works and the history survives it" || fail "re-pass lost history"
+
+    rc=0; engine "$p" reopen build --reason "rebuild" >/dev/null 2>&1 || rc=$?
+    [ "$rc" -eq 0 ] && passed "$p" confirmed && ! passed "$p" build \
+        && pass "reopening a leaf leaves its dependencies passed" || fail "leaf reopen wrong (rc=$rc)"
+    jq -e '.approval_history | length == 1' "$st" >/dev/null 2>&1 \
+        && pass "automated gates add no approval history" || fail "spurious history entry"
+    rm -rf "$p"
+}
+
+test_agent_cannot_reopen() {
+    echo ""
+    echo "Test: PreToolUse leaves reopen to the operator"
+    local rc
+    export MERIDIAN_PROJECT_DIR="$MERIDIAN_DIR"
+    rc=0; TOOL_NAME=Bash COMMAND="bash scripts/gate-engine.sh reopen data_contract --reason 'amend'" bash "$PRE" >/dev/null 2>&1 || rc=$?
+    [ "$rc" -eq 2 ] && pass "agent-run reopen is blocked" || fail "agent reopen allowed (rc=$rc)"
+    rc=0; TOOL_NAME=Bash COMMAND="bash scripts/gate-engine.sh reopen data_contract --reason 'amend' --dry-run" bash "$PRE" >/dev/null 2>&1 || rc=$?
+    [ "$rc" -eq 0 ] && pass "agent may preview with --dry-run" || fail "dry-run blocked (rc=$rc)"
+}
+
 main() {
     echo "━━━ Meridian gate passing tests ━━━"
     command -v yq >/dev/null 2>&1 || { echo "yq required"; exit 1; }
@@ -195,6 +253,8 @@ main() {
     test_verify_catches_hand_edited_state
     test_agent_cannot_approve_or_edit_state
     test_evaluator_as_pre_hook
+    test_reopen_keeps_an_audit_trail
+    test_agent_cannot_reopen
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "Tests run: $TESTS_RUN | Passed: $TESTS_PASSED | Failed: $TESTS_FAILED"

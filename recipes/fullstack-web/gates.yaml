@@ -25,9 +25,8 @@ gates:
       pre:
         - validate-contract.sh
         - validate-spec.sh
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: CONFIRMED_GATE.json
     on_fail: block_all_writes
 
@@ -46,9 +45,8 @@ gates:
     hooks:
       pre:
         - validate-frontend-spec.sh
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: FRONTEND_GATE.json
     on_fail: block_all_writes
 
@@ -67,9 +65,8 @@ gates:
       pre:
         - validate-api-spec.sh
         - validate-schema.sh
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: BACKEND_GATE.json
     on_fail: block_all_writes
 
@@ -117,10 +114,9 @@ gates:
     hooks:
       pre:
         - validate-deployment.sh
-      post:
+      post:                         # checklist only: the engine does not run post hooks
         - tag-release.sh
         - write-reflexion.sh
-        - emit-telemetry.sh
     emits: DEPLOY_APPROVED
     on_fail: block_all_writes
 
